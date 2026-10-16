@@ -1,0 +1,28 @@
+{
+  "author": "Bastián Paredes",
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    "./*": {
+      "default": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts"
+    }
+  },
+  "name": "@ab-tester/constants",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "prepublish": "npm run build",
+    "publish:public": "npm publish --access public"
+  },
+  "version": "0.0.19"
+}

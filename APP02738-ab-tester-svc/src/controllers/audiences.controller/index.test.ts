@@ -1,0 +1,69 @@
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { describe, expect, it } from 'vitest';
+import { AudiencesController } from './index';
+
+describe('AudiencesController', () => {
+  it('returns audience lists and a selected audience', async () => {
+    const audience = { id: 5, name: 'Returning customers' };
+    const audiences = [audience];
+    const calls: unknown[] = [];
+    const controller = new AudiencesController({
+      audiences: {
+        get: async (input: unknown) => {
+          calls.push(input);
+          return audience;
+        },
+        getAllForCampaign: async (input: unknown) => {
+          calls.push(input);
+          return audiences;
+        },
+        getMany: async (input: unknown) => {
+          calls.push(input);
+          return audiences;
+        },
+      },
+    } as never);
+    const query = { page: 1, textSearch: '' };
+
+    await expect(controller.getMany(3, query as never)).resolves.toBe(audiences);
+    await expect(controller.getAllForCampaign(3)).resolves.toEqual({ audiences });
+    await expect(controller.get(3, 5)).resolves.toBe(audience);
+    expect(calls).toEqual([{ params: query, tenantId: 3 }, { tenantId: 3 }, { audienceId: 5, tenantId: 3 }]);
+  });
+
+  it('throws when an audience is missing', async () => {
+    const controller = new AudiencesController({ audiences: { get: async () => null } } as never);
+
+    await expect(controller.get(3, 99)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('requires an authenticated user to create and update audiences', async () => {
+    const controller = new AudiencesController({ audiences: {} } as never);
+    const body = { name: 'New audience', requirements: { data: { children: [], operator: 'and' }, type: 'node' } };
+
+    await expect(controller.create(3, body as never, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(controller.update(3, 5, body as never, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('creates, updates, and removes audiences for the selected tenant and user', async () => {
+    const calls: unknown[] = [];
+    const controller = new AudiencesController({
+      audiences: {
+        create: async (input: unknown) => calls.push(input),
+        remove: async (input: unknown) => calls.push(input),
+        update: async (input: unknown) => calls.push(input),
+      },
+    } as never);
+    const body = { name: 'New audience', requirements: { data: { children: [], operator: 'and' }, type: 'node' } };
+    const request = { user: { id: 8 } };
+
+    await expect(controller.create(3, body as never, request as never)).resolves.toEqual({});
+    await expect(controller.update(3, 5, body as never, request as never)).resolves.toEqual({});
+    await expect(controller.remove(3, 5)).resolves.toEqual({});
+    expect(calls).toEqual([
+      { tenantId: 3, userId: 8, values: body },
+      { audienceId: 5, tenantId: 3, updates: body, userId: 8 },
+      { audienceId: 5, tenantId: 3 },
+    ]);
+  });
+});

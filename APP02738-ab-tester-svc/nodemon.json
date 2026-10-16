@@ -1,0 +1,9 @@
+{
+  "events": {
+    "restart": "npm run build:script",
+    "start": "npm run build:script"
+  },
+  "exec": "echo 'nodemon will re build script when change are detected'",
+  "ext": "*",
+  "watch": ["./vite.config.js", "./src/script/**/*"]
+}
