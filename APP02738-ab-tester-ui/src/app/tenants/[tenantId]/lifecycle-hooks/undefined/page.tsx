@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { Navigation } from '@/app/_common/components/navigation';
 import constants from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
-import { createInitialLifecycleHookJavascript } from '../lifecycleHookJavascript';
 import { ClientPage, type TypeLifecycleHook } from '../[lifecycleHookId]/clientPage';
+import { createInitialLifecycleHookJavascript } from '../lifecycleHookJavascript';
 
 type PageProps = {
   params: Promise<{
