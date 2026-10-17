@@ -1,14 +1,14 @@
 import { TypeApiTenants } from '@ab-tester/constants/types/api/tenants';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 
 /* ---------- SCHEMA ---------- */
 
-const tenantSchema = z
+export const tenantSchema = z
   .object({
     description: z.string(),
     domain: z.string(),
@@ -18,6 +18,7 @@ const tenantSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('tenants')
 @Controller('tenants')
 export class TenantsController {
   constructor(private readonly dbService: DbService) {}
@@ -41,7 +42,7 @@ export class TenantsController {
   @UseGuards(AuthGuard({ action: 'create', feature: 'tenant' }))
   @Post()
   async create(
-    @Body(new ZodValidationPipe(tenantSchema)) body: AssertEqual<z.infer<typeof tenantSchema>, TypeApiTenants['create']['request']['body']>,
+    @Body({ schema: tenantSchema }) body: AssertEqual<z.infer<typeof tenantSchema>, TypeApiTenants['create']['request']['body']>,
   ): Promise<TypeApiTenants['create']['response']> {
     const newTenant = await this.dbService.tenants.create(body);
     return newTenant;
@@ -51,7 +52,7 @@ export class TenantsController {
   @Put(':tenantId')
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Body(new ZodValidationPipe(tenantSchema)) body: AssertEqual<z.infer<typeof tenantSchema>, TypeApiTenants['update']['request']['body']>,
+    @Body({ schema: tenantSchema }) body: AssertEqual<z.infer<typeof tenantSchema>, TypeApiTenants['update']['request']['body']>,
   ): Promise<TypeApiTenants['update']['response']> {
     const newTenant = await this.dbService.tenants.update({
       tenantId,

@@ -2,17 +2,17 @@ import { TypeApiUsers } from '@ab-tester/constants/types/api/users';
 import { TypeUser } from '@ab-tester/constants/types/user';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { getTokenData } from '../libs/auth/jwt';
 import { cookieNames } from '../libs/constants';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 import { type Request } from '../types/request';
 
 /* ---------- SCHEMAS ---------- */
 
-const newUserSchema = z
+export const newUserSchema = z
   .object({
     email: z.string(),
     name: z.string(),
@@ -20,7 +20,7 @@ const newUserSchema = z
   })
   .strip();
 
-const oldUserSchema = z
+export const oldUserSchema = z
   .object({
     email: z.string(),
     name: z.string(),
@@ -30,6 +30,7 @@ const oldUserSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('users')
 @Controller('admin/users')
 export class UsersController {
   constructor(private readonly dbService: DbService) {}
@@ -60,7 +61,7 @@ export class UsersController {
   @UseGuards(AuthGuard({ action: 'create', feature: 'user' }))
   @Post()
   async create(
-    @Body(new ZodValidationPipe(newUserSchema)) body: AssertEqual<z.infer<typeof newUserSchema>, TypeApiUsers['create']['request']['body']>,
+    @Body({ schema: newUserSchema }) body: AssertEqual<z.infer<typeof newUserSchema>, TypeApiUsers['create']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiUsers['create']['response']> {
     const user = req.user;
@@ -75,7 +76,7 @@ export class UsersController {
   @Put(':userId')
   async update(
     @Param('userId') userId: TypeUser['id'],
-    @Body(new ZodValidationPipe(oldUserSchema)) body: AssertEqual<z.infer<typeof oldUserSchema>, TypeApiUsers['update']['request']['body']>,
+    @Body({ schema: oldUserSchema }) body: AssertEqual<z.infer<typeof oldUserSchema>, TypeApiUsers['update']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiUsers['update']['response']> {
     const user = req.user;

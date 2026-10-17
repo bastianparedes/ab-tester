@@ -1,10 +1,10 @@
 import { TypeApiAudiences } from '@ab-tester/constants/types/api/audiences';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import commonConstants from '../../libs/sharedConstants';
-import { ZodValidationPipe } from '../../pipes/zod';
 import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
 import { NodeRequirementSchema } from './requirementsValidator';
@@ -33,6 +33,7 @@ const audienceSchema = z
   })
   .strip();
 
+@ApiTags('audiences')
 @Controller('tenants/:tenantId/audiences')
 export class AudiencesController {
   constructor(private readonly dbService: DbService) {}
@@ -41,7 +42,7 @@ export class AudiencesController {
   @Get()
   async getMany(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Query(new ZodValidationPipe(getAudiencesQuerySchema)) query: AssertEqual<z.infer<typeof getAudiencesQuerySchema>, TypeApiAudiences['getMany']['request']['pathParams']>,
+    @Query({ schema: getAudiencesQuerySchema }) query: AssertEqual<z.infer<typeof getAudiencesQuerySchema>, TypeApiAudiences['getMany']['request']['pathParams']>,
   ): Promise<TypeApiAudiences['getMany']['response']> {
     const audiences = await this.dbService.audiences.getMany({ params: query, tenantId });
     return audiences;
@@ -66,7 +67,7 @@ export class AudiencesController {
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Body(new ZodValidationPipe(audienceSchema)) body: AssertEqual<z.infer<typeof audienceSchema>, TypeApiAudiences['create']['request']['body']>,
+    @Body({ schema: audienceSchema }) body: AssertEqual<z.infer<typeof audienceSchema>, TypeApiAudiences['create']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiAudiences['create']['response']> {
     const user = req.user;
@@ -81,7 +82,7 @@ export class AudiencesController {
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('audienceId', ParseIntPipe) audienceId: number,
-    @Body(new ZodValidationPipe(audienceSchema)) body: AssertEqual<z.infer<typeof audienceSchema>, TypeApiAudiences['update']['request']['body']>,
+    @Body({ schema: audienceSchema }) body: AssertEqual<z.infer<typeof audienceSchema>, TypeApiAudiences['update']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiAudiences['update']['response']> {
     const user = req.user;

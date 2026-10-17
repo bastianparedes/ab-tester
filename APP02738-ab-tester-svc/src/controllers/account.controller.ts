@@ -1,10 +1,10 @@
 import { TypeApiUsers } from '@ab-tester/constants/types/api/users';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { isPasswordCorrect } from '../libs/auth/password';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 import { type Request } from '../types/request';
 
@@ -26,13 +26,14 @@ const accountSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('account')
 @Controller('account')
 export class AccountController {
   constructor(private readonly dbService: DbService) {}
   @UseGuards(AuthGuard({ action: 'update', feature: 'user' }))
   @Put('update-password')
   async updatePassword(
-    @Body(new ZodValidationPipe(changePasswordSchema)) body: AssertEqual<z.infer<typeof changePasswordSchema>, TypeApiUsers['updatePassword']['request']['body']>,
+    @Body({ schema: changePasswordSchema }) body: AssertEqual<z.infer<typeof changePasswordSchema>, TypeApiUsers['updatePassword']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiUsers['updatePassword']['response']> {
     const reqUser = req.user;
@@ -51,7 +52,7 @@ export class AccountController {
   @UseGuards(AuthGuard({ action: 'update', feature: 'user' }))
   @Put('update-account')
   async updateAccount(
-    @Body(new ZodValidationPipe(accountSchema)) body: AssertEqual<z.infer<typeof accountSchema>, TypeApiUsers['updateAccount']['request']['body']>,
+    @Body({ schema: accountSchema }) body: AssertEqual<z.infer<typeof accountSchema>, TypeApiUsers['updateAccount']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiUsers['updateAccount']['response']> {
     const user = req.user;

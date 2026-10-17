@@ -1,16 +1,16 @@
 import { TypeApiExecutionGroups } from '@ab-tester/constants/types/api/executionGroups';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import commonConstants from '../libs/sharedConstants';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 import { type Request } from '../types/request';
 
 /* ---------- QUERY SCHEMA ---------- */
 
-const getExecutionGroupsQuerySchema = z
+export const getExecutionGroupsQuerySchema = z
   .object({
     orderBy: z.enum(['status', 'name', 'id', 'updatedAt']),
     orderDirection: z.enum(commonConstants.orderDirectionArray),
@@ -30,7 +30,7 @@ const getExecutionGroupsQuerySchema = z
 
 /* ---------- BODY SCHEMA ---------- */
 
-const executionGroupSchema = z
+export const executionGroupSchema = z
   .object({
     campaignIds: z.array(z.number().int()),
     name: z.string(),
@@ -43,6 +43,7 @@ const executionGroupSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('execution-groups')
 @Controller('tenants/:tenantId/execution-groups')
 export class ExecutionGroupsController {
   constructor(private readonly dbService: DbService) {}
@@ -51,7 +52,7 @@ export class ExecutionGroupsController {
   @Get()
   async getMany(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Query(new ZodValidationPipe(getExecutionGroupsQuerySchema)) query: AssertEqual<
+    @Query({ schema: getExecutionGroupsQuerySchema }) query: AssertEqual<
       z.infer<typeof getExecutionGroupsQuerySchema>,
       TypeApiExecutionGroups['getMany']['request']['queryParams']
     >,
@@ -86,7 +87,7 @@ export class ExecutionGroupsController {
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Body(new ZodValidationPipe(executionGroupSchema)) body: AssertEqual<z.infer<typeof executionGroupSchema>, TypeApiExecutionGroups['create']['request']['body']>,
+    @Body({ schema: executionGroupSchema }) body: AssertEqual<z.infer<typeof executionGroupSchema>, TypeApiExecutionGroups['create']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiExecutionGroups['create']['response']> {
     const user = req.user;
@@ -109,7 +110,7 @@ export class ExecutionGroupsController {
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('executionGroupId', ParseIntPipe) executionGroupId: number,
-    @Body(new ZodValidationPipe(executionGroupSchema)) body: AssertEqual<z.infer<typeof executionGroupSchema>, TypeApiExecutionGroups['update']['request']['body']>,
+    @Body({ schema: executionGroupSchema }) body: AssertEqual<z.infer<typeof executionGroupSchema>, TypeApiExecutionGroups['update']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiExecutionGroups['update']['response']> {
     const user = req.user;

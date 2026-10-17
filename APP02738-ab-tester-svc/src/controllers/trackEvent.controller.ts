@@ -1,17 +1,17 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { jsCodeHasCorrectSyntax } from '../libs/jsCode';
 import commonConstants from '../libs/sharedConstants';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 import { type Request } from '../types/request';
 
 /* ---------- QUERY SCHEMA ---------- */
 
-const getTrackEventQuerySchema = z
+export const getTrackEventQuerySchema = z
   .object({
     orderBy: z.enum(['status', 'name', 'id', 'updatedAt']),
     orderDirection: z.enum(commonConstants.orderDirectionArray),
@@ -31,7 +31,7 @@ const getTrackEventQuerySchema = z
 
 /* ---------- BODY SCHEMA ---------- */
 
-const trackEventSchema = z
+export const trackEventSchema = z
   .object({
     getData: z.string().refine((value) => jsCodeHasCorrectSyntax(value), {
       message: 'Invalid JavaScript code',
@@ -44,6 +44,7 @@ const trackEventSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('track-events')
 @Controller('tenants/:tenantId/track-events')
 export class TrackEventController {
   constructor(private readonly dbService: DbService) {}
@@ -52,10 +53,7 @@ export class TrackEventController {
   @Get()
   async getMany(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Query(new ZodValidationPipe(getTrackEventQuerySchema)) query: AssertEqual<
-      z.infer<typeof getTrackEventQuerySchema>,
-      TypeApiTrackEvents['getMany']['request']['queryParams']
-    >,
+    @Query({ schema: getTrackEventQuerySchema }) query: AssertEqual<z.infer<typeof getTrackEventQuerySchema>, TypeApiTrackEvents['getMany']['request']['queryParams']>,
   ): Promise<TypeApiTrackEvents['getMany']['response']> {
     const trackEvents = await this.dbService.trackEvents.getMany({
       params: query,
@@ -88,7 +86,7 @@ export class TrackEventController {
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Body(new ZodValidationPipe(trackEventSchema)) body: AssertEqual<z.infer<typeof trackEventSchema>, TypeApiTrackEvents['create']['request']['body']>,
+    @Body({ schema: trackEventSchema }) body: AssertEqual<z.infer<typeof trackEventSchema>, TypeApiTrackEvents['create']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiTrackEvents['create']['response']> {
     const user = req.user;
@@ -108,7 +106,7 @@ export class TrackEventController {
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('trackEventId', ParseIntPipe) trackEventId: number,
-    @Body(new ZodValidationPipe(trackEventSchema)) body: AssertEqual<z.infer<typeof trackEventSchema>, TypeApiTrackEvents['update']['request']['body']>,
+    @Body({ schema: trackEventSchema }) body: AssertEqual<z.infer<typeof trackEventSchema>, TypeApiTrackEvents['update']['request']['body']>,
     @Req() req: Request,
   ): Promise<TypeApiTrackEvents['update']['response']> {
     const user = req.user;

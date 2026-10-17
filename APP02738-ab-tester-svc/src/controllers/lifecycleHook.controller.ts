@@ -2,16 +2,16 @@ import type { TypeApiLifecycleHooks } from '@ab-tester/constants/types/api/lifec
 import type { TypeLifecycleHook } from '@ab-tester/constants/types/lifecycleHooks';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { jsCodeIsSingleAsyncArrowFunction } from '../libs/jsCode';
 import commonConstants from '../libs/sharedConstants';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 import { ScriptService } from '../services/script.service';
 import { type Request } from '../types/request';
 
-const lifecycleHookSchema = z
+export const lifecycleHookSchema = z
   .object({
     javascript: z.string().refine(jsCodeIsSingleAsyncArrowFunction, {
       message: 'JavaScript must contain exactly one async arrow function',
@@ -24,7 +24,7 @@ const lifecycleHookSchema = z
 
 type LifecycleHookValues = Pick<TypeLifecycleHook, 'status' | 'name' | 'option' | 'javascript'>;
 
-const getLifecycleHooksQuerySchema = z
+export const getLifecycleHooksQuerySchema = z
   .object({
     orderBy: z.enum(['id', 'name', 'option', 'status', 'updatedAt']),
     orderDirection: z.enum(commonConstants.orderDirectionArray),
@@ -42,6 +42,7 @@ const getLifecycleHooksQuerySchema = z
   })
   .strip();
 
+@ApiTags('lifecycle-hooks')
 @Controller('tenants/:tenantId/lifecycle-hooks')
 export class LifecycleHookController {
   constructor(
@@ -53,7 +54,7 @@ export class LifecycleHookController {
   @Get()
   async getMany(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Query(new ZodValidationPipe(getLifecycleHooksQuerySchema)) query: AssertEqual<
+    @Query({ schema: getLifecycleHooksQuerySchema }) query: AssertEqual<
       z.infer<typeof getLifecycleHooksQuerySchema>,
       TypeApiLifecycleHooks['getMany']['request']['queryParams']
     >,
@@ -77,7 +78,7 @@ export class LifecycleHookController {
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
-    @Body(new ZodValidationPipe(lifecycleHookSchema)) body: AssertEqual<z.infer<typeof lifecycleHookSchema>, LifecycleHookValues>,
+    @Body({ schema: lifecycleHookSchema }) body: AssertEqual<z.infer<typeof lifecycleHookSchema>, LifecycleHookValues>,
     @Req() req: Request,
   ): Promise<Record<string, never>> {
     const user = req.user;
@@ -98,7 +99,7 @@ export class LifecycleHookController {
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('lifecycleHookId', ParseIntPipe) lifecycleHookId: number,
-    @Body(new ZodValidationPipe(lifecycleHookSchema)) body: AssertEqual<z.infer<typeof lifecycleHookSchema>, LifecycleHookValues>,
+    @Body({ schema: lifecycleHookSchema }) body: AssertEqual<z.infer<typeof lifecycleHookSchema>, LifecycleHookValues>,
   ): Promise<Record<string, never>> {
     const lifecycleHook = await this.dbService.lifecycleHooks.update({
       lifecycleHookId,

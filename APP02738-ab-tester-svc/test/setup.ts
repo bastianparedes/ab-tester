@@ -1,4 +1,14 @@
 import 'fake-indexeddb/auto';
+import { vi } from 'vitest';
+
+vi.mock('redis', () => ({
+  createClient: () => ({
+    connect: () => Promise.resolve(),
+    del: () => Promise.resolve(0),
+    get: () => Promise.resolve(null),
+    set: () => Promise.resolve('OK'),
+  }),
+}));
 
 process.env.DATABASE_URL_POSTGRES ||= 'postgres://test:test@localhost/test';
 process.env.DATABASE_URL_REDIS ||= 'redis://localhost:6379';

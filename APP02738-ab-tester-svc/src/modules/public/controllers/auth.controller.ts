@@ -7,7 +7,6 @@ import { generateToken, getTokenData, secondsAccessTokenIsValid, secondsRefreshT
 import { isPasswordCorrect } from '../../../libs/auth/password';
 import { cookieNames } from '../../../libs/constants';
 import { env } from '../../../libs/env';
-import { ZodValidationPipe } from '../../../pipes/zod';
 import { CacheService } from '../../../services/cache.service';
 import { DbService } from '../../../services/db.service';
 import { type Request } from '../../../types/request';
@@ -45,7 +44,7 @@ export class AuthController {
   @Post()
   async logIn(
     @Res({ passthrough: true }) res: Response,
-    @Body(new ZodValidationPipe(logInSchema)) body: AssertEqual<z.infer<typeof logInSchema>, TypeApiSessions['logIn']['request']['body']>,
+    @Body({ schema: logInSchema }) body: AssertEqual<z.infer<typeof logInSchema>, TypeApiSessions['logIn']['request']['body']>,
   ): Promise<TypeApiSessions['logIn']['response']> {
     const { email, password } = body;
     const user = await this.dbService.users.getForLogin({ email });

@@ -13,6 +13,6 @@ export default defineConfig({
         statements: 90,
       },
     },
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['src/**/__tests__/**/*.test.ts', 'src/**/__tests__/**/*.test.tsx'],
   },
 });

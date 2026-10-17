@@ -16,7 +16,7 @@ export function ClientPage({ url, script }: Props) {
   const { translation } = useTranslationContext();
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [isScriptExpanded, setIsScriptExpanded] = useState(true);
+  const [isScriptExpanded, setIsScriptExpanded] = useState(false);
   const [isScriptFormatted, setIsScriptFormatted] = useState(true);
   const [formattedScript, setFormattedScript] = useState({ code: '', source: '' });
 
@@ -166,11 +166,11 @@ export function ClientPage({ url, script }: Props) {
                 <Switch
                   checked={isScriptExpanded}
                   onChange={(event) => setIsScriptExpanded(event.target.checked)}
-                  aria-label={isScriptExpanded ? translation.script.scriptShowLess : translation.script.scriptShowMore}
+                  aria-label={translation.script.scriptShowAll}
                   aria-controls="script-preview"
                   className="h-5 w-10 bg-blue-300 shadow-none checked:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 before:h-3.5 before:w-3.5 checked:before:translate-x-5"
                 />
-                {isScriptExpanded ? translation.script.scriptShowLess : translation.script.scriptShowMore}
+                {translation.script.scriptShowAll}
               </div>
             </div>
             <dl className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-blue-900">

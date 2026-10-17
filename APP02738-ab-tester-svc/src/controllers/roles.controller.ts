@@ -1,13 +1,13 @@
 import { TypeApiRoles } from '@ab-tester/constants/types/api/roles';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
-import { ZodValidationPipe } from '../pipes/zod';
 import { DbService } from '../services/db.service';
 
 /* ---------- SCHEMAS ---------- */
-const roleSchema = z
+export const roleSchema = z
   .object({
     description: z.string(),
     name: z.string(),
@@ -17,6 +17,7 @@ const roleSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
+@ApiTags('roles')
 @Controller('admin/roles')
 export class RolesController {
   constructor(private readonly dbService: DbService) {}
@@ -31,7 +32,7 @@ export class RolesController {
   @UseGuards(AuthGuard({ action: 'create', feature: 'role' }))
   @Post()
   async create(
-    @Body(new ZodValidationPipe(roleSchema)) body: AssertEqual<z.infer<typeof roleSchema>, TypeApiRoles['create']['request']['body']>,
+    @Body({ schema: roleSchema }) body: AssertEqual<z.infer<typeof roleSchema>, TypeApiRoles['create']['request']['body']>,
   ): Promise<TypeApiRoles['create']['response']> {
     await this.dbService.roles.create(body);
     return {};
@@ -41,7 +42,7 @@ export class RolesController {
   @Put(':roleId')
   async update(
     @Param('roleId', ParseIntPipe) roleId: number,
-    @Body(new ZodValidationPipe(roleSchema)) body: AssertEqual<z.infer<typeof roleSchema>, TypeApiRoles['update']['request']['body']>,
+    @Body({ schema: roleSchema }) body: AssertEqual<z.infer<typeof roleSchema>, TypeApiRoles['update']['request']['body']>,
   ): Promise<TypeApiRoles['update']['response']> {
     await this.dbService.roles.update({
       roleId,
