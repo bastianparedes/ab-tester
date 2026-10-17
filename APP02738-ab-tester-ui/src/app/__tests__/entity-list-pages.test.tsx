@@ -580,6 +580,16 @@ describe('lifecycle hook list client page', () => {
         queryParams: { orderBy: 'name', orderDirection: 'desc', page: 0, quantity: 50, statusList: ['inactive'], textSearch: 'script' },
       }),
     );
+
+    for (const [heading, orderBy] of [
+      ['ID', 'id'],
+      ['Status', 'status'],
+      ['Execution timing', 'option'],
+      ['Updated at', 'updatedAt'],
+    ]) {
+      fireEvent.click(screen.getByRole('columnheader', { name: new RegExp(heading) }));
+      await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy }) })));
+    }
   });
 
   it('covers inactive hooks, status toggles, pagination, create access and cancelled deletion', async () => {

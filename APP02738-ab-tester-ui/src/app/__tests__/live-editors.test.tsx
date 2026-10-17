@@ -74,6 +74,8 @@ describe('lifecycle hook live viewers', () => {
     fireEvent.mouseEnter(screen.getByRole('button'));
     expect(screen.getByText('Bea')).toBeTruthy();
     expect(screen.queryByText('Ada')).toBeNull();
+    fireEvent.mouseLeave(screen.getByRole('button'));
+    expect(screen.queryByText('Bea')).toBeNull();
   });
 
   it('shows a warning when another editor changed the hook', () => {
@@ -159,7 +161,7 @@ describe('track event editor', () => {
 
   it('gates saving on valid JavaScript and exposes state controls only with permission', () => {
     const permissions = [getStringPermission({ action: 'create', feature: 'track-event', tenantId: 12 })];
-    renderWithUser(<TrackEventEditor initialTrackEvent={initialTrackEvent} tenantId={12} trackEventId={undefined} />, {
+    const { container } = renderWithUser(<TrackEventEditor initialTrackEvent={initialTrackEvent} tenantId={12} trackEventId={undefined} />, {
       data: currentUser.data,
       isLogedIn: true,
       permissions,
@@ -167,6 +169,7 @@ describe('track event editor', () => {
 
     const save = screen.getByRole('button', { name: 'Save track event' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
+    fireEvent.change(container.querySelector('input[type="text"]') as HTMLInputElement, { target: { value: 'Purchase' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: validJavaScript } });
     expect(save.disabled).toBe(false);
 

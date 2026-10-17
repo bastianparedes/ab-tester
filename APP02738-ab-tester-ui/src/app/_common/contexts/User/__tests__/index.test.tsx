@@ -39,4 +39,8 @@ describe('UserProvider', () => {
 
     expect(screen.getByText('Signed out')).toBeTruthy();
   });
+
+  it('throws when the user hook is used outside its provider', () => {
+    expect(() => render(<UserSummary />)).toThrow('useUser must be used inside UserProvider');
+  });
 });

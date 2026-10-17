@@ -1,11 +1,26 @@
 import fs from 'node:fs';
 import { InternalServerErrorException } from '@nestjs/common';
+import CleanCSS from 'clean-css';
+import { minify as minifyHtml } from 'html-minifier-terser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ScriptService } from '../script.service';
 
+vi.mock('html-minifier-terser', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('html-minifier-terser')>();
+  return { ...actual, minify: vi.fn(actual.minify) };
+});
+
 const tenantId = 9;
 
-const createService = ({ cachedScript = null }: { cachedScript?: string | null } = {}) => {
+const createService = ({
+  cachedScript = null,
+  css = 'main { color: red; }',
+  html = '<main> Offer </main>',
+}: {
+  cachedScript?: string | null;
+  css?: string;
+  html?: string;
+} = {}) => {
   const calls = {
     audiences: [] as unknown[],
     cacheDelete: [] as unknown[],
@@ -26,6 +41,7 @@ const createService = ({ cachedScript = null }: { cachedScript?: string | null }
             data: { children: [{ data: { javascript: 'async () => { return false; }', name: 'nested' }, type: 'custom' }], operator: 'or' },
             type: 'node',
           },
+          { data: { id: 41 }, type: 'audience' },
         ],
         operator: 'and',
       },
@@ -35,7 +51,7 @@ const createService = ({ cachedScript = null }: { cachedScript?: string | null }
       { data: { javascript: 'async () => { return true; }', name: 'custom trigger' }, id: 1, type: 'custom' },
       { data: {}, id: 2, type: 'pageLoad' },
     ],
-    variations: [{ css: 'main { color: red; }', html: '<main> Offer </main>', id: 1, javascript: 'async () => { return true; }', name: 'A', traffic: 100 }],
+    variations: [{ css, html, id: 1, javascript: 'async () => { return true; }', name: 'A', traffic: 100 }],
   };
   const executionGroups = [{ id: 21, name: 'Main group' }];
   const trackEvents = [{ id: 31, javascript: 'async () => { return { amount: 1 }; }', name: 'Purchase' }];
@@ -147,5 +163,21 @@ describe('ScriptService', () => {
     const { service } = createService();
 
     await expect(service.getScript({ tenantId })).rejects.toBeInstanceOf(InternalServerErrorException);
+  });
+
+  it('logs HTML minification failures and falls back to empty variation assets', async () => {
+    const htmlError = new Error('invalid script markup');
+    vi.mocked(minifyHtml).mockRejectedValueOnce(htmlError);
+    const cssResult = new CleanCSS({ level: 2 }).minify('main { color: red; }');
+    cssResult.errors.push('invalid CSS');
+    vi.spyOn(CleanCSS.prototype, 'minify').mockReturnValueOnce(cssResult);
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { service } = createService();
+
+    const script = await service.getScript({ tenantId });
+
+    expect(errorLog).toHaveBeenCalledWith('Error al minificar HTML:', htmlError);
+    expect(script).not.toContain('color:red');
+    expect(script).not.toContain('<main>Offer</main>');
   });
 });

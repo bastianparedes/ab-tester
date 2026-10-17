@@ -84,6 +84,7 @@ describe('application bootstrap', () => {
         filter: true,
         operationsSorter: 'alpha',
         persistAuthorization: false,
+        supportedSubmitMethods: ['get'],
         tagsSorter: 'alpha',
       },
     });

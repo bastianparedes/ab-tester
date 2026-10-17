@@ -139,6 +139,8 @@ describe('campaign triggers', () => {
 
     const buttons = container.querySelectorAll('button');
     fireEvent.click(buttons[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear editor' }));
+    expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'invalid (' } });
     expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByTestId('data-testid-button-closer-modal'));
@@ -146,7 +148,10 @@ describe('campaign triggers', () => {
     fireEvent.click(container.querySelectorAll('button')[1]);
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return true; }' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    rerender(renderTree());
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Custom trigger' } });
     expect(campaign.triggers[0]).toMatchObject({ data: { javascript: 'async () => { return true; }' }, type: 'custom' });
+    expect(campaign.triggers[0]).toMatchObject({ data: { name: 'Custom trigger' } });
   });
 });
 

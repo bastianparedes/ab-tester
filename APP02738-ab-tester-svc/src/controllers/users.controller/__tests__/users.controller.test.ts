@@ -48,6 +48,7 @@ describe('UsersController', () => {
 
     await expect(controller.create({ email: 'a@example.test', name: 'A', password: 'secret' }, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
     await expect(controller.update(23, { email: 'a@example.test', name: 'A', roleIds: [] }, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(controller.remove(23, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('creates a user for an authenticated request', async () => {

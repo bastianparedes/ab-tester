@@ -1,5 +1,6 @@
 import { type INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { appendCurlExamples } from './curl-examples';
 import { applySwaggerDocumentation } from './documentation';
 
 export function setupSwagger(app: INestApplication): void {
@@ -41,6 +42,7 @@ export function setupSwagger(app: INestApplication): void {
 
   applySwaggerDocumentation();
   const document = SwaggerModule.createDocument(app, config);
+  appendCurlExamples(document);
 
   SwaggerModule.setup('docs', app, document, {
     customSiteTitle: 'AB Tester API | Swagger',
@@ -51,6 +53,7 @@ export function setupSwagger(app: INestApplication): void {
       filter: true,
       operationsSorter: 'alpha',
       persistAuthorization: false,
+      supportedSubmitMethods: ['get'],
       tagsSorter: 'alpha',
     },
   });

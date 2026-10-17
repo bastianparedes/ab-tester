@@ -54,4 +54,11 @@ describe('initSpecificCampaign', () => {
     await Promise.resolve();
     expect(campaignInstances[1].applyChanges).toHaveBeenCalledOnce();
   });
+
+  it('maps configured audiences when the module initializes', async () => {
+    window.ab_tester.audiencesData = [{ id: 5, name: 'Returning visitors', requirements: {} }] as never;
+    vi.resetModules();
+
+    await import('../forced.js');
+  });
 });

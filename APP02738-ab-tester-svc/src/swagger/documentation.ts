@@ -12,6 +12,7 @@ import {
   ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
+  type SchemaObject,
 } from '@nestjs/swagger';
 import { AccountController } from '../controllers/account.controller';
 import { accountSchema, changePasswordSchema } from '../controllers/account.controller/request.schema';
@@ -127,8 +128,140 @@ const emptyTextSearchQuery = ApiQuery({
   schema: { default: '', example: '', type: 'string' },
 });
 const emptyResponse = { schema: { example: {}, type: 'object' as const } };
-const created = (description: string) => ApiCreatedResponse({ description, ...emptyResponse });
-const ok = (description: string) => ApiOkResponse({ description, ...emptyResponse });
+const created = (description: string, schema?: SchemaObject) => ApiCreatedResponse({ description, ...(schema ? { schema } : emptyResponse) });
+const ok = (description: string, schema?: SchemaObject) => ApiOkResponse({ description, ...(schema ? { schema } : emptyResponse) });
+
+const objectSchema = (properties: Record<string, SchemaObject>, required: string[] = Object.keys(properties)) => ({
+  properties,
+  required,
+  type: 'object' as const,
+});
+const arrayOf = (items: SchemaObject) => ({ items, type: 'array' as const });
+
+const roleSchemaShape = objectSchema({
+  description: { example: 'Can view campaigns.', type: 'string' },
+  id: { example: 3, type: 'integer' },
+  name: { example: 'Analyst', type: 'string' },
+  permissions: { example: ['campaign:read'], items: { type: 'string' }, type: 'array' },
+});
+
+const userSchemaShape = objectSchema({
+  email: { example: 'ada@example.com', type: 'string' },
+  id: { example: 12, type: 'integer' },
+  name: { example: 'Ada Lovelace', type: 'string' },
+  roles: { example: [roleSchemaShape], items: roleSchemaShape, type: 'array' },
+});
+
+const tenantSchemaShape = objectSchema({
+  description: { example: 'Example store for A/B testing.', type: 'string' },
+  domain: { example: 'shop.example.com', type: 'string' },
+  id: { example: 1, type: 'integer' },
+  name: { example: 'Example store', type: 'string' },
+});
+
+const audienceRequirementLeafShape = objectSchema({
+  data: { example: { comparator: 'equal', eventCount: 1, quantityOperator: 'equal', timeAmount: 1, timeUnit: 'days', trackEventId: 7, value: 'accepted' }, type: 'object' },
+  type: { example: 'string', type: 'string' },
+});
+
+const audienceSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  id: { example: 4, type: 'integer' },
+  name: { example: 'Recent buyers', type: 'string' },
+  requirements: { example: { data: { children: [audienceRequirementLeafShape], operator: 'and' }, type: 'node' }, type: 'object' },
+  tenantId: { example: 1, type: 'integer' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+});
+
+const audienceForMenuSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  id: { example: 4, type: 'integer' },
+  name: { example: 'Recent buyers', type: 'string' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+});
+
+const executionGroupSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  id: { example: 7, type: 'integer' },
+  name: { example: 'Checkout experimentos', type: 'string' },
+  onlyCampaignsPreviouslyExecuted: { example: false, type: 'boolean' },
+  onlyOneCampaignPerPageLoad: { example: true, type: 'boolean' },
+  status: { example: 'active', type: 'string' },
+  tenantId: { example: 1, type: 'integer' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+  waitForEveryCampaignToBeEvaluated: { example: true, type: 'boolean' },
+});
+
+const campaignTriggerItemShape = objectSchema({
+  data: { example: {}, type: 'object' },
+  id: { example: 1, type: 'integer' },
+  type: { example: 'pageLoad', type: 'string' },
+});
+
+const campaignVariationShape = objectSchema({
+  css: { example: '', type: 'string' },
+  html: { example: '<p>Variante A</p>', type: 'string' },
+  id: { example: 1, type: 'integer' },
+  javascript: { example: '() => {}', type: 'string' },
+  name: { example: 'Variante A', type: 'string' },
+  traffic: { example: 100, type: 'integer' },
+});
+
+const campaignSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  executionGroupId: {
+    description: 'Execution group identifier, or null when the campaign is not assigned to an execution group.',
+    example: 7,
+    nullable: true,
+    type: 'integer',
+  },
+  id: { example: 9, type: 'integer' },
+  name: { example: 'Checkout experiment', type: 'string' },
+  requirements: { example: { data: { children: [], operator: 'and' }, type: 'node' }, type: 'object' },
+  status: { example: 'active', type: 'string' },
+  tenantId: { example: 1, type: 'integer' },
+  triggers: { example: [campaignTriggerItemShape], items: campaignTriggerItemShape, type: 'array' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+  variations: { example: [campaignVariationShape], items: campaignVariationShape, type: 'array' },
+});
+
+const campaignForMenuSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  executionGroupId: { example: null, nullable: true, type: 'integer' },
+  id: { example: 9, type: 'integer' },
+  name: { example: 'Checkout experiment', type: 'string' },
+  status: { example: 'active', type: 'string' },
+  tenantId: { example: 1, type: 'integer' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+});
+
+const trackEventSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  id: { example: 8, type: 'integer' },
+  javascript: { example: 'return { orderId: 123 };', type: 'string' },
+  multipleTimes: { example: false, type: 'boolean' },
+  name: { example: 'Purchase completed', type: 'string' },
+  status: { example: 'active', type: 'string' },
+  tenantId: { example: 1, type: 'integer' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+});
+
+const lifecycleHookSchemaShape = objectSchema({
+  createdAt: { example: '2025-01-15T00:00:00.000Z', format: 'date-time', type: 'string' },
+  id: { example: 6, type: 'integer' },
+  javascript: { example: 'async () => true', type: 'string' },
+  name: { example: 'Script initialization', type: 'string' },
+  option: { example: 'scriptStart', type: 'string' },
+  status: { example: 'active', type: 'string' },
+  tenantId: { example: 1, type: 'integer' },
+  updatedAt: { example: '2025-01-16T00:00:00.000Z', format: 'date-time', type: 'string' },
+});
+
+const healthStatusSchemaShape = objectSchema({
+  deployed: { example: true, type: 'boolean' },
+  fileExists: { example: true, type: 'boolean' },
+});
+
 const statusFilter = ApiQuery({
   description: 'Repeat this parameter to filter by status: `active` or `inactive`.',
   enum: commonConstants.arrayStatusArray,
@@ -169,14 +302,17 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Numeric audience identifier.', example: 1, name: 'audienceId', type: Number }),
-      ApiOkResponse({ description: 'Audience and evaluation rules.' }),
+      ApiOkResponse({ description: 'Audience and evaluation rules.', schema: audienceSchemaShape }),
       ApiNotFoundResponse({ description: 'The audience was not found in the specified tenant.' }),
     ],
     getAllForCampaign: [
       ApiOperation({ description: 'Returns audiences available to associate with campaigns.', summary: 'List audiences for campaigns' }),
       ...authorized,
       tenantParam,
-      ApiOkResponse({ description: 'Audiences available for campaigns.' }),
+      ApiOkResponse({
+        description: 'Audiences available for campaigns.',
+        schema: arrayOf(audienceForMenuSchemaShape),
+      }),
     ],
     getMany: [
       ApiOperation({ description: 'Returns the tenant audiences with search, sorting, pagination, and status filtering.', summary: 'List audiences' }),
@@ -193,7 +329,13 @@ export function applySwaggerDocumentation(): void {
       quantityQuery,
       statusFilter,
       emptyTextSearchQuery,
-      ApiOkResponse({ description: 'Audiences and pagination metadata.' }),
+      ApiOkResponse({
+        description: 'Audiences and pagination metadata.',
+        schema: objectSchema({
+          audiences: { items: audienceForMenuSchemaShape, type: 'array' },
+          count: { example: 42, type: 'integer' },
+        }),
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified audience from the tenant.', summary: 'Delete audience' }),
@@ -234,14 +376,56 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Numeric campaign identifier.', example: 1, name: 'campaignId', type: Number }),
-      ApiOkResponse({ description: 'Campaign and complete configuration.' }),
+      ApiOkResponse({
+        content: {
+          'application/json': {
+            examples: {
+              assignedToExecutionGroup: {
+                summary: 'Campaign assigned to an execution group',
+                value: {
+                  createdAt: '2025-01-15T00:00:00.000Z',
+                  executionGroupId: 7,
+                  id: 9,
+                  name: 'Checkout experiment',
+                  requirements: { data: { children: [], operator: 'and' }, type: 'node' },
+                  status: 'active',
+                  tenantId: 1,
+                  triggers: [{ data: {}, id: 1, type: 'pageLoad' }],
+                  updatedAt: '2025-01-16T00:00:00.000Z',
+                  variations: [{ css: '', html: '<p>Variant A</p>', id: 1, javascript: '() => {}', name: 'Variant A', traffic: 100 }],
+                },
+              },
+              notAssignedToExecutionGroup: {
+                summary: 'Campaign without an execution group',
+                value: {
+                  createdAt: '2025-01-15T00:00:00.000Z',
+                  executionGroupId: null,
+                  id: 9,
+                  name: 'Checkout experiment',
+                  requirements: { data: { children: [], operator: 'and' }, type: 'node' },
+                  status: 'active',
+                  tenantId: 1,
+                  triggers: [{ data: {}, id: 1, type: 'pageLoad' }],
+                  updatedAt: '2025-01-16T00:00:00.000Z',
+                  variations: [{ css: '', html: '<p>Variant A</p>', id: 1, javascript: '() => {}', name: 'Variant A', traffic: 100 }],
+                },
+              },
+            },
+            schema: campaignSchemaShape,
+          },
+        },
+        description: 'Campaign and complete configuration. `executionGroupId` is null when the campaign is not assigned to an execution group.',
+      }),
       ApiNotFoundResponse({ description: 'The campaign was not found in the specified tenant.' }),
     ],
     getAllLightVersion: [
       ApiOperation({ description: 'Returns a reduced list of campaigns eligible for an execution group.', summary: 'List campaigns for execution groups' }),
       ...authorized,
       tenantParam,
-      ApiOkResponse({ description: 'Campaigns available for execution groups.' }),
+      ApiOkResponse({
+        description: 'Campaigns available for execution groups.',
+        schema: arrayOf(campaignForMenuSchemaShape),
+      }),
     ],
     getMany: [
       ApiOperation({ description: 'Returns the tenant campaigns with search, sorting, pagination, and status filtering.', summary: 'List campaigns' }),
@@ -253,7 +437,45 @@ export function applySwaggerDocumentation(): void {
       quantityQuery,
       allStatusesFilter,
       emptyTextSearchQuery,
-      ApiOkResponse({ description: 'Campaigns and pagination metadata.' }),
+      ApiOkResponse({
+        content: {
+          'application/json': {
+            examples: {
+              campaignsWithAndWithoutExecutionGroups: {
+                summary: 'Campaigns with and without execution groups',
+                value: {
+                  campaigns: [
+                    {
+                      createdAt: '2025-01-15T00:00:00.000Z',
+                      executionGroupId: null,
+                      id: 9,
+                      name: 'Checkout experiment',
+                      status: 'active',
+                      tenantId: 1,
+                      updatedAt: '2025-01-16T00:00:00.000Z',
+                    },
+                    {
+                      createdAt: '2025-01-15T00:00:00.000Z',
+                      executionGroupId: 7,
+                      id: 10,
+                      name: 'Product page experiment',
+                      status: 'active',
+                      tenantId: 1,
+                      updatedAt: '2025-01-16T00:00:00.000Z',
+                    },
+                  ],
+                  count: 26,
+                },
+              },
+            },
+            schema: objectSchema({
+              campaigns: { items: campaignForMenuSchemaShape, type: 'array' },
+              count: { example: 26, type: 'integer' },
+            }),
+          },
+        },
+        description: 'Campaigns and pagination metadata.',
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified campaign from the tenant.', summary: 'Delete campaign' }),
@@ -298,7 +520,7 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Execution group identifier.', example: 1, name: 'executionGroupId', type: Number }),
-      ApiOkResponse({ description: 'Execution group with its campaigns.' }),
+      ApiOkResponse({ description: 'Execution group with its campaigns.', schema: executionGroupSchemaShape }),
       ApiNotFoundResponse({ description: 'The execution group was not found in the specified tenant.' }),
     ],
     getMany: [
@@ -311,7 +533,13 @@ export function applySwaggerDocumentation(): void {
       quantityQuery,
       allStatusesFilter,
       emptyTextSearchQuery,
-      ApiOkResponse({ description: 'Execution groups and pagination metadata.' }),
+      ApiOkResponse({
+        description: 'Execution groups and pagination metadata.',
+        schema: objectSchema({
+          count: { example: 11, type: 'integer' },
+          executionGroups: { items: executionGroupSchemaShape, type: 'array' },
+        }),
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the execution group from the specified tenant.', summary: 'Delete execution group' }),
@@ -342,11 +570,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Indicates whether the service is deployed and whether the client script exists on disk.', summary: 'Get service health' }),
       ApiOkResponse({
         description: 'Current service status.',
-        schema: {
-          properties: { deployed: { example: true, type: 'boolean' }, fileExists: { example: true, type: 'boolean' } },
-          required: ['deployed', 'fileExists'],
-          type: 'object',
-        },
+        schema: healthStatusSchemaShape,
       }),
     ],
   });
@@ -369,7 +593,7 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 1, name: 'lifecycleHookId', type: Number }),
-      ApiOkResponse({ description: 'Lifecycle hook.' }),
+      ApiOkResponse({ description: 'Lifecycle hook.', schema: lifecycleHookSchemaShape }),
       ApiNotFoundResponse({ description: 'The lifecycle hook was not found in the specified tenant.' }),
     ],
     getMany: [
@@ -382,7 +606,13 @@ export function applySwaggerDocumentation(): void {
       quantityQuery,
       allStatusesFilter,
       emptyTextSearchQuery,
-      ApiOkResponse({ description: 'Lifecycle hooks and pagination metadata.' }),
+      ApiOkResponse({
+        description: 'Lifecycle hooks and pagination metadata.',
+        schema: objectSchema({
+          count: { example: 7, type: 'integer' },
+          lifecycleHooks: { items: lifecycleHookSchemaShape, type: 'array' },
+        }),
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the hook and regenerates the tenant script.', summary: 'Delete lifecycle hook' }),
@@ -422,7 +652,10 @@ export function applySwaggerDocumentation(): void {
     getAll: [
       ApiOperation({ description: 'Returns the roles available for permission management.', summary: 'List roles' }),
       ...authorized,
-      ApiOkResponse({ description: 'List of roles and associated permissions.' }),
+      ApiOkResponse({
+        description: 'List of roles and associated permissions.',
+        schema: arrayOf(roleSchemaShape),
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified role.', summary: 'Delete role' }),
@@ -458,15 +691,18 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the configuration for the specified tenant.', summary: 'Get tenant' }),
       ...authorized,
       tenantParam,
-      ApiOkResponse({ description: 'Tenant details.' }),
+      ApiOkResponse({ description: 'Tenant details.', schema: tenantSchemaShape }),
       ApiNotFoundResponse({ description: 'The tenant was not found.' }),
     ],
-    getAll: [ApiOperation({ description: 'Returns all available tenants.', summary: 'List tenants' }), ApiOkResponse({ description: 'Tenant list.' })],
+    getAll: [
+      ApiOperation({ description: 'Returns all available tenants.', summary: 'List tenants' }),
+      ApiOkResponse({ description: 'Tenant list.', schema: arrayOf(tenantSchemaShape) }),
+    ],
     remove: [
       ApiOperation({ description: 'Deletes the specified tenant.', summary: 'Delete tenant' }),
       ...authorized,
       tenantParam,
-      ApiOkResponse({ description: 'Tenant deleted and returned in the response.' }),
+      ApiOkResponse({ description: 'Tenant deleted and returned in the response.', schema: tenantSchemaShape }),
       ApiNotFoundResponse({ description: 'The tenant was not found.' }),
     ],
     update: [
@@ -478,7 +714,7 @@ export function applySwaggerDocumentation(): void {
         domain: 'shop.example.com',
         name: 'Main store',
       }),
-      ApiOkResponse({ description: 'Tenant updated and returned in the response.' }),
+      ApiOkResponse({ description: 'Tenant updated and returned in the response.', schema: tenantSchemaShape }),
     ],
   });
 
@@ -500,14 +736,14 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Numeric tracking event identifier.', example: 1, name: 'trackEventId', type: Number }),
-      ApiOkResponse({ description: 'Tracking event.' }),
+      ApiOkResponse({ description: 'Tracking event.', schema: trackEventSchemaShape }),
       ApiNotFoundResponse({ description: 'The tracking event was not found in the specified tenant.' }),
     ],
     getAllForAudience: [
       ApiOperation({ description: 'Returns events available for audience rules.', summary: 'List events for audiences' }),
       ...authorized,
       tenantParam,
-      ApiOkResponse({ description: 'Events available for audience rules.' }),
+      ApiOkResponse({ description: 'Events available for audience rules.', schema: arrayOf(trackEventSchemaShape) }),
     ],
     getMany: [
       ApiOperation({ description: 'Returns tenant events with search, sorting, pagination, and status filtering.', summary: 'List tracking events' }),
@@ -519,7 +755,13 @@ export function applySwaggerDocumentation(): void {
       quantityQuery,
       statusFilter,
       ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'purchase', name: 'textSearch', required: false }),
-      ApiOkResponse({ description: 'Tracking events and pagination metadata.' }),
+      ApiOkResponse({
+        description: 'Tracking events and pagination metadata.',
+        schema: objectSchema({
+          count: { example: 18, type: 'integer' },
+          trackEvents: { items: trackEventSchemaShape, type: 'array' },
+        }),
+      }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified event from the tenant.', summary: 'Delete tracking event' }),
@@ -557,13 +799,13 @@ export function applySwaggerDocumentation(): void {
     get: [
       ApiOperation({ description: 'Resolves the authenticated user from the `accessToken` cookie.', summary: 'Get current user' }),
       ApiCookieAuth('cookie'),
-      ApiOkResponse({ description: 'Authenticated user details.' }),
+      ApiOkResponse({ description: 'Authenticated user details.', schema: userSchemaShape }),
       ApiUnauthorizedResponse({ description: 'The cookie is missing, expired, or does not match a user.' }),
     ],
     getAll: [
       ApiOperation({ description: 'Returns users available for administration.', summary: 'List users' }),
       ...authorized,
-      ApiOkResponse({ description: 'List of users and their assigned roles.' }),
+      ApiOkResponse({ description: 'List of users and their assigned roles.', schema: arrayOf(userSchemaShape) }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified user.', summary: 'Delete user' }),

@@ -16,6 +16,7 @@ import { ComponentLanguage } from '../Sidebar/Language';
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -76,9 +77,24 @@ describe('navigation controls', () => {
     expect(screen.getByText('Campaigns')).toBeTruthy();
     expect(screen.getByText('Campaign list')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Ada/ }));
-    expect(screen.getByRole('link', { name: 'Account' })).toBeTruthy();
+    const accountLink = screen.getByRole('link', { name: 'Account' });
+    expect(accountLink).toBeTruthy();
+    accountLink.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    fireEvent.click(accountLink);
+    expect(screen.queryByRole('link', { name: 'Account' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Ada/ }));
     fireEvent.click(screen.getByRole('button', { name: /Log out/i }));
     await vi.waitFor(() => expect(apiCaller.sessions.logOut).toHaveBeenCalledOnce());
+  });
+
+  it('redirects home after a successful logout', async () => {
+    vi.spyOn(apiCaller.sessions, 'logOut').mockResolvedValue(new Response(null, { status: 200 }) as Awaited<ReturnType<typeof apiCaller.sessions.logOut>>);
+    vi.stubGlobal('location', { href: '' });
+    renderWithProviders(<Navbar breadcrumb={[]}>Account</Navbar>, [], true);
+    fireEvent.click(screen.getByRole('button', { name: /Ada/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Log out/i }));
+
+    await vi.waitFor(() => expect(location.href).toBe('/'));
   });
 
   it('composes the sidebar and navbar around route content', () => {

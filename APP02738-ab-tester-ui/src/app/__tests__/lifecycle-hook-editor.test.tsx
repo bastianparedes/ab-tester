@@ -19,6 +19,7 @@ vi.mock('@monaco-editor/react', () => ({
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -101,5 +102,13 @@ describe('lifecycle hook editor', () => {
 
     await waitFor(() => expect(update).toHaveBeenCalledOnce());
     await waitFor(() => expect(location.href).toBe('/tenants/12/lifecycle-hooks'));
+  });
+
+  it('redirects to the hook list when exiting without saving', () => {
+    vi.stubGlobal('location', { href: '' });
+    renderHookEditor({ javascript: validJavaScript, name: 'Hook', status: 'active', tenantId: 12, trigger: 'scriptStart' });
+    fireEvent.click(screen.getByRole('button', { name: 'Exit' }));
+
+    expect(location.href).toBe('/tenants/12/lifecycle-hooks');
   });
 });

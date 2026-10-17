@@ -8,6 +8,7 @@ import Page from '../page';
 describe('login page', () => {
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -37,5 +38,16 @@ describe('login page', () => {
 
     expect(await screen.findByText('Incorrect username or password. Please try again.')).toBeTruthy();
     expect(logIn).toHaveBeenCalledWith({ body: { email: 'ana@example.test', password: 'incorrect' } });
+  });
+
+  it('redirects to tenants after a successful login', async () => {
+    vi.spyOn(apiCaller.sessions, 'logIn').mockResolvedValue(new Response(null, { status: 200 }) as Awaited<ReturnType<typeof apiCaller.sessions.logIn>>);
+    vi.stubGlobal('location', { href: '' });
+    renderPage();
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ada@example.test' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'correct-password' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
+
+    await vi.waitFor(() => expect(location.href).toBe('/tenants'));
   });
 });

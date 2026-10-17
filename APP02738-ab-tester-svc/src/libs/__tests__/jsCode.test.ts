@@ -70,6 +70,9 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     'async () => {}; suffix',
     'async () => {} /* trailing comment */ extra',
     'async () => { const value = ; }',
+    'async () => { await ; }',
+    'value => {}',
+    ';suffix',
   ])('rejects code that is not exactly one async arrow with parenthesized parameters and a block body: %s', (jsCode) => {
     expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
   });

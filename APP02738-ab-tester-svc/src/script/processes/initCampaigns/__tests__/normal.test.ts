@@ -164,10 +164,38 @@ describe('initExecutionGroups', () => {
     expect(campaignInstances[0].applyChanges).not.toHaveBeenCalled();
   });
 
+  it('runs all campaigns when prior-execution filtering has no saved campaigns', async () => {
+    window.ab_tester.executionGroupsData = [makeGroup({ onlyCampaignsPreviouslyExecuted: true })];
+
+    await initExecutionGroups();
+
+    expect(campaignInstances.map(({ id }) => id)).toEqual([1, 2]);
+  });
+
+  it('still runs end hooks when campaign requirements are not met', async () => {
+    const endedCampaigns: number[] = [];
+    window.ab_tester.campaignsData = [makeCampaign(1, { data: { met: false } })];
+    window.ab_tester.executionGroupsData = [makeGroup({ campaigns: [1] })];
+    window.ab_tester.lifecycleHooksData.campaignEnd = [{ javascript: ({ campaign }: { campaign: { id: number } }) => endedCampaigns.push(campaign.id) } as never];
+
+    await initExecutionGroups();
+
+    expect(cookieState.insertedIds).toEqual([]);
+    expect(campaignInstances[0].applyChanges).not.toHaveBeenCalled();
+    expect(endedCampaigns).toEqual([1]);
+  });
+
   it('does nothing when there are no execution groups', async () => {
     window.ab_tester.executionGroupsData = [];
 
     await expect(initExecutionGroups()).resolves.toBeUndefined();
     expect(campaignInstances).toEqual([]);
+  });
+
+  it('maps configured audiences when the module initializes', async () => {
+    window.ab_tester.audiencesData = [{ id: 5, name: 'Returning visitors', requirements: {} }] as never;
+    vi.resetModules();
+
+    await import('../normal.js');
   });
 });

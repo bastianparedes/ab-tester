@@ -60,6 +60,18 @@ describe('initCampaigns', () => {
     expect(initExecutionGroups).not.toHaveBeenCalled();
   });
 
+  it('uses default requirements when the ignore flag is absent from the forced query', () => {
+    Object.defineProperty(globalThis, 'location', {
+      configurable: true,
+      value: { search: `?${abTesterCampaignId}=12&${abTesterVariationId}=3` },
+    });
+
+    initCampaigns();
+
+    expect(session.has(abTesterIgnoreRequirements)).toBe(false);
+    expect(initSpecificCampaign).toHaveBeenCalledWith({ campaignId: 12, ignoreRequirements: false, variationId: 3 });
+  });
+
   it('loads forced campaign values from session storage when the query is empty', () => {
     session.set(abTesterCampaignId, '8');
     session.set(abTesterVariationId, '4');
@@ -68,6 +80,19 @@ describe('initCampaigns', () => {
     initCampaigns();
 
     expect(initSpecificCampaign).toHaveBeenCalledWith({ campaignId: 8, ignoreRequirements: false, variationId: 4 });
+  });
+
+  it('ignores an incomplete forced campaign query pair', () => {
+    Object.defineProperty(globalThis, 'location', {
+      configurable: true,
+      value: { search: `?${abTesterCampaignId}=12` },
+    });
+
+    initCampaigns();
+
+    expect(session.has(abTesterCampaignId)).toBe(false);
+    expect(initSpecificCampaign).not.toHaveBeenCalled();
+    expect(initExecutionGroups).toHaveBeenCalledOnce();
   });
 
   it('stores the debug panel preference from the query string', () => {

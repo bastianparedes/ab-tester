@@ -43,4 +43,14 @@ describe('DynamicDialog', () => {
     await expect(confirmation).resolves.toBe(true);
     await waitFor(() => expect(screen.queryByText('Delete campaign?')).toBeNull());
   });
+
+  it('renders a dynamic form and resolves cancellation', async () => {
+    const result = useDialogStore.getState().getDataFromForm({ title: 'Edit user' }, { name: { label: 'Name', type: 'text', value: 'Ada' } } as const);
+    renderDialog();
+
+    expect(screen.getByText('Name')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await expect(result).resolves.toBeNull();
+  });
 });

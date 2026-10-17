@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { jsCodeIsSingleAsyncArrowFunction } from '../jsCode';
 
 describe('jsCodeIsSingleAsyncArrowFunction', () => {
+  it('returns false for values that are not source strings', () => {
+    expect(jsCodeIsSingleAsyncArrowFunction(null as unknown as string)).toBe(false);
+  });
+
   it.each([
     'async () => {}',
     'async (input) => {}',

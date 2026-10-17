@@ -24,4 +24,26 @@ describe('PostgreSQL schema', () => {
     expect(updateCallbacks).toHaveLength(5);
     for (const callback of updateCallbacks) expect(callback?.()).toBeInstanceOf(Date);
   });
+
+  it('resolves every declared foreign-key reference', () => {
+    const tables = [
+      schema.tenants,
+      schema.trackEvents,
+      schema.executionGroups,
+      schema.lifecycleHooks,
+      schema.audiences,
+      schema.campaigns,
+      schema.permissions,
+      schema.roles,
+      schema.rolePermissions,
+      schema.users,
+      schema.userRoles,
+    ];
+    const foreignKeys = tables.flatMap((table) => getTableConfig(table).foreignKeys);
+
+    expect(foreignKeys.length).toBeGreaterThan(0);
+    for (const foreignKey of foreignKeys) {
+      expect(foreignKey.reference().foreignColumns).toHaveLength(1);
+    }
+  });
 });

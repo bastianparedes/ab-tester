@@ -45,11 +45,32 @@ describe('ExecutionGroupCookieManager', () => {
     expect(manager.insertCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [12] } } });
   });
 
+  it('initializes a campaign list for an existing group when inserting', () => {
+    saveCookie({ executionGroups: { 7: {} } });
+    const manager = new ExecutionGroupCookieManager(7);
+
+    expect(manager.insertCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [12] } } });
+  });
+
   it('deletes an existing campaign and leaves other ids intact', () => {
     saveCookie({ executionGroups: { 7: { campaignsExecuted: [12, 13] } } });
     const manager = new ExecutionGroupCookieManager(7);
 
     expect(manager.deleteCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [13] } } });
+  });
+
+  it('initializes missing group state when deleting a campaign', () => {
+    saveCookie({ executionGroups: {} });
+    const manager = new ExecutionGroupCookieManager(7);
+
+    expect(manager.deleteCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [] } } });
+  });
+
+  it('initializes a missing execution-groups object when deleting', () => {
+    saveCookie({});
+    const manager = new ExecutionGroupCookieManager(7);
+
+    expect(manager.deleteCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [] } } });
   });
 
   it('returns an empty campaign list for missing groups', () => {
@@ -64,5 +85,16 @@ describe('ExecutionGroupCookieManager', () => {
     const manager = new ExecutionGroupCookieManager(7);
 
     expect(manager.getCampaignIds()).toEqual([12, 13]);
+  });
+
+  it('recovers from cookie JSON with an invalid shape for every operation', () => {
+    saveCookie(null);
+    const manager = new ExecutionGroupCookieManager(7);
+
+    expect(manager.insertCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [12] } } });
+    saveCookie(null);
+    expect(manager.deleteCampaignId(12)).toEqual({ executionGroups: { 7: { campaignsExecuted: [] } } });
+    saveCookie(null);
+    expect(manager.getCampaignIds()).toEqual([]);
   });
 });

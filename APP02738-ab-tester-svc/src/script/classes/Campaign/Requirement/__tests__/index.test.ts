@@ -29,11 +29,31 @@ describe('campaign Requirement', () => {
     await expect(createRequirement([child]).evaluate()).resolves.toBe(true);
   });
 
+  it('matches desktop device requirements', async () => {
+    vi.stubGlobal('navigator', { userAgent: 'Desktop browser' });
+
+    await expect(createRequirement([{ data: { comparator: 'equal', device: 'desktop' }, type: 'device' }]).evaluate()).resolves.toBe(true);
+  });
+
   it('evaluates a matching audience and returns false for an unknown audience', async () => {
     const audiences = [{ evaluate: async () => true, id: 4 }];
 
     await expect(createRequirement([{ data: { id: 4 }, type: 'audience' }], 'and', audiences).evaluate()).resolves.toBe(true);
     await expect(createRequirement([{ data: { id: 5 }, type: 'audience' }], 'and', audiences).evaluate()).resolves.toBe(false);
+  });
+
+  it('evaluates nested nodes and returns false when an audience rejects', async () => {
+    await expect(createRequirement([{ data: { children: [], operator: 'and' }, type: 'node' }]).evaluate()).resolves.toBe(true);
+    const audiences = [
+      {
+        evaluate: async () => {
+          throw new Error('audience evaluation failed');
+        },
+        id: 4,
+      },
+    ];
+
+    await expect(createRequirement([{ data: { id: 4 }, type: 'audience' }], 'and', audiences).evaluate()).resolves.toBe(false);
   });
 
   it('converts custom requirement results to booleans and catches callback errors', async () => {
@@ -79,5 +99,9 @@ describe('campaign Requirement', () => {
     },
   ])('combines child requirements with $operator', async ({ children, operator, expected }) => {
     await expect(createRequirement(children, operator).evaluate()).resolves.toBe(expected);
+  });
+
+  it('rejects unsupported logical operators', async () => {
+    await expect(createRequirement([], 'xor' as never).evaluate()).resolves.toBe(false);
   });
 });

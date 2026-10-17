@@ -460,4 +460,56 @@ describe('server route pages', () => {
 
     await expect(ExecutionGroupDetailPage({ params: Promise.resolve({ executionGroupId: '6', tenantId: '12' }) })).rejects.toBeTruthy();
   });
+
+  it('redirects admin routes when their required data cannot be loaded', async () => {
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue({ ok: false });
+    await expect(AdminRolesPage()).rejects.toBeTruthy();
+    vi.restoreAllMocks();
+
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(successfulResponse([tenant]));
+    vi.spyOn(apiCaller.roles, 'getAll').mockResolvedValue({ ok: false });
+    await expect(AdminRolesPage()).rejects.toBeTruthy();
+
+    vi.restoreAllMocks();
+    vi.spyOn(apiCaller.users, 'getAll').mockResolvedValue({ ok: false });
+    await expect(AdminUsersPage()).rejects.toBeTruthy();
+    vi.restoreAllMocks();
+
+    vi.spyOn(apiCaller.users, 'getAll').mockResolvedValue(successfulResponse([]));
+    vi.spyOn(apiCaller.roles, 'getAll').mockResolvedValue({ ok: false });
+    await expect(AdminUsersPage()).rejects.toBeTruthy();
+  });
+
+  it('redirects global and tenant list routes when their data cannot be loaded', async () => {
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue({ ok: false });
+    await expect(TenantsPage()).rejects.toBeTruthy();
+    vi.restoreAllMocks();
+
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(AudienceListPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+    await expect(CampaignListPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+    await expect(ExecutionGroupsPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+    await expect(LifecycleHooksPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+    await expect(TrackEventsPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+  });
+
+  it.each(['tenant', 'script'] as const)('redirects the script route when %s data fails', async (failedResource) => {
+    const getTenant = vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
+    const getScript = vi.spyOn(apiCaller.scripts, 'get').mockResolvedValue(successfulResponse('script'));
+    if (failedResource === 'tenant') getTenant.mockResolvedValue({ ok: false });
+    if (failedResource === 'script') getScript.mockResolvedValue({ ok: false });
+
+    await expect(ScriptPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+  });
+
+  it.each(['tenant', 'audiences'] as const)('redirects campaign detail when %s data fails', async (failedResource) => {
+    const getTenant = vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
+    const getCampaign = vi.spyOn(apiCaller.campaigns, 'get').mockResolvedValue(successfulResponse({ id: 5, name: 'Campaign' }));
+    const getAudiences = vi.spyOn(apiCaller.audiences, 'getAllForCampaign').mockResolvedValue(successfulResponse({ audiences: [] }));
+    if (failedResource === 'tenant') getTenant.mockResolvedValue({ ok: false });
+    if (failedResource === 'audiences') getAudiences.mockResolvedValue({ ok: false });
+
+    await expect(CampaignDetailPage({ params: Promise.resolve({ campaignId: '5', tenantId: '12' }) })).rejects.toBeTruthy();
+    if (failedResource === 'tenant') expect(getCampaign).not.toHaveBeenCalled();
+  });
 });

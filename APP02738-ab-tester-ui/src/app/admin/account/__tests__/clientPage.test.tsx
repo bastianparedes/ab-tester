@@ -45,6 +45,10 @@ describe('account settings page', () => {
     const saveButtons = screen.getAllByRole('button', { name: 'Save changes' });
     const passwordInputs = container.querySelectorAll('input[type="password"]');
 
+    fireEvent.change(passwordInputs[1], { target: { value: '' } });
+    fireEvent.change(passwordInputs[2], { target: { value: '' } });
+    expect((saveButtons[1] as HTMLButtonElement).disabled).toBe(true);
+
     fireEvent.change(passwordInputs[0], { target: { value: 'old-secret' } });
     fireEvent.change(passwordInputs[1], { target: { value: 'new-secret' } });
     fireEvent.change(passwordInputs[2], { target: { value: 'different-secret' } });
@@ -53,6 +57,11 @@ describe('account settings page', () => {
 
     fireEvent.change(passwordInputs[2], { target: { value: 'new-secret' } });
     expect((saveButtons[1] as HTMLButtonElement).disabled).toBe(false);
+    const visibilityToggle = passwordInputs[0].parentElement?.querySelector('button') as HTMLButtonElement;
+    fireEvent.click(visibilityToggle);
+    expect((passwordInputs[0] as HTMLInputElement).type).toBe('text');
+    fireEvent.click(visibilityToggle);
+    expect((passwordInputs[0] as HTMLInputElement).type).toBe('password');
     fireEvent.click(saveButtons[1]);
 
     await waitFor(() => expect(updatePassword).toHaveBeenCalledWith({ body: { newPassword: 'new-secret', oldPassword: 'old-secret' } }));

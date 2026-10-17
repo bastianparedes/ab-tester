@@ -59,4 +59,19 @@ describe('auth proxy', () => {
 
     expect(response.cookies.getAll()).toEqual([]);
   });
+
+  it('ignores unsupported SameSite values and cookie attributes', async () => {
+    vi.spyOn(apiCaller.sessions, 'refreshAccessToken').mockResolvedValue(
+      new Response(null, {
+        headers: {
+          'set-cookie': 'accessToken=next-access; SameSite=unsupported; Priority=High',
+        },
+      }),
+    );
+
+    const response = await proxy(requestWithCookies(`${sharedConstants.cookieNames.refreshToken}=old-refresh`));
+
+    expect(response.cookies.get(sharedConstants.cookieNames.accessToken)?.value).toBe('next-access');
+    expect(response.headers.get('set-cookie')).not.toContain('SameSite');
+  });
 });

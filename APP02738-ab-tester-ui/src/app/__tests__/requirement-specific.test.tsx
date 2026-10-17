@@ -5,6 +5,7 @@ import type { TypeCampaignWithOptionalId, TypeCustomRequirement } from '@ab-test
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
+import AudienceRequirements from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements';
 import BooleanAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/BooleanComponent';
 import NumberAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/NumberComponent';
 import StringAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/StringComponent';
@@ -76,9 +77,16 @@ describe('campaign requirement-specific controls', () => {
   it('updates a device condition', () => {
     const requirement: TypeCampaignWithOptionalId['requirements']['data']['children'][number] = { data: { comparator: 'equal', device: 'desktop' }, type: 'device' };
     const { container } = renderWithTranslations(<DeviceRequirement requirement={requirement} setCampaign={setCampaign} />);
+    fireEvent.change(container.querySelectorAll('select')[0], { target: { value: 'isNot' } });
     fireEvent.change(container.querySelectorAll('select')[1], { target: { value: 'mobile' } });
 
-    expect(requirement.data.device).toBe('mobile');
+    expect(requirement.data).toEqual({ comparator: 'isNot', device: 'mobile' });
+  });
+
+  it('rejects a non-device requirement', () => {
+    const requirement = { data: { comparator: 'contains', value: '/' }, type: 'url' } as unknown as TypeCampaignWithOptionalId['requirements']['data']['children'][number];
+
+    expect(() => renderWithTranslations(<DeviceRequirement requirement={requirement} setCampaign={setCampaign} />)).toThrow('Type device expected in requirement');
   });
 
   it.each(['exists', 'doesNotExist'] as const)('hides storage values for the %s comparator', (comparator) => {
@@ -141,10 +149,34 @@ describe('campaign requirement-specific controls', () => {
 
   it('updates URL comparison values', () => {
     const requirement: TypeCampaignWithOptionalId['requirements']['data']['children'][number] = { data: { comparator: 'contains', value: '/shop' }, type: 'url' };
-    renderWithTranslations(<UrlRequirement requirement={requirement} setCampaign={setCampaign} />);
+    const { container } = renderWithTranslations(<UrlRequirement requirement={requirement} setCampaign={setCampaign} />);
+    fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: 'doesNotContain' } });
     fireEvent.change(screen.getByPlaceholderText('Value'), { target: { value: '/sale' } });
 
-    expect(requirement.data.value).toBe('/sale');
+    expect(requirement.data).toEqual({ comparator: 'doesNotContain', value: '/sale' });
+  });
+
+  it('rejects a non-URL requirement', () => {
+    const requirement = {
+      data: { comparator: 'equal', device: 'desktop' },
+      type: 'device',
+    } as unknown as TypeCampaignWithOptionalId['requirements']['data']['children'][number];
+
+    expect(() => renderWithTranslations(<UrlRequirement requirement={requirement} setCampaign={setCampaign} />)).toThrow('Type url expected in requirement');
+  });
+
+  it('rejects a non-audience requirement', () => {
+    const requirement = { data: { comparator: 'equal', value: '/' }, type: 'url' } as unknown as TypeCampaignWithOptionalId['requirements']['data']['children'][number];
+
+    expect(() => renderWithTranslations(<AudienceRequirement audiences={[]} requirement={requirement} setCampaign={setCampaign} />)).toThrow(
+      'Type audience expected in requirement',
+    );
+  });
+
+  it('rejects a non-custom requirement', () => {
+    const requirement = { data: { comparator: 'equal', value: '/' }, type: 'url' } as unknown as TypeCampaignWithOptionalId['requirements']['data']['children'][number];
+
+    expect(() => renderWithTranslations(<CustomRequirement requirement={requirement} setCampaign={setCampaign} />)).toThrow('Type custom expected in requirement');
   });
 });
 
@@ -172,15 +204,80 @@ describe('audience requirement-specific controls', () => {
     expect(requirement.data.value).toBe(24);
   });
 
+  it('normalizes an empty number constraint to zero', () => {
+    const requirement: TypeAudienceWithOptionalId['requirements']['data']['children'][number] = {
+      data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1, value: 10 },
+      type: 'number',
+    };
+    const { container } = renderWithTranslations(<NumberAudienceRequirement requirement={requirement} setAudience={setAudience} />);
+    fireEvent.change(container.querySelector('input[type="number"]') as HTMLInputElement, { target: { value: '' } });
+
+    expect(requirement.data.value).toBe(0);
+  });
+
   it('converts boolean selector values to booleans', () => {
     const requirement: TypeAudienceWithOptionalId['requirements']['data']['children'][number] = {
       data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1, value: true },
       type: 'boolean',
     };
     const { container } = renderWithTranslations(<BooleanAudienceRequirement requirement={requirement} setAudience={setAudience} />);
+    fireEvent.change(container.querySelectorAll('select')[0], { target: { value: 'equal' } });
     fireEvent.change(container.querySelectorAll('select')[1], { target: { value: '0' } });
 
     expect(requirement.data.value).toBe(false);
+  });
+
+  it('rejects requirements with mismatched audience-specific types', () => {
+    const stringRequirement = {
+      data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1, value: '' },
+      type: 'string',
+    };
+    const booleanRequirement = {
+      data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1, value: true },
+      type: 'boolean',
+    };
+
+    expect(() =>
+      renderWithTranslations(
+        <BooleanAudienceRequirement
+          requirement={stringRequirement as unknown as TypeAudienceWithOptionalId['requirements']['data']['children'][number]}
+          setAudience={setAudience}
+        />,
+      ),
+    ).toThrow('Type boolean expected in requirement');
+    expect(() =>
+      renderWithTranslations(
+        <NumberAudienceRequirement
+          requirement={stringRequirement as unknown as TypeAudienceWithOptionalId['requirements']['data']['children'][number]}
+          setAudience={setAudience}
+        />,
+      ),
+    ).toThrow('Type number expected in requirement');
+    expect(() =>
+      renderWithTranslations(
+        <StringAudienceRequirement
+          requirement={booleanRequirement as unknown as TypeAudienceWithOptionalId['requirements']['data']['children'][number]}
+          setAudience={setAudience}
+        />,
+      ),
+    ).toThrow('Type string expected in requirement');
+  });
+
+  it('renders the audience restrictions section and hides controls for an any requirement', () => {
+    const anyRequirement: TypeAudienceWithOptionalId['requirements']['data']['children'][number] = {
+      data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1 },
+      type: 'any',
+    };
+    renderWithTranslations(
+      <AudienceRequirements
+        requirements={{ data: { children: [anyRequirement], operator: 'and' }, type: 'node' }}
+        setAudience={setAudience}
+        trackEvents={[{ id: 1, name: 'Checkout' }]}
+      />,
+    );
+    expect(screen.getByText('Restrictions')).toBeTruthy();
+    expect(screen.getByText('Restrictions')).toBeTruthy();
+    expect(screen.queryByPlaceholderText('Value')).toBeNull();
   });
 });
 

@@ -121,12 +121,15 @@ describe('DbService', () => {
   it('looks up login credentials and supports the configured super admin', async () => {
     const { service, userRepository } = createService();
     const loginUser = { email: 'ada@example.test', id: 7, passwordHash: 'hash' };
-    userRepository.getForLogin.mockResolvedValueOnce(loginUser).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
+    userRepository.getForLogin.mockResolvedValueOnce(loginUser).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
     env.SUPER_ADMIN_EMAIL = 'admin@example.test';
-    env.SUPER_ADMIN_PASSWORD = 'secret';
 
     await expect(service.users.getForLogin({ email: loginUser.email })).resolves.toBe(loginUser);
 
+    const adminWithoutConfiguredPassword = await service.users.getForLogin({ email: 'admin@example.test' });
+    expect(adminWithoutConfiguredPassword?.passwordHash).toBeTruthy();
+
+    env.SUPER_ADMIN_PASSWORD = 'secret';
     const admin = await service.users.getForLogin({ email: 'admin@example.test' });
     expect(admin).toMatchObject({ email: 'admin@example.test', id: superAdminId });
     expect(admin?.passwordHash).toBeTruthy();

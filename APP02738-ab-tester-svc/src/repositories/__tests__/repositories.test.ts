@@ -32,6 +32,7 @@ import { AudienceRepository } from '../audience.repository';
 import { CampaignRepository } from '../campaign.repository';
 import { ExecutionGroupRepository } from '../executionGroup.repository';
 import { LifecycleHookRepository } from '../lifecycleHook.repository';
+import * as schema from '../postgres/schema';
 import { RoleRepository } from '../role.repository';
 import { TenantRepository } from '../tenant.repository';
 import { TrackEventRepository } from '../trackEvent.repository';
@@ -106,6 +107,8 @@ describe('repositories', () => {
     await expect(repository.getAllForExecutionGroup({ tenantId: 3 })).resolves.toEqual([campaign]);
     await expect(repository.get({ campaignId: 2, tenantId: 3 })).resolves.toBe(campaign);
     await expect(repository.getAllCampaignsForScript({ tenantId: 3 })).resolves.toEqual([campaign]);
+    const whereCampaigns = db.query.campaigns.findMany.mock.calls.at(-1)?.[0].where as (table: typeof schema.campaigns) => unknown;
+    expect(whereCampaigns(schema.campaigns)).toBeDefined();
 
     db.query.campaigns.findMany.mockResolvedValueOnce([
       { ...campaign, triggers: [{}], variations: [] },
@@ -224,6 +227,22 @@ describe('repositories', () => {
     await expect(repository.update({ roleId: 2, updates: { description: '', name: 'Editor', permissions: [] } as never })).resolves.toMatchObject({
       permissions: [],
     });
+  });
+
+  it('reuses existing permissions when adding them to a role', async () => {
+    const repository = new RoleRepository();
+    db.query.roles.findFirst.mockResolvedValueOnce({ description: '', id: 2, name: 'Editor', rolePermissions: [] });
+    db.update.mockReturnValueOnce(createQuery([{ id: 2, name: 'Editor' }]));
+    db.query.rolePermissions.findMany.mockResolvedValueOnce([]);
+    db.select.mockReturnValueOnce(createQuery([{ id: 10, name: 'campaign:read' }]));
+    db.insert.mockReturnValueOnce(createQuery(undefined));
+
+    await expect(
+      repository.update({
+        roleId: 2,
+        updates: { description: '', name: 'Editor', permissions: ['campaign:read'] } as never,
+      }),
+    ).resolves.toEqual({ id: 2, name: 'Editor', permissions: ['campaign:read'] });
   });
 
   it('creates, updates, reads, lists, and removes tenants', async () => {

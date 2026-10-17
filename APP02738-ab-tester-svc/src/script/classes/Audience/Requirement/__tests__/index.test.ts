@@ -78,4 +78,8 @@ describe('audience Requirement', () => {
 
     await expect(createRequirement([requirement]).evaluate()).resolves.toBe(false);
   });
+
+  it('rejects unsupported logical operators', async () => {
+    await expect(createRequirement([], 'xor' as never).evaluate()).resolves.toBe(false);
+  });
 });
