@@ -2,7 +2,6 @@ import type { TypeApiLifecycleHooks } from '@ab-tester/constants/types/api/lifec
 import type { TypeLifecycleHook } from '@ab-tester/constants/types/lifecycleHooks';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { jsCodeIsSingleAsyncArrowFunction } from '../libs/jsCode';
@@ -38,11 +37,10 @@ export const getLifecycleHooksQuerySchema = z
       },
       z.array(z.enum(commonConstants.arrayStatusArray)),
     ),
-    textSearch: z.string(),
+    textSearch: z.string().default(''),
   })
   .strip();
 
-@ApiTags('lifecycle-hooks')
 @Controller('tenants/:tenantId/lifecycle-hooks')
 export class LifecycleHookController {
   constructor(

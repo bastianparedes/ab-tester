@@ -1,7 +1,6 @@
 import { TypeApiExecutionGroups } from '@ab-tester/constants/types/api/executionGroups';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import commonConstants from '../libs/sharedConstants';
@@ -24,7 +23,7 @@ export const getExecutionGroupsQuerySchema = z
       },
       z.array(z.enum(commonConstants.arrayStatusArray)),
     ),
-    textSearch: z.string(),
+    textSearch: z.string().default(''),
   })
   .strip();
 
@@ -43,7 +42,6 @@ export const executionGroupSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
-@ApiTags('execution-groups')
 @Controller('tenants/:tenantId/execution-groups')
 export class ExecutionGroupsController {
   constructor(private readonly dbService: DbService) {}

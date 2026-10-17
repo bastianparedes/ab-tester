@@ -22,13 +22,10 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(true);
   });
 
-  it.each([
-    '() => true',
-    'async function () { return true; }',
-    'async () => {}; const extra = true;',
-    'async (input,,) => input',
-    'async () => {',
-  ])('rejects code that is not a single valid async arrow function: %s', (jsCode) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
-  });
+  it.each(['() => true', 'async function () { return true; }', 'async () => {}; const extra = true;', 'async (input,,) => input', 'async () => {'])(
+    'rejects code that is not a single valid async arrow function: %s',
+    (jsCode) => {
+      expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
+    },
+  );
 });

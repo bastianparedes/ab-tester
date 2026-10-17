@@ -15,6 +15,7 @@ describe('controller request schemas', () => {
     const query = { orderBy: 'name', orderDirection: 'asc', page: '1', quantity: '10', textSearch: '' };
 
     expect(schema.parse(query)).toMatchObject({ page: 1, quantity: 10, statusList: [] });
+    expect(schema.parse({ ...query, textSearch: undefined }).textSearch).toBe('');
     expect(schema.parse({ ...query, statusList: 'active' }).statusList).toEqual(['active']);
     expect(schema.parse({ ...query, statusList: ['active'] }).statusList).toEqual(['active']);
   });

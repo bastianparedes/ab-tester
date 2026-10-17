@@ -38,6 +38,11 @@ services:
       SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
       SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
       SERVICE_BASE_URL: ${SERVICE_BASE_URL}
+
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: 10000
+      TSC_WATCHFILE: PriorityPollingInterval
+      TSC_WATCHDIRECTORY: RecursiveDirectoryUsingDynamicPriorityPolling
     ports:
       - "4000:4000"
     depends_on:

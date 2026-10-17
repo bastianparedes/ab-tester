@@ -2,7 +2,6 @@ import { TypeApiUsers } from '@ab-tester/constants/types/api/users';
 import { TypeUser } from '@ab-tester/constants/types/user';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { getTokenData } from '../libs/auth/jwt';
@@ -30,7 +29,6 @@ export const oldUserSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
-@ApiTags('users')
 @Controller('admin/users')
 export class UsersController {
   constructor(private readonly dbService: DbService) {}

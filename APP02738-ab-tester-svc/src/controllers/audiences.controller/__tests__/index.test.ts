@@ -7,6 +7,7 @@ describe('AudiencesController', () => {
     const query = { orderBy: 'name', orderDirection: 'asc', page: '1', textSearch: '' };
 
     expect(getAudiencesQuerySchema.parse(query)).toMatchObject({ page: 1, statusList: [] });
+    expect(getAudiencesQuerySchema.parse({ ...query, textSearch: undefined }).textSearch).toBe('');
     expect(getAudiencesQuerySchema.parse({ ...query, statusList: 'active' }).statusList).toEqual(['active']);
     expect(getAudiencesQuerySchema.parse({ ...query, statusList: ['active'] }).statusList).toEqual(['active']);
   });

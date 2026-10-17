@@ -11,7 +11,7 @@ import { CacheService } from '../../../services/cache.service';
 import { DbService } from '../../../services/db.service';
 import { type Request } from '../../../types/request';
 
-const logInSchema = z
+export const logInSchema = z
   .object({
     email: z.email(),
     password: z.string(),

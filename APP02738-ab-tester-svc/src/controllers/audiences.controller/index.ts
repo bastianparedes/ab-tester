@@ -1,7 +1,6 @@
 import { TypeApiAudiences } from '@ab-tester/constants/types/api/audiences';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import commonConstants from '../../libs/sharedConstants';
@@ -22,18 +21,17 @@ export const getAudiencesQuerySchema = z
       },
       z.array(z.enum(commonConstants.arrayStatusArray)),
     ),
-    textSearch: z.string(),
+    textSearch: z.string().default(''),
   })
   .strip();
 
-const audienceSchema = z
+export const audienceSchema = z
   .object({
     name: z.string(),
     requirements: NodeRequirementSchema,
   })
   .strip();
 
-@ApiTags('audiences')
 @Controller('tenants/:tenantId/audiences')
 export class AudiencesController {
   constructor(private readonly dbService: DbService) {}

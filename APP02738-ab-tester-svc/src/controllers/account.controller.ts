@@ -1,7 +1,6 @@
 import { TypeApiUsers } from '@ab-tester/constants/types/api/users';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { isPasswordCorrect } from '../libs/auth/password';
@@ -10,14 +9,14 @@ import { type Request } from '../types/request';
 
 /* ---------- SCHEMAS ---------- */
 
-const changePasswordSchema = z
+export const changePasswordSchema = z
   .object({
     newPassword: z.string(),
     oldPassword: z.string(),
   })
   .strip();
 
-const accountSchema = z
+export const accountSchema = z
   .object({
     email: z.string(),
     name: z.string(),
@@ -26,7 +25,6 @@ const accountSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
-@ApiTags('account')
 @Controller('account')
 export class AccountController {
   constructor(private readonly dbService: DbService) {}

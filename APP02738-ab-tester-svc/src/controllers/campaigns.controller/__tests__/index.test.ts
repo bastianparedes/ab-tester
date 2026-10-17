@@ -15,6 +15,7 @@ describe('CampaignsController', () => {
     const query = { orderBy: 'name', orderDirection: 'asc', page: '1', quantity: '10', textSearch: '' };
 
     expect(getCampaignsQuerySchema.parse(query)).toMatchObject({ page: 1, quantity: 10, statusList: [] });
+    expect(getCampaignsQuerySchema.parse({ ...query, textSearch: undefined }).textSearch).toBe('');
     expect(getCampaignsQuerySchema.parse({ ...query, statusList: 'active' }).statusList).toEqual(['active']);
     expect(getCampaignsQuerySchema.parse({ ...query, statusList: ['active'] }).statusList).toEqual(['active']);
   });

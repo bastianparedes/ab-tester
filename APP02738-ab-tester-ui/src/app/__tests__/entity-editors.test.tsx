@@ -113,10 +113,9 @@ describe('campaign editor', () => {
     const update = vi.spyOn(apiCaller.campaigns, 'update').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });
     const existingCampaign = { ...campaign, id: 5, variations: [{ ...campaign.variations[0], traffic: 100 }] };
-    const { container } = renderWithPermissions(
-      <CampaignEditor audiences={[]} campaignId={5} initialCampaign={existingCampaign} tenantId={12} />,
-      [getStringPermission({ action: 'update', feature: 'campaign', tenantId: 12 })],
-    );
+    const { container } = renderWithPermissions(<CampaignEditor audiences={[]} campaignId={5} initialCampaign={existingCampaign} tenantId={12} />, [
+      getStringPermission({ action: 'update', feature: 'campaign', tenantId: 12 }),
+    ]);
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: 'inactive' } });
     fireEvent.change(container.querySelector('input[type="text"]') as HTMLInputElement, { target: { value: 'Paused campaign' } });
     expect((container.querySelector('select') as HTMLSelectElement).className).toContain('bg-gray-400');
@@ -132,10 +131,9 @@ describe('campaign editor', () => {
 
   it('uses the fallback status color for an unknown campaign status', () => {
     const unknownStatusCampaign = { ...campaign, status: 'archived' as unknown as TypeCampaignWithOptionalId['status'] };
-    const { container } = renderWithPermissions(
-      <CampaignEditor audiences={[]} campaignId={undefined} initialCampaign={unknownStatusCampaign} tenantId={12} />,
-      [getStringPermission({ action: 'create', feature: 'campaign', tenantId: 12 })],
-    );
+    const { container } = renderWithPermissions(<CampaignEditor audiences={[]} campaignId={undefined} initialCampaign={unknownStatusCampaign} tenantId={12} />, [
+      getStringPermission({ action: 'create', feature: 'campaign', tenantId: 12 }),
+    ]);
 
     expect((container.querySelector('select') as HTMLSelectElement).className).toContain('bg-red-500');
   });

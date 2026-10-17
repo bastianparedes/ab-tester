@@ -153,9 +153,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
     const scopePermissions = (scope === 'global' ? globalPermissions : tenantPermissions).map((permission) =>
       getStringPermission({ ...permission, tenantId: scope === 'global' ? null : scope }),
     );
-    const permissions = active
-      ? [...new Set([...role.permissions, ...scopePermissions])]
-      : role.permissions.filter((permission) => !scopePermissions.includes(permission));
+    const permissions = active ? [...new Set([...role.permissions, ...scopePermissions])] : role.permissions.filter((permission) => !scopePermissions.includes(permission));
     await updatePermissions(role, permissions);
   };
 

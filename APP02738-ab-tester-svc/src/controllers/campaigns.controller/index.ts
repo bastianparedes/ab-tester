@@ -1,7 +1,6 @@
 import { TypeApiCampaigns } from '@ab-tester/constants/types/api/campaigns';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import commonConstants from '../../libs/sharedConstants';
@@ -25,7 +24,7 @@ export const getCampaignsQuerySchema = z
       },
       z.array(z.enum(commonConstants.arrayStatusArray)),
     ),
-    textSearch: z.string(),
+    textSearch: z.string().default(''),
   })
   .strip();
 
@@ -39,7 +38,6 @@ export const campaignSchema = z
   })
   .strip();
 
-@ApiTags('campaigns')
 @Controller('tenants/:tenantId/campaigns')
 export class CampaignsController {
   constructor(private readonly dbService: DbService) {}

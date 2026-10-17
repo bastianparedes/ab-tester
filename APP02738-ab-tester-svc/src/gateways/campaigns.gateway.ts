@@ -1,5 +1,5 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import * as cookie from 'cookie';
+import { parseCookie } from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '../services/auth.service';
 
@@ -20,7 +20,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     const { tenantId, campaignId } = client.handshake.auth;
 
-    const cookies = cookie.parse(client.handshake.headers.cookie || '');
+    const cookies = parseCookie(client.handshake.headers.cookie || '');
     const user = await this.authService.getUserFromToken(cookies);
     if (!user) {
       client.disconnect(true);

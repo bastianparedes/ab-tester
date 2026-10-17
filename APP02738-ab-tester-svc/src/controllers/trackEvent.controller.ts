@@ -1,7 +1,6 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { jsCodeHasCorrectSyntax } from '../libs/jsCode';
@@ -25,7 +24,7 @@ export const getTrackEventQuerySchema = z
       },
       z.array(z.enum(commonConstants.arrayStatusArray)),
     ),
-    textSearch: z.string(),
+    textSearch: z.string().default(''),
   })
   .strip();
 
@@ -44,7 +43,6 @@ export const trackEventSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
-@ApiTags('track-events')
 @Controller('tenants/:tenantId/track-events')
 export class TrackEventController {
   constructor(private readonly dbService: DbService) {}

@@ -107,11 +107,17 @@ describe('campaign list client page', () => {
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'asc' }) })));
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Status/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status', orderDirection: 'asc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Updated at/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })),
+    );
 
     const activeFilter = screen.getByRole('checkbox', { name: 'Active' });
     fireEvent.click(activeFilter);
@@ -121,7 +127,7 @@ describe('campaign list client page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
     await waitFor(() =>
       expect(getMany).toHaveBeenLastCalledWith(
-        expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive', 'active'], quantity: 50, textSearch: 'spring' }) }),
+        expect.objectContaining({ queryParams: expect.objectContaining({ quantity: 50, statusList: ['inactive', 'active'], textSearch: 'spring' }) }),
       ),
     );
 
@@ -254,16 +260,22 @@ describe('execution group list client page', () => {
     expect(screen.getByRole('link').getAttribute('href')).toBe('/tenants/12/execution-groups/undefined');
 
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Updated at/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })),
+    );
 
     const activeFilter = screen.getByRole('checkbox', { name: 'Active' });
     fireEvent.click(activeFilter);
     fireEvent.click(activeFilter);
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive', 'active'], quantity: 50 }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ quantity: 50, statusList: ['inactive', 'active'] }) })),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ page: 1 }) })));
@@ -478,18 +490,26 @@ describe('track event list client page', () => {
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'asc' }) })));
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Status/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status', orderDirection: 'asc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Updated at/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })),
+    );
 
     const activeFilter = screen.getByRole('checkbox', { name: 'Active' });
     fireEvent.click(activeFilter);
     fireEvent.click(activeFilter);
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive', 'active'], quantity: 50 }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ quantity: 50, statusList: ['inactive', 'active'] }) })),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ page: 1 }) })));
@@ -564,17 +584,16 @@ describe('lifecycle hook list client page', () => {
 
   it('covers inactive hooks, status toggles, pagination, create access and cancelled deletion', async () => {
     const inactiveHook = { ...lifecycleHook, id: 16, name: 'Paused script', status: 'inactive' as const };
-    const getMany = vi.spyOn(apiCaller.lifecycleHooks, 'getMany').mockImplementation(async () => successfulResponse({ count: 100, lifecycleHooks: [lifecycleHook, inactiveHook] }));
+    const getMany = vi
+      .spyOn(apiCaller.lifecycleHooks, 'getMany')
+      .mockImplementation(async () => successfulResponse({ count: 100, lifecycleHooks: [lifecycleHook, inactiveHook] }));
     const deleteHook = vi.spyOn(apiCaller.lifecycleHooks, 'delete');
     const { container } = renderWithProviders(
       <>
         <LifecycleHookList tenantId={tenantId} />
         <DynamicDialog />
       </>,
-      [
-        getStringPermission({ action: 'create', feature: 'tenant', tenantId }),
-        getStringPermission({ action: 'delete', feature: 'tenant', tenantId }),
-      ],
+      [getStringPermission({ action: 'create', feature: 'tenant', tenantId }), getStringPermission({ action: 'delete', feature: 'tenant', tenantId })],
     );
     expect(await screen.findByText('Paused script')).toBeTruthy();
     expect(screen.getByRole('link').getAttribute('href')).toBe('/tenants/12/lifecycle-hooks/undefined');
@@ -586,7 +605,9 @@ describe('lifecycle hook list client page', () => {
     fireEvent.click(activeFilter);
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive', 'active'], quantity: 50 }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ quantity: 50, statusList: ['inactive', 'active'] }) })),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ page: 1 }) })));

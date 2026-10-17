@@ -1,7 +1,6 @@
 import { TypeApiTenants } from '@ab-tester/constants/types/api/tenants';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { AuthGuard } from '../guards/auth.guard';
 import { DbService } from '../services/db.service';
@@ -18,7 +17,6 @@ export const tenantSchema = z
 
 /* ---------- CONTROLLER ---------- */
 
-@ApiTags('tenants')
 @Controller('tenants')
 export class TenantsController {
   constructor(private readonly dbService: DbService) {}

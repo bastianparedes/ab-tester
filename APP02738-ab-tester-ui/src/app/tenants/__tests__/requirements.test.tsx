@@ -367,37 +367,31 @@ describe('campaign requirement tree', () => {
     expect(setCampaign).toHaveBeenCalledTimes(2);
   });
 
-  it.each([
-    'audience',
-    'cookie',
-    'custom',
-    'device',
-    'localStorage',
-    'queryParam',
-    'sessionStorage',
-    'url',
-  ] as const)('creates the correct default data when switching to %s', (type) => {
-    const tree = createCampaignTree();
-    const setCampaign = campaignSetter(tree);
-    const { container } = render(
-      <TranslationProvider language="english">
-        <CampaignRequirement
-          audiences={[{ id: 5, name: 'Visitors' }]}
-          grandParentNode={null}
-          id="0"
-          index={0}
-          parentNode={null}
-          requirement={tree}
-          setCampaign={setCampaign}
-        />
-      </TranslationProvider>,
-    );
+  it.each(['audience', 'cookie', 'custom', 'device', 'localStorage', 'queryParam', 'sessionStorage', 'url'] as const)(
+    'creates the correct default data when switching to %s',
+    (type) => {
+      const tree = createCampaignTree();
+      const setCampaign = campaignSetter(tree);
+      const { container } = render(
+        <TranslationProvider language="english">
+          <CampaignRequirement
+            audiences={[{ id: 5, name: 'Visitors' }]}
+            grandParentNode={null}
+            id="0"
+            index={0}
+            parentNode={null}
+            requirement={tree}
+            setCampaign={setCampaign}
+          />
+        </TranslationProvider>,
+      );
 
-    fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: type } });
+      fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: type } });
 
-    expect(tree.data.children[0].type).toBe(type);
-    expect(setCampaign).toHaveBeenCalledOnce();
-  });
+      expect(tree.data.children[0].type).toBe(type);
+      expect(setCampaign).toHaveBeenCalledOnce();
+    },
+  );
 
   it('removes storage values when its comparator only checks existence', () => {
     const tree = createCampaignTree();

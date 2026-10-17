@@ -260,16 +260,12 @@ describe('server route pages', () => {
 
   it('redirects campaign creation when tenant or audience data cannot be loaded', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
-    await expect(
-      CampaignCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
-    ).rejects.toBeTruthy();
+    await expect(CampaignCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) })).rejects.toBeTruthy();
 
     vi.restoreAllMocks();
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
     vi.spyOn(apiCaller.audiences, 'getAllForCampaign').mockResolvedValue({ ok: false });
-    await expect(
-      CampaignCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
-    ).rejects.toBeTruthy();
+    await expect(CampaignCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) })).rejects.toBeTruthy();
   });
 
   it('creates a new track event with its default script and status', async () => {
@@ -437,9 +433,7 @@ describe('server route pages', () => {
     if (failedResource === 'tenant') getTenant.mockResolvedValue({ ok: false });
     if (failedResource === 'track events') getTrackEvents.mockResolvedValue({ ok: false });
 
-    await expect(
-      AudienceCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
-    ).rejects.toBeTruthy();
+    await expect(AudienceCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) })).rejects.toBeTruthy();
   });
 
   it.each(['tenant', 'lifecycle hook'] as const)('redirects lifecycle detail when %s data fails', async (failedResource) => {

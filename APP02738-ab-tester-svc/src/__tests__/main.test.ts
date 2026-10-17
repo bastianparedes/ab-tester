@@ -25,7 +25,7 @@ vi.mock('@nestjs/swagger', async (importOriginal) => {
   return {
     ...original,
     DocumentBuilder: class {
-      addBearerAuth() {
+      addTag() {
         return this;
       }
       addCookieAuth() {
@@ -75,7 +75,18 @@ describe('application bootstrap', () => {
     expect(app.useGlobalPipes).toHaveBeenCalledOnce();
     expect(app.use).toHaveBeenCalledOnce();
     expect(SwaggerModule.createDocument).toHaveBeenCalledOnce();
-    expect(SwaggerModule.setup).toHaveBeenCalledWith('docs', app, document);
+    expect(SwaggerModule.setup).toHaveBeenCalledWith('docs', app, document, {
+      customSiteTitle: 'AB Tester API | Swagger',
+      swaggerOptions: {
+        deepLinking: true,
+        displayRequestDuration: true,
+        docExpansion: 'list',
+        filter: true,
+        operationsSorter: 'alpha',
+        persistAuthorization: true,
+        tagsSorter: 'alpha',
+      },
+    });
     expect(redisAdapter.connectToRedis).toHaveBeenCalledOnce();
     expect(app.useWebSocketAdapter).toHaveBeenCalledOnce();
     expect(app.enableCors).toHaveBeenCalledWith({ credentials: true, origin: true });

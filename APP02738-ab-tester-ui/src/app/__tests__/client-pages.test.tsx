@@ -74,10 +74,7 @@ describe('audience list client page', () => {
         <AudienceList tenantId={tenantId} />
         <DynamicDialog />
       </>,
-      [
-        getStringPermission({ action: 'create', feature: 'audience', tenantId }),
-        getStringPermission({ action: 'delete', feature: 'audience', tenantId }),
-      ],
+      [getStringPermission({ action: 'create', feature: 'audience', tenantId }), getStringPermission({ action: 'delete', feature: 'audience', tenantId })],
     );
     expect(await screen.findByText('Visitors')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Create new audience' }).getAttribute('href')).toBe('/tenants/12/audiences/undefined');
@@ -85,14 +82,18 @@ describe('audience list client page', () => {
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'asc' }) })));
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })),
+    );
     fireEvent.click(screen.getByRole('columnheader', { name: /Updated at/ }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'updatedAt', orderDirection: 'asc' }) })),
+    );
 
     fireEvent.change(container.querySelector('input[type="text"]') as HTMLInputElement, { target: { value: 'visitor' } });
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ textSearch: 'visitor', quantity: 50 }) })));
+    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ quantity: 50, textSearch: 'visitor' }) })));
 
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ page: 1 }) })));

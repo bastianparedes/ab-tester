@@ -47,7 +47,7 @@ export class DbService {
           if (cached) return cached;
         }
 
-        if (!!env.SUPER_ADMIN_EMAIL && args.userId === superAdminId) {
+        if (env.SUPER_ADMIN_EMAIL && args.userId === superAdminId) {
           const user = {
             email: env.SUPER_ADMIN_EMAIL,
             id: superAdminId,
