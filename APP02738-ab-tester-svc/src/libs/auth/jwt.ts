@@ -7,7 +7,7 @@ type TokenData = { valid: true; id: TypeUser['id']; secondsLeft: number } | { va
 type Payload = { id: TypeUser['id']; purpose: TokenPurpose };
 type FullPayload = Payload & { iat: number; exp: number };
 
-export const secondsAccessTokenIsValid = 60 * 5; // 5 minutes
+export const secondsAccessTokenIsValid = 60 * 15; // 15 minutes
 export const secondsRefreshTokenIsValid = 60 * 60 * 24; // 1 day
 
 export const getTokenData = ({ token, purpose }: { token: string; purpose: TokenPurpose }): TokenData => {

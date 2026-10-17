@@ -56,7 +56,7 @@ With the backend running, open the interactive Swagger UI at
 [`http://localhost:4000/docs`](http://localhost:4000/docs). The OpenAPI document is
 available at [`http://localhost:4000/docs-json`](http://localhost:4000/docs-json).
 
-Use **Authorize** in Swagger UI to provide a JWT bearer token or the `access-token`
+Use **Authorize** in Swagger UI to provide a JWT bearer token or the `refreshToken`
 cookie for protected endpoints.
 
 ## 🔄 Development

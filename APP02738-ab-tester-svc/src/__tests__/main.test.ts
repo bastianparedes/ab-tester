@@ -83,7 +83,7 @@ describe('application bootstrap', () => {
         docExpansion: 'list',
         filter: true,
         operationsSorter: 'alpha',
-        persistAuthorization: true,
+        persistAuthorization: false,
         tagsSorter: 'alpha',
       },
     });

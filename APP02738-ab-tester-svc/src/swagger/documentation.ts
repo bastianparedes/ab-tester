@@ -53,11 +53,72 @@ const authorized = [
   ApiForbiddenResponse({ description: 'The user is not authorized to perform this operation.' }),
 ];
 
-const tenantParam = ApiParam({ description: 'Numeric tenant identifier.', example: 12, name: 'tenantId', type: Number });
+const tenantOperations = ['asc' as const, 'desc' as const];
+const campaignStatuses = ['active' as const, 'inactive' as const];
+const tenantParam = ApiParam({ description: 'Numeric tenant identifier.', example: 1, name: 'tenantId', type: Number });
+const pageQuery = ApiQuery({
+  description: 'Page number (integer).',
+  name: 'page',
+  required: true,
+  schema: { default: 0, example: 0, type: 'integer' },
+});
+const quantityQuery = ApiQuery({
+  description: 'Number of results per page.',
+  name: 'quantity',
+  required: true,
+  schema: { default: 25, example: 25, type: 'integer' },
+});
+const campaignOrderByQuery = ApiQuery({
+  description: 'Sort field.',
+  name: 'orderBy',
+  required: true,
+  schema: { default: 'updatedAt', enum: ['status', 'name', 'id', 'updatedAt'], type: 'string' },
+});
+const executionGroupOrderByQuery = ApiQuery({
+  description: 'Sort field.',
+  name: 'orderBy',
+  required: true,
+  schema: { default: 'id', enum: ['status', 'name', 'id', 'updatedAt'], type: 'string' },
+});
+const lifecycleHookOrderByQuery = ApiQuery({
+  description: 'Sort field.',
+  name: 'orderBy',
+  required: true,
+  schema: { default: 'updatedAt', enum: ['id', 'name', 'option', 'status', 'updatedAt'], type: 'string' },
+});
+const ascendingOrderDirectionQuery = ApiQuery({
+  description: 'Sort direction.',
+  name: 'orderDirection',
+  required: true,
+  schema: { default: 'asc', enum: tenantOperations, type: 'string' },
+});
+const descendingOrderDirectionQuery = ApiQuery({
+  description: 'Sort direction.',
+  name: 'orderDirection',
+  required: true,
+  schema: { default: 'desc', enum: tenantOperations, type: 'string' },
+});
+const allStatusesFilter = ApiQuery({
+  description: 'Repeat this parameter to filter by status: `active` or `inactive`.',
+  explode: true,
+  name: 'statusList',
+  required: false,
+  schema: {
+    default: [...campaignStatuses],
+    items: { enum: [...campaignStatuses], type: 'string' },
+    type: 'array',
+  },
+  style: 'form',
+});
+const emptyTextSearchQuery = ApiQuery({
+  description: 'Optional text to search by name.',
+  name: 'textSearch',
+  required: false,
+  schema: { default: '', example: '', type: 'string' },
+});
 const emptyResponse = { schema: { example: {}, type: 'object' as const } };
 const created = (description: string) => ApiCreatedResponse({ description, ...emptyResponse });
 const ok = (description: string) => ApiOkResponse({ description, ...emptyResponse });
-const tenantOperations = ['asc', 'desc'] as const;
 const statusFilter = ApiQuery({
   description: 'Repeat this parameter to filter by status: `active` or `inactive`.',
   enum: commonConstants.arrayStatusArray,
@@ -97,7 +158,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the audience and its requirements tree.', summary: 'Get audience' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric audience identifier.', example: 8, name: 'audienceId', type: Number }),
+      ApiParam({ description: 'Numeric audience identifier.', example: 1, name: 'audienceId', type: Number }),
       ApiOkResponse({ description: 'Audience and evaluation rules.' }),
       ApiNotFoundResponse({ description: 'The audience was not found in the specified tenant.' }),
     ],
@@ -111,25 +172,31 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the tenant audiences with search, sorting, pagination, and status filtering.', summary: 'List audiences' }),
       ...authorized,
       tenantParam,
-      ApiQuery({ description: 'Sort field.', enum: ['status', 'name', 'id', 'updatedAt'], example: 'name', name: 'orderBy' }),
-      ApiQuery({ description: 'Sort direction.', enum: tenantOperations, example: 'asc', name: 'orderDirection' }),
-      ApiQuery({ description: 'Page number (integer).', example: 1, name: 'page', type: Number }),
+      ApiQuery({
+        description: 'Sort field.',
+        name: 'orderBy',
+        required: true,
+        schema: { default: 'updatedAt', enum: ['status', 'name', 'id', 'updatedAt'], type: 'string' },
+      }),
+      descendingOrderDirectionQuery,
+      pageQuery,
+      quantityQuery,
       statusFilter,
-      ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'frequent customers', name: 'textSearch', required: false }),
+      emptyTextSearchQuery,
       ApiOkResponse({ description: 'Audiences and pagination metadata.' }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified audience from the tenant.', summary: 'Delete audience' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric audience identifier.', example: 8, name: 'audienceId', type: Number }),
+      ApiParam({ description: 'Numeric audience identifier.', example: 1, name: 'audienceId', type: Number }),
       ok('Audience deleted.'),
     ],
     update: [
       ApiOperation({ description: 'Replaces the name and evaluation rules.', summary: 'Update audience' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric audience identifier.', example: 8, name: 'audienceId', type: Number }),
+      ApiParam({ description: 'Numeric audience identifier.', example: 1, name: 'audienceId', type: Number }),
       ApiZodBody(audienceSchema, 'Updated audience name and logical requirements tree.', {
         name: 'Repeat customers',
         requirements: { data: { children: [], operator: 'or' }, type: 'node' },
@@ -156,7 +223,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the campaign, its requirements, triggers, and variations.', summary: 'Get campaign' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric campaign identifier.', example: 27, name: 'campaignId', type: Number }),
+      ApiParam({ description: 'Numeric campaign identifier.', example: 1, name: 'campaignId', type: Number }),
       ApiOkResponse({ description: 'Campaign and complete configuration.' }),
       ApiNotFoundResponse({ description: 'The campaign was not found in the specified tenant.' }),
     ],
@@ -170,26 +237,26 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the tenant campaigns with search, sorting, pagination, and status filtering.', summary: 'List campaigns' }),
       ...authorized,
       tenantParam,
-      ApiQuery({ description: 'Sort field.', enum: ['status', 'name', 'id', 'updatedAt'], example: 'name', name: 'orderBy' }),
-      ApiQuery({ description: 'Sort direction.', enum: tenantOperations, example: 'asc', name: 'orderDirection' }),
-      ApiQuery({ description: 'Page number (integer).', example: 1, name: 'page', type: Number }),
-      ApiQuery({ description: 'Number of results per page.', example: 10, name: 'quantity', type: Number }),
-      statusFilter,
-      ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'checkout', name: 'textSearch', required: false }),
+      campaignOrderByQuery,
+      descendingOrderDirectionQuery,
+      pageQuery,
+      quantityQuery,
+      allStatusesFilter,
+      emptyTextSearchQuery,
       ApiOkResponse({ description: 'Campaigns and pagination metadata.' }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the specified campaign from the tenant.', summary: 'Delete campaign' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric campaign identifier.', example: 27, name: 'campaignId', type: Number }),
+      ApiParam({ description: 'Numeric campaign identifier.', example: 1, name: 'campaignId', type: Number }),
       ok('Campaign deleted.'),
     ],
     update: [
       ApiOperation({ description: 'Replaces the campaign configuration, triggers, and variations.', summary: 'Update campaign' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric campaign identifier.', example: 27, name: 'campaignId', type: Number }),
+      ApiParam({ description: 'Numeric campaign identifier.', example: 1, name: 'campaignId', type: Number }),
       ApiZodBody(campaignSchema, 'The variation traffic allocation must total exactly 100. Requirements form a logical tree.', {
         name: 'Updated checkout experiment',
         requirements: { data: { children: [], operator: 'and' }, type: 'node' },
@@ -220,7 +287,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the execution group and its associated campaigns.', summary: 'Get execution group' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Execution group identifier.', example: 34, name: 'executionGroupId', type: Number }),
+      ApiParam({ description: 'Execution group identifier.', example: 1, name: 'executionGroupId', type: Number }),
       ApiOkResponse({ description: 'Execution group with its campaigns.' }),
       ApiNotFoundResponse({ description: 'The execution group was not found in the specified tenant.' }),
     ],
@@ -228,26 +295,26 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the tenant execution groups with sorting, pagination, search, and status filtering.', summary: 'List execution groups' }),
       ...authorized,
       tenantParam,
-      ApiQuery({ description: 'Sort field.', enum: ['status', 'name', 'id', 'updatedAt'], example: 'name', name: 'orderBy' }),
-      ApiQuery({ description: 'Sort direction.', enum: tenantOperations, example: 'asc', name: 'orderDirection' }),
-      ApiQuery({ description: 'Page number (integer).', example: 1, name: 'page', type: Number }),
-      ApiQuery({ description: 'Number of results per page (integer).', example: 10, name: 'quantity', type: Number }),
-      statusFilter,
-      ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'checkout', name: 'textSearch', required: false }),
+      executionGroupOrderByQuery,
+      ascendingOrderDirectionQuery,
+      pageQuery,
+      quantityQuery,
+      allStatusesFilter,
+      emptyTextSearchQuery,
       ApiOkResponse({ description: 'Execution groups and pagination metadata.' }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the execution group from the specified tenant.', summary: 'Delete execution group' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Execution group identifier.', example: 34, name: 'executionGroupId', type: Number }),
+      ApiParam({ description: 'Execution group identifier.', example: 1, name: 'executionGroupId', type: Number }),
       ok('Execution group deleted.'),
     ],
     update: [
       ApiOperation({ description: 'Replaces the execution group configuration and associated campaigns.', summary: 'Update execution group' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Execution group identifier.', example: 34, name: 'executionGroupId', type: Number }),
+      ApiParam({ description: 'Execution group identifier.', example: 1, name: 'executionGroupId', type: Number }),
       ApiZodBody(executionGroupSchema, 'Updated execution group configuration and associated campaigns.', {
         campaignIds: [34],
         name: 'Checkout principal',
@@ -291,7 +358,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the configuration for the specified hook.', summary: 'Get lifecycle hook' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 5, name: 'lifecycleHookId', type: Number }),
+      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 1, name: 'lifecycleHookId', type: Number }),
       ApiOkResponse({ description: 'Lifecycle hook.' }),
       ApiNotFoundResponse({ description: 'The lifecycle hook was not found in the specified tenant.' }),
     ],
@@ -299,19 +366,19 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the tenant hooks with search, sorting, pagination, and status filtering.', summary: 'List lifecycle hooks' }),
       ...authorized,
       tenantParam,
-      ApiQuery({ description: 'Sort field.', enum: ['id', 'name', 'option', 'status', 'updatedAt'], example: 'name', name: 'orderBy' }),
-      ApiQuery({ description: 'Sort direction.', enum: tenantOperations, example: 'asc', name: 'orderDirection' }),
-      ApiQuery({ description: 'Page number (integer).', example: 1, name: 'page', type: Number }),
-      ApiQuery({ description: 'Number of results per page (integer).', example: 10, name: 'quantity', type: Number }),
-      statusFilter,
-      ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'initialization', name: 'textSearch', required: false }),
+      lifecycleHookOrderByQuery,
+      descendingOrderDirectionQuery,
+      pageQuery,
+      quantityQuery,
+      allStatusesFilter,
+      emptyTextSearchQuery,
       ApiOkResponse({ description: 'Lifecycle hooks and pagination metadata.' }),
     ],
     remove: [
       ApiOperation({ description: 'Deletes the hook and regenerates the tenant script.', summary: 'Delete lifecycle hook' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 5, name: 'lifecycleHookId', type: Number }),
+      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 1, name: 'lifecycleHookId', type: Number }),
       ok('Lifecycle hook deleted.'),
       ApiNotFoundResponse({ description: 'The lifecycle hook was not found in the specified tenant.' }),
     ],
@@ -319,7 +386,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Updates the hook and regenerates the tenant script.', summary: 'Update lifecycle hook' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 5, name: 'lifecycleHookId', type: Number }),
+      ApiParam({ description: 'Numeric lifecycle hook identifier.', example: 1, name: 'lifecycleHookId', type: Number }),
       ApiZodBody(lifecycleHookSchema, 'The code must be a single async arrow function. `option` determines when it runs.', {
         javascript: 'async () => true',
         name: 'Script initialization',
@@ -422,7 +489,7 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Returns the configuration for the specified event.', summary: 'Get tracking event' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric tracking event identifier.', example: 19, name: 'trackEventId', type: Number }),
+      ApiParam({ description: 'Numeric tracking event identifier.', example: 1, name: 'trackEventId', type: Number }),
       ApiOkResponse({ description: 'Tracking event.' }),
       ApiNotFoundResponse({ description: 'The tracking event was not found in the specified tenant.' }),
     ],
@@ -438,8 +505,8 @@ export function applySwaggerDocumentation(): void {
       tenantParam,
       ApiQuery({ description: 'Sort field.', enum: ['status', 'name', 'id', 'updatedAt'], example: 'name', name: 'orderBy' }),
       ApiQuery({ description: 'Sort direction.', enum: tenantOperations, example: 'asc', name: 'orderDirection' }),
-      ApiQuery({ description: 'Page number (integer).', example: 1, name: 'page', type: Number }),
-      ApiQuery({ description: 'Number of results per page (integer).', example: 10, name: 'quantity', type: Number }),
+      pageQuery,
+      quantityQuery,
       statusFilter,
       ApiQuery({ default: '', description: 'Optional text to search by name.', example: 'purchase', name: 'textSearch', required: false }),
       ApiOkResponse({ description: 'Tracking events and pagination metadata.' }),
@@ -448,14 +515,14 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Deletes the specified event from the tenant.', summary: 'Delete tracking event' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric tracking event identifier.', example: 19, name: 'trackEventId', type: Number }),
+      ApiParam({ description: 'Numeric tracking event identifier.', example: 1, name: 'trackEventId', type: Number }),
       ok('Tracking event deleted.'),
     ],
     update: [
       ApiOperation({ description: 'Updates the status and code used to extract event data.', summary: 'Update tracking event' }),
       ...authorized,
       tenantParam,
-      ApiParam({ description: 'Numeric tracking event identifier.', example: 19, name: 'trackEventId', type: Number }),
+      ApiParam({ description: 'Numeric tracking event identifier.', example: 1, name: 'trackEventId', type: Number }),
       ApiZodBody(trackEventSchema, 'The `getData` property must contain syntactically valid JavaScript code.', {
         getData: 'return { orderId: 123 };',
         multipleTimes: false,
@@ -478,7 +545,7 @@ export function applySwaggerDocumentation(): void {
       created('User created.'),
     ],
     get: [
-      ApiOperation({ description: 'Resolves the authenticated user from the `access-token` cookie.', summary: 'Get current user' }),
+      ApiOperation({ description: 'Resolves the authenticated user from the `accessToken` cookie.', summary: 'Get current user' }),
       ApiCookieAuth('cookie'),
       ApiOkResponse({ description: 'Authenticated user details.' }),
       ApiUnauthorizedResponse({ description: 'The cookie is missing, expired, or does not match a user.' }),
@@ -519,7 +586,12 @@ export function applySwaggerDocumentation(): void {
       ApiOkResponse({ description: 'Session cookies cleared.', ...emptyResponse }),
     ],
     refreshToken: [
-      ApiOperation({ description: 'Renews the cookies using the refresh token. Returns an empty response if no valid token is available.', summary: 'Refresh session' }),
+      ApiOperation({
+        description:
+          'Reads the `refreshToken` cookie, rotates it, and sets new `refreshToken` and `accessToken` HttpOnly cookies. Call this endpoint before protected endpoints when you need a fresh access token. The browser stores the returned cookies automatically. Returns an empty response if no valid refresh token is available.',
+        summary: 'Refresh session',
+      }),
+      ApiCookieAuth('cookie'),
       ApiOkResponse({ description: 'Session refreshed when the refresh token is valid.', ...emptyResponse }),
     ],
   });
