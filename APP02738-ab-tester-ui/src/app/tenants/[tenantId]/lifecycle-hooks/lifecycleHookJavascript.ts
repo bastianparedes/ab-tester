@@ -1,45 +1,12 @@
 import type { TypeLifecycleHookOption } from '@ab-tester/constants/types/constants';
 
 const initialJavascriptByTrigger: Record<TypeLifecycleHookOption, string> = {
-  scriptStart: `
-/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
-
-async () => {
-  /* write your code here */
-}
-`.trim(),
-  trackEventStart: `
-/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
-
-async () => {
-  /* write your code here */
-}
-`.trim(),
-  trackEventEnd: `
-/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
-
-async () => {
-  /* write your code here */
-}
-`.trim(),
-  executionGroupStart: `
+  campaignEnd: `
 /* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
 
 /**
   * @param {{
-  *   executionGroup?: { id: number, name: string }
-  * }} props
-  */
-async (props) => {
-  /* write your code here */
-}
-`.trim(),
-  executionGroupEnd: `
-/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
-
-/**
-  * @param {{
-  *   executionGroup?: { id: number, name: string }
+  *   campaign?: { id: number, name: string }
   * }} props
   */
 async (props) => {
@@ -59,25 +26,68 @@ async (props) => {
   /* write your code here */
 }
 `.trim(),
-  campaignEnd: `
+  executionGroupEnd: `
 /* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
 
 /**
   * @param {{
-  *   campaign?: { id: number, name: string }
+  *   executionGroup?: { id: number, name: string }
   * }} props
   */
 async (props) => {
   /* write your code here */
 }
 `.trim(),
-  variantCampaignStart: `
+  executionGroupStart: `
 /* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
 
 /**
   * @param {{
-  *   campaign?: { id: number, name: string },
-  *   variation?: { id: number, name: string }
+  *   executionGroup?: { id: number, name: string }
+  * }} props
+  */
+async (props) => {
+  /* write your code here */
+}
+`.trim(),
+  scriptEnd: `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+/**
+  * @param {{}} props
+  */
+async (props) => {
+  /* write your code here */
+}
+`.trim(),
+  scriptStart: `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+/**
+  * @param {{}} props
+  */
+async (props) => {
+  /* write your code here */
+}
+`.trim(),
+  trackEventEnd: `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+/**
+  * @param {{
+  *   trackEvent?: { id: number, name: string }
+  * }} props
+  */
+async (props) => {
+  /* write your code here */
+}
+`.trim(),
+  trackEventStart: `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+/**
+  * @param {{
+  *   trackEvent?: { id: number, name: string }
   * }} props
   */
 async (props) => {
@@ -97,10 +107,16 @@ async (props) => {
   /* write your code here */
 }
 `.trim(),
-  scriptEnd: `
+  variantCampaignStart: `
 /* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
 
-async () => {
+/**
+  * @param {{
+  *   campaign?: { id: number, name: string },
+  *   variation?: { id: number, name: string }
+  * }} props
+  */
+async (props) => {
   /* write your code here */
 }
 `.trim(),

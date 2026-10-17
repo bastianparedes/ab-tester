@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
 import { apiCaller } from '@/libs/restClient';
 import { ClientPage } from '../tenants/[tenantId]/lifecycle-hooks/[lifecycleHookId]/clientPage';
+import { createInitialLifecycleHookJavascript } from '../tenants/[tenantId]/lifecycle-hooks/lifecycleHookJavascript';
 
 const validJavaScript = 'async () => { return true; }';
 
@@ -50,7 +51,7 @@ describe('lifecycle hook editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear lifecycle JavaScript' }));
 
     expect((screen.getByRole('textbox', { name: 'Lifecycle JavaScript editor' }) as HTMLTextAreaElement).value).toBe('');
-    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toContain('syntax errors');
     expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -77,7 +78,7 @@ describe('lifecycle hook editor', () => {
 
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith({
-        body: { javascript: validJavaScript, name: 'Hook', option: 'campaignStart', status: 'active' },
+        body: { javascript: createInitialLifecycleHookJavascript('campaignStart'), name: 'Hook', option: 'campaignStart', status: 'active' },
         pathParams: { lifecycleHookId: 7, tenantId: 12 },
       }),
     );

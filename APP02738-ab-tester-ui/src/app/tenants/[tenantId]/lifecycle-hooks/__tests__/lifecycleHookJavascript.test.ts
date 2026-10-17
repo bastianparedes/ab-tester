@@ -1,22 +1,22 @@
-import { describe, expect, it } from 'vitest';
 import type { TypeLifecycleHookOption } from '@ab-tester/constants/types/constants';
+import { describe, expect, it } from 'vitest';
 import { createInitialLifecycleHookJavascript } from '../lifecycleHookJavascript';
 
 describe('lifecycle hook JavaScript templates', () => {
   it.each([
     ['scriptStart', '@param {{}} props'],
-    ['scriptEnd', '@param {{}} props'],
     ['trackEventStart', 'trackEvent?: { id: number, name: string }'],
     ['trackEventEnd', 'trackEvent?: { id: number, name: string }'],
     ['executionGroupStart', 'executionGroup?: { id: number, name: string }'],
     ['executionGroupEnd', 'executionGroup?: { id: number, name: string }'],
-    ['campaignStart', 'campaign?: { id: number, name: string }'],
     ['campaignStart', 'executionGroup?: { id: number, name: string }'],
+    ['campaignStart', 'campaign?: { id: number, name: string }'],
     ['campaignEnd', 'campaign?: { id: number, name: string }'],
     ['variantCampaignStart', 'campaign?: { id: number, name: string }'],
     ['variantCampaignStart', 'variation?: { id: number, name: string }'],
     ['variantCampaignEnd', 'campaign?: { id: number, name: string }'],
     ['variantCampaignEnd', 'variation?: { id: number, name: string }'],
+    ['scriptEnd', '@param {{}} props'],
   ] as const)('provides the %s parameter type', (trigger, expectedType) => {
     expect(createInitialLifecycleHookJavascript(trigger)).toContain(expectedType);
   });
