@@ -8,7 +8,7 @@ describe('nodeRequirementSchema', () => {
     { data: { comparator: 'contains', name: 'experiment', value: 'variant' }, type: 'localStorage' },
     { data: { comparator: 'doesNotExist', name: 'experiment' }, type: 'sessionStorage' },
     { data: { comparator: 'isNot', name: 'source', value: 'email' }, type: 'queryParam' },
-    { data: { javascript: 'return true;', name: 'custom check' }, type: 'custom' },
+    { data: { javascript: 'async () => { return true; }', name: 'custom check' }, type: 'custom' },
     { data: { comparator: 'equal', device: 'mobile' }, type: 'device' },
     { data: { comparator: 'contains', value: '/offers' }, type: 'url' },
     { data: { id: 12 }, type: 'audience' },

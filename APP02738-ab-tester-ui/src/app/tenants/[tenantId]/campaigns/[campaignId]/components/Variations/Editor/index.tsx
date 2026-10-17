@@ -7,7 +7,7 @@ import { useTranslationContext } from '@/app/_common/contexts/Translation';
 
 import 'react-tabs/style/react-tabs.css';
 import { Pencil } from 'lucide-react';
-import { jsCodeHasCorrectSyntax } from '@/utils/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '@/utils/jsCode';
 
 interface Props {
   variation: TypeVariationData;
@@ -78,7 +78,7 @@ const Editor = ({ setCampaign, variation }: Props) => {
         <Modal setModalVisible={() => onCloseModal()}>
           <div className="flex flex-col items-start gap-4 p-4">
             <button
-              disabled={!jsCodeHasCorrectSyntax(javascript)}
+              disabled={!jsCodeIsSingleAsyncArrowFunction(javascript)}
               type="button"
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:enabled:bg-blue-700 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
               onClick={onSave}

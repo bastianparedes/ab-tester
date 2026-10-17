@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { jsCodeHasCorrectSyntax } from '../../libs/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '../../libs/jsCode';
 
 export const variationSchema = z
   .array(
@@ -7,7 +7,7 @@ export const variationSchema = z
       css: z.string(),
       html: z.string(),
       id: z.number().int(),
-      javascript: z.string().refine((val) => jsCodeHasCorrectSyntax(val), {
+      javascript: z.string().refine(jsCodeIsSingleAsyncArrowFunction, {
         message: 'Invalid JavaScript code',
       }),
       name: z.string(),

@@ -111,7 +111,7 @@ export class TrackEventRepository {
 
     const [{ count }] = await db
       .select({
-        count: sql<number>`count(*)`,
+        count: sql<number>`count(*)`.mapWith(Number),
       })
       .from(schema.trackEvents)
       .where(and(eq(schema.trackEvents.tenantId, tenantId), ilike(schema.trackEvents.name, treatedTextSearch)));
@@ -145,8 +145,8 @@ export class TrackEventRepository {
   getAllTrackEventsForScript = async ({ tenantId }: { tenantId: TypeTenant['id'] }) => {
     const trackEvents = await db.query.trackEvents.findMany({
       columns: {
-        javascript: true,
         id: true,
+        javascript: true,
         multipleTimes: true,
         name: true,
       },

@@ -1,69 +1,76 @@
 import { describe, expect, it } from 'vitest';
-import { jsCodeHasCorrectSyntax, jsCodeIsSingleAsyncArrowFunction } from '../jsCode';
-
-describe('jsCodeHasCorrectSyntax', () => {
-  it('accepts valid statements and top-level await', () => {
-    expect(jsCodeHasCorrectSyntax('const answer = 42;')).toBe(true);
-    expect(jsCodeHasCorrectSyntax('const answer = await Promise.resolve(42);')).toBe(true);
-  });
-
-  it('rejects incomplete JavaScript', () => {
-    expect(jsCodeHasCorrectSyntax('if (')).toBe(false);
-  });
-});
+import { jsCodeIsSingleAsyncArrowFunction } from '../jsCode';
 
 describe('jsCodeIsSingleAsyncArrowFunction', () => {
-  it.each(['async () => { return 42; }', 'async value => value + 1', '(async (value = 1) => value)'])('accepts a single async arrow: %s', (code) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(true);
+  it.each([
+    'async () => {}',
+    'async (input) => {}',
+    'async (first, second, third) => {}',
+    'async (...args) => {}',
+    'async ({ value, nested: { enabled } }) => {}',
+    'async ([first, second]) => {}',
+    'async (value = 1, ...rest) => {}',
+    'async (value = build(1, 2), callback = () => true) => {}',
+    '(async () => {})',
+    '((async (input) => {}))',
+    '/* leading comment */ async /* before args */ (input /* arg comment */) /* before arrow */ => /* before body */ {}',
+    'async /* comment with => and } */ (first, second) => {}',
+    'async (\n  first,\n  second,\n) => {}',
+    'async () => { return true; }',
+    'async () => { const value = 1; }',
+    'async () => { await Promise.resolve(); }',
+    'async () => { if (true) { await Promise.resolve(); } }',
+    'async () => { for (const value of [1, 2]) { console.log(value); } }',
+    'async () => { try { await work(); } catch (error) { console.error(error); } finally { cleanup(); } }',
+    'async () => { const nested = () => 1; const alsoNested = async () => {}; }',
+    'async () => { return { value: true, nested: { count: 1 } }; }',
+    'async () => { const text = "} => ;"; const template = `} => $' + '{1}`; }',
+    'async () => { const pattern = /=>|}/; }',
+    'async () => { /* } => ; */ // another } => ;\n await work(); }',
+    '/* async () => {} */ async () => {}',
+    'async () => {} /* trailing comment with } and => */',
+    'async () => {}; // trailing line comment',
+    'async () => {};',
+    '  \n async () => {} \n',
+  ])('accepts a single async arrow with a block body: %s', (jsCode) => {
+    expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(true);
   });
 
   it.each([
-    'async /* parameter comment */ value => value',
-    'async /* parameter comment */ (value) => await Promise.resolve(value)',
-    'async /* => */ () => true',
-    'async (value) /* ) */ => value',
-    '((async () => ({ value: true })))',
-    'async () => { if (true) { await Promise.resolve(); } return true; }',
-    'async (...args) => args.length',
-  ])('accepts nested parameters, comments and block bodies: %s', (code) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(true);
+    '',
+    ' ',
+    '// async () => {}',
+    '/* async () => {}',
+    '() => {}',
+    'async input => {}',
+    'async function () {}',
+    'function () {}',
+    'async () => true',
+    'async (input) => input.value',
+    'async () => ({ value: true })',
+    'async',
+    'async ()',
+    'async => {}',
+    'async (input,,) => {}',
+    'async (input = ) => {}',
+    'async (...args, last) => {}',
+    'async () =>',
+    'async () => {',
+    'async () => }',
+    'async () => { /* unterminated comment',
+    'async (input /* unterminated) => {}',
+    'async () => {} extra',
+    'async () => {} const extra = true;',
+    'const handler = async () => {};',
+    'let handler; handler = async () => {};',
+    'async () => {}, async () => {}',
+    'async () => {}; async () => {};',
+    'async () => {} + 1',
+    'prefix; async () => {}',
+    'async () => {}; suffix',
+    'async () => {} /* trailing comment */ extra',
+    'async () => { const value = ; }',
+  ])('rejects code that is not exactly one async arrow with parenthesized parameters and a block body: %s', (jsCode) => {
+    expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
   });
-
-  it.each(['', '() => 42', 'async function () {}', 'async () => {}\nconst extra = 1', 'async () => {'])('rejects non-single or invalid functions: %s', (code) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(false);
-  });
-
-  it('rejects a valid synchronous arrow expression', () => {
-    expect(jsCodeIsSingleAsyncArrowFunction('value => value')).toBe(false);
-    expect(jsCodeIsSingleAsyncArrowFunction('async => value')).toBe(false);
-    expect(jsCodeIsSingleAsyncArrowFunction('value /* ; */')).toBe(false);
-  });
-
-  it.each(['async /* unterminated', 'async (value,,) => value', 'async () => { /* unterminated'])('rejects invalid parameter/trivia forms: %s', (code) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(false);
-  });
-
-  it('allows a trailing semicolon and comments', () => {
-    expect(jsCodeIsSingleAsyncArrowFunction('async () => 42; // trailing comment')).toBe(true);
-  });
-
-  it.each([
-    '/* leading */ async /* parameter */ value => await Promise.resolve(value)',
-    'async (value = 1, ...rest) => ({ value, rest })',
-    'async (value = build()) => value',
-    'async (callback = () => true) => callback',
-    '(async () => { const nested = () => 1; return nested(); })',
-    'async () => { if (true) { return 1; } return 0; } /* trailing */',
-    'async () => { return true; } /* } */',
-    'async () => 42; /* trailing semicolon comment */',
-  ])('accepts valid async arrow syntax with trivia and nested expressions: %s', (code) => {
-    expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(true);
-  });
-
-  it.each(['async', 'async (value = ) => value', 'async () => {} extra', 'async () => { /* unclosed', 'async () => {}\nconst second = async () => true'])(
-    'rejects malformed or multiple async expressions: %s',
-    (code) => {
-      expect(jsCodeIsSingleAsyncArrowFunction(code)).toBe(false);
-    },
-  );
 });

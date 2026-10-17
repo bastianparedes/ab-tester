@@ -7,22 +7,26 @@ import { apiCaller } from '@/libs/restClient';
 import { ClientPage } from '../[trackEventId]/clientPage';
 
 const javascriptInitialValue = `
+/* ############ THIS FUNCTION WILL BE EXECUTED MULTIPLE TIMES ############ */
 /* ############ IT IS VERY IMPORTANT TO REMOVE UNUSED LISTENERS AND INTERVALS ############ */
 /* ############ RESOLVE ONLY string, number, boolean, undefined ############ */
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
 
-return new Promise((r) => {
-  function handler(e) {
-    if (e.target.id !== 'my-id') r(true);
-    window.removeEventListener("click", handler);
-  }
-  window.addEventListener("click", handler);
-});
+async () => {
+  return new Promise((r) => {
+    function handler(e) {
+      if (e.target.id !== 'my-id') r(true);
+      window.removeEventListener("click", handler);
+    }
+    window.addEventListener("click", handler);
+  })
+}
 `;
 
 const getTrackEventInitialData = async ({ tenantId, cloneFrom }: { tenantId: number; cloneFrom: string | undefined }): Promise<TypeTrackEventWithOptionalId> => {
   const fallbackValue = {
-    javascript: javascriptInitialValue,
     id: undefined,
+    javascript: javascriptInitialValue,
     multipleTimes: false,
     name: 'New Track Event Name',
     status: commonConstants.status.active,

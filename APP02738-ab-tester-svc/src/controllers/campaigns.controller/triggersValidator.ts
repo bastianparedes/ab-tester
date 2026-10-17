@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { jsCodeHasCorrectSyntax } from '../../libs/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '../../libs/jsCode';
 import constants from '../../libs/sharedConstants';
 
 const clickOnElementDataSchema = z.object({
@@ -7,7 +7,7 @@ const clickOnElementDataSchema = z.object({
 });
 
 const customTriggerDataSchema = z.object({
-  javascript: z.string().refine((val) => jsCodeHasCorrectSyntax(val), {
+  javascript: z.string().refine(jsCodeIsSingleAsyncArrowFunction, {
     message: 'Invalid JavaScript code',
   }),
   name: z.string(),

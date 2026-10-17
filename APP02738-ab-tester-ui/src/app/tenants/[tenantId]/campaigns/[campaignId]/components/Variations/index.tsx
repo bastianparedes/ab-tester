@@ -4,6 +4,14 @@ import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import Editor from './Editor';
 import { variationsWithDistributedTraffic } from './util';
 
+const javascript = `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+async () => {
+  /* write your code here */
+}
+`;
+
 interface Props {
   variations: TypeVariationData[];
   setCampaign: (campaign: (TypeCampaign: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => void;
@@ -20,7 +28,7 @@ const Variations = ({ setCampaign, variations }: Props) => {
         css: '',
         html: '',
         id: newIdVariation,
-        javascript: '',
+        javascript,
         name: `Variation ${String(newIdVariation)}`,
         traffic: 0,
       });

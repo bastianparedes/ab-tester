@@ -106,7 +106,7 @@ export class AudienceRepository {
 
     const [{ count }] = await db
       .select({
-        count: sql<number>`count(*)`,
+        count: sql<number>`count(*)`.mapWith(Number),
       })
       .from(schema.audiences)
       .where(

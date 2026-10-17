@@ -49,6 +49,7 @@ const currentUser: TypeFullUser = {
   isLogedIn: true,
   permissions: [],
 };
+const validJavaScript = 'async () => { return true; }';
 
 describe('lifecycle hook live viewers', () => {
   it('hides an empty indicator and excludes the current user from counts', () => {
@@ -110,7 +111,7 @@ describe.each([
 });
 
 describe('track event custom code editor', () => {
-  const requirement: TypeCustomRequirement = { data: { javascript: 'return true;', name: 'Rule' }, type: 'custom' };
+  const requirement: TypeCustomRequirement = { data: { javascript: validJavaScript, name: 'Rule' }, type: 'custom' };
   const campaign: TypeCampaignWithOptionalId = {
     executionGroupId: null,
     name: 'Campaign',
@@ -132,9 +133,9 @@ describe('track event custom code editor', () => {
       </TranslationProvider>,
     );
     fireEvent.click(screen.getByRole('button'));
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return false;' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return false; }' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(requirement.data.javascript).toBe('return false;');
+    expect(requirement.data.javascript).toBe('async () => { return false; }');
 
     fireEvent.click(screen.getByRole('button'));
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'invalid (' } });
@@ -142,7 +143,7 @@ describe('track event custom code editor', () => {
     fireEvent.click(screen.getByTestId('data-testid-button-closer-modal'));
 
     fireEvent.click(screen.getByRole('button'));
-    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('return false;');
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('async () => { return false; }');
     expect(currentCampaign.requirements.data.children[0]).toEqual(requirement);
   });
 });
@@ -166,7 +167,7 @@ describe('track event editor', () => {
 
     const save = screen.getByRole('button', { name: 'Save track event' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return true;' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: validJavaScript } });
     expect(save.disabled).toBe(false);
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'active' } });
@@ -183,7 +184,7 @@ describe('track event editor', () => {
   it('creates a valid track event and redirects to its list', async () => {
     const create = vi.spyOn(apiCaller.trackEvents, 'create').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });
-    const validTrackEvent = { ...initialTrackEvent, javascript: 'return true;' };
+    const validTrackEvent = { ...initialTrackEvent, javascript: validJavaScript };
     renderWithUser(<TrackEventEditor initialTrackEvent={validTrackEvent} tenantId={12} trackEventId={undefined} />, {
       data: currentUser.data,
       isLogedIn: true,
@@ -198,7 +199,7 @@ describe('track event editor', () => {
   it('updates an existing track event with its current fields', async () => {
     const update = vi.spyOn(apiCaller.trackEvents, 'update').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });
-    const existingTrackEvent = { ...initialTrackEvent, javascript: 'return true;', id: 8, multipleTimes: true, name: 'Checkout complete', status: 'active' as const };
+    const existingTrackEvent = { ...initialTrackEvent, id: 8, javascript: validJavaScript, multipleTimes: true, name: 'Checkout complete', status: 'active' as const };
     renderWithUser(<TrackEventEditor initialTrackEvent={existingTrackEvent} tenantId={12} trackEventId={8} />, {
       data: currentUser.data,
       isLogedIn: true,
@@ -211,7 +212,7 @@ describe('track event editor', () => {
   });
 
   it('shows the live-view warning and disables save after another event editor changes it', () => {
-    const existingTrackEvent = { ...initialTrackEvent, javascript: 'return true;', id: 8 };
+    const existingTrackEvent = { ...initialTrackEvent, id: 8, javascript: validJavaScript };
     renderWithUser(<TrackEventEditor initialTrackEvent={existingTrackEvent} tenantId={12} trackEventId={8} />, {
       data: currentUser.data,
       isLogedIn: true,

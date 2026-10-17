@@ -22,7 +22,7 @@ describe('setTrackEvents', () => {
   it('runs track-event hooks and stores a single event for non-repeating events', async () => {
     const calls: Array<[string, unknown]> = [];
     const javascript = vi.fn().mockResolvedValue({ value: 1 });
-    window.ab_tester.trackEventsData = [{ javascript, id: 7, multipleTimes: false, name: 'Purchase' }] as never;
+    window.ab_tester.trackEventsData = [{ id: 7, javascript, multipleTimes: false, name: 'Purchase' }] as never;
     window.ab_tester.lifecycleHooksData.trackEventStart = [{ javascript: (input: unknown) => calls.push(['start', input]) } as never];
     window.ab_tester.lifecycleHooksData.trackEventEnd = [{ javascript: (input: unknown) => calls.push(['end', input]) } as never];
 
@@ -36,7 +36,7 @@ describe('setTrackEvents', () => {
 
   it('limits repeat events to five per time window and resets the count after the window expires', async () => {
     const cappedJavascript = vi.fn().mockResolvedValue('event');
-    window.ab_tester.trackEventsData = [{ javascript: cappedJavascript, id: 8, multipleTimes: true, name: 'Capped' }] as never;
+    window.ab_tester.trackEventsData = [{ id: 8, javascript: cappedJavascript, multipleTimes: true, name: 'Capped' }] as never;
     vi.spyOn(Date, 'now').mockReturnValue(0);
 
     await setTrackEvents();
@@ -46,7 +46,7 @@ describe('setTrackEvents', () => {
     expect(add).toHaveBeenCalledTimes(5);
 
     add.mockClear();
-    const eventData = { javascript: vi.fn(), id: 9, multipleTimes: true, name: 'Windowed' };
+    const eventData = { id: 9, javascript: vi.fn(), multipleTimes: true, name: 'Windowed' };
     eventData.javascript.mockImplementation(async () => {
       if (eventData.javascript.mock.calls.length === 7) eventData.multipleTimes = false;
       return 'event';

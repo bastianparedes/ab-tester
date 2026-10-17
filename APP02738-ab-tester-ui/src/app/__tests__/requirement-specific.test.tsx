@@ -64,7 +64,7 @@ describe('campaign requirement-specific controls', () => {
 
   it('updates the name of a custom requirement', () => {
     const requirement: TypeCampaignWithOptionalId['requirements']['data']['children'][number] = {
-      data: { javascript: 'return true;', name: '' },
+      data: { javascript: 'async () => { return true; }', name: '' },
       type: 'custom',
     };
     renderWithTranslations(<CustomRequirement requirement={requirement} setCampaign={setCampaign} />);
@@ -186,7 +186,7 @@ describe('audience requirement-specific controls', () => {
 
 describe('custom requirement code editor', () => {
   it('validates code, discards edits on close and saves valid changes', () => {
-    const requirement: TypeCustomRequirement = { data: { javascript: 'return true;', name: 'Custom' }, type: 'custom' };
+    const requirement: TypeCustomRequirement = { data: { javascript: 'async () => { return true; }', name: 'Custom' }, type: 'custom' };
     renderWithTranslations(<CustomRequirementEditor requirement={requirement} setCampaign={setCampaign} />);
 
     fireEvent.click(screen.getByRole('button'));
@@ -195,10 +195,10 @@ describe('custom requirement code editor', () => {
     fireEvent.click(screen.getByTestId('data-testid-button-closer-modal'));
 
     fireEvent.click(screen.getByRole('button'));
-    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('return true;');
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return false;' } });
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('async () => { return true; }');
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return false; }' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(requirement.data.javascript).toBe('return false;');
+    expect(requirement.data.javascript).toBe('async () => { return false; }');
   });
 });

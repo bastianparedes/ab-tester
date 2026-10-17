@@ -50,7 +50,7 @@ describe('LifecycleHookController', () => {
       { lifecycleHooks: { create: async (input: unknown) => calls.push(input) } } as never,
       { clear: async (input: unknown) => calls.push(input) } as never,
     );
-    const body = { javascript: 'async () => true', name: 'Start', option: 'campaignStart', status: 'active' };
+    const body = { javascript: 'async () => { return true; }', name: 'Start', option: 'campaignStart', status: 'active' };
 
     await expect(controller.create(3, body as never, { user: { id: 7 } } as never)).resolves.toEqual({});
     expect(calls).toEqual([{ tenantId: 3, userId: 7, values: body }, { tenantId: 3 }]);
@@ -80,7 +80,7 @@ describe('LifecycleHookController', () => {
       } as never,
       { clear: async (input: unknown) => calls.push(input) } as never,
     );
-    const body = { javascript: 'async () => true', name: 'Start', option: 'campaignStart', status: 'active' };
+    const body = { javascript: 'async () => { return true; }', name: 'Start', option: 'campaignStart', status: 'active' };
 
     await expect(controller.update(3, 8, body as never)).resolves.toEqual({});
     await expect(controller.remove(3, 8)).resolves.toEqual({});

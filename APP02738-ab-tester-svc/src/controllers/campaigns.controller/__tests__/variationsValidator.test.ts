@@ -5,7 +5,7 @@ const variation = (id: number, traffic: number) => ({
   css: '',
   html: '<main>variant</main>',
   id,
-  javascript: 'return true;',
+  javascript: 'async () => { return true; }',
   name: `variant ${id}`,
   traffic,
 });

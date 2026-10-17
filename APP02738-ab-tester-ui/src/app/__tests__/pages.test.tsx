@@ -154,7 +154,7 @@ describe('server route pages', () => {
   });
 
   it('normalizes lifecycle hook properties for its editor', async () => {
-    const lifecycleHook = { id: 3, javascript: 'return true;', name: 'Initialize', option: 'scriptStart', status: 'active', tenantId: 12 };
+    const lifecycleHook = { id: 3, javascript: 'async () => { return true; }', name: 'Initialize', option: 'scriptStart', status: 'active', tenantId: 12 };
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
     const getHook = vi.spyOn(apiCaller.lifecycleHooks, 'get').mockResolvedValue(successfulResponse({ lifecycleHook }));
 
@@ -162,7 +162,7 @@ describe('server route pages', () => {
 
     expect(getHook).toHaveBeenCalledWith({ pathParams: { lifecycleHookId: 3, tenantId: 12 } });
     expect(result.props.children.props).toMatchObject({
-      initialLifecycleHook: { id: 3, javascript: 'return true;', name: 'Initialize', status: 'active', tenantId: 12, trigger: 'scriptStart' },
+      initialLifecycleHook: { id: 3, javascript: 'async () => { return true; }', name: 'Initialize', status: 'active', tenantId: 12, trigger: 'scriptStart' },
       tenantId: 12,
     });
   });
@@ -285,7 +285,7 @@ describe('server route pages', () => {
 
   it('clones a track event while clearing its original id', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
-    const sourceTrackEvent = { javascript: 'return 7;', id: 8, multipleTimes: true, name: 'Checkout', status: 'inactive', tenantId: 12 };
+    const sourceTrackEvent = { id: 8, javascript: 'async () => { return 7; }', multipleTimes: true, name: 'Checkout', status: 'inactive', tenantId: 12 };
     const getTrackEvent = vi.spyOn(apiCaller.trackEvents, 'get').mockResolvedValue(successfulResponse({ trackEvent: sourceTrackEvent }));
 
     const result = (await TrackEventCreatePage({
@@ -320,7 +320,7 @@ describe('server route pages', () => {
 
   it('clones lifecycle hook code and trigger into a new hook', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
-    const sourceHook = { id: 6, javascript: 'async () => true', name: 'After campaign', option: 'campaignEnd', status: 'active', tenantId: 12 };
+    const sourceHook = { id: 6, javascript: 'async () => { return true; }', name: 'After campaign', option: 'campaignEnd', status: 'active', tenantId: 12 };
     const getHook = vi.spyOn(apiCaller.lifecycleHooks, 'get').mockResolvedValue(successfulResponse({ lifecycleHook: sourceHook }));
 
     const result = (await LifecycleHookCreatePage({
@@ -437,7 +437,7 @@ describe('server route pages', () => {
   });
 
   it.each(['tenant', 'lifecycle hook'] as const)('redirects lifecycle detail when %s data fails', async (failedResource) => {
-    const lifecycleHook = { id: 3, javascript: 'async () => true', name: 'Initialize', option: 'scriptStart', status: 'active', tenantId: 12 };
+    const lifecycleHook = { id: 3, javascript: 'async () => { return true; }', name: 'Initialize', option: 'scriptStart', status: 'active', tenantId: 12 };
     const getTenant = vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
     const getHook = vi.spyOn(apiCaller.lifecycleHooks, 'get').mockResolvedValue(successfulResponse({ lifecycleHook }));
     if (failedResource === 'tenant') getTenant.mockResolvedValue({ ok: false });

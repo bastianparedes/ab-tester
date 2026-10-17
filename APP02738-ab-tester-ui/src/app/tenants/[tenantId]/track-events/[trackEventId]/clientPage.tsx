@@ -15,7 +15,7 @@ import constants, { getStringPermission } from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
-import { jsCodeHasCorrectSyntax } from '@/utils/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '@/utils/jsCode';
 import { LiveViewersNavbar } from './components/LiveViewersBar';
 
 type Props = {
@@ -33,7 +33,7 @@ const ClientPage = ({ initialTrackEvent, tenantId, trackEventId }: Props) => {
   const user = useUser();
 
   const isNewTrackEvent = trackEvent.id === undefined;
-  const javascriptIsValid = jsCodeHasCorrectSyntax(trackEvent.javascript);
+  const javascriptIsValid = jsCodeIsSingleAsyncArrowFunction(trackEvent.javascript);
 
   const returnToTrackEvents = () => {
     location.href = constants.pages.trackEvents({ tenantId: trackEvent.tenantId });

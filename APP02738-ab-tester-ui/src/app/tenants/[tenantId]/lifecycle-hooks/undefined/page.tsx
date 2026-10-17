@@ -5,6 +5,8 @@ import { apiCaller } from '@/libs/restClient';
 import { ClientPage, type TypeLifecycleHook } from '../[lifecycleHookId]/clientPage';
 
 const initialJavascript = `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
 /**
   * @param {{
   *   executionGroup?: { id: number, name: string },
@@ -13,7 +15,7 @@ const initialJavascript = `
   * }} props
   */
 async (props) => {
-  /* Insert your code here */
+  /* write your code here */
 }
 `.trim();
 

@@ -135,7 +135,7 @@ export class ExecutionGroupRepository {
 
     const executionGroups = await db
       .select({
-        campaignsCount: sql<number>`count(${schema.campaigns.id})`,
+        campaignsCount: sql<number>`count(${schema.campaigns.id})`.mapWith(Number),
         createdAt: schema.executionGroups.createdAt,
         id: schema.executionGroups.id,
         name: schema.executionGroups.name,

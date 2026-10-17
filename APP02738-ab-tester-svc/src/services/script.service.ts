@@ -75,18 +75,18 @@ const stringifyWithFunctions = (obj: unknown): string => {
 
   return `{${' '.repeat(2)}${entries.join(`, ${' '.repeat(2)}`)}}`;
 };
-const getFunctionFromBody = ({ params = [], body }: { params?: string[]; body: string }): (() => Promise<void>) => {
-  const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
-  const fn = new AsyncFunction(...params, body);
 
-  fn.toString = () => `async function(${params.join(',')}) {${body}}`;
-  return fn;
-};
-const getFunctionFromAsyncArrow = ({ javascript }: { javascript: string }): (() => Promise<void>) => {
+const getFunctionFromAsyncArrowFromStringFunction = async (stringFunction: string) => {
+  const result = await minifyJs(stringFunction, {
+    compress: false,
+    format: { comments: false, semicolons: false },
+    mangle: false,
+  });
+
   const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
   const fn = new AsyncFunction([], 'return;');
 
-  fn.toString = () => javascript;
+  fn.toString = () => result.code ?? 'async () => {}';
   return fn;
 };
 
@@ -105,47 +105,57 @@ export class ScriptService {
     const campaigns = await this.campaignRepository.getAllCampaignsForScript({ tenantId });
     const campaignsWithFunctions = await Promise.all(
       campaigns.map(async (campaign) => {
-        const migrateRequirementsFromStringToFunction = (requirement: TypeNodeRequirement): TypeCampaignScript['requirements'] => {
+        const migrateRequirementsFromStringToFunction = async (requirement: TypeNodeRequirement): Promise<TypeCampaignScript['requirements']> => {
           return {
             ...requirement,
             data: {
               ...requirement.data,
-              children: requirement.data.children.map((childRequirement) => {
-                if (childRequirement.type === 'node') return migrateRequirementsFromStringToFunction(childRequirement);
-                if (childRequirement.type === 'custom')
-                  return {
-                    ...childRequirement,
-                    data: {
-                      ...childRequirement.data,
-                      javascript: getFunctionFromBody({ body: childRequirement.data.javascript }),
-                    },
-                  };
-                return childRequirement;
-              }),
+              children: await Promise.all(
+                requirement.data.children.map(async (childRequirement) => {
+                  if (childRequirement.type === 'node') return migrateRequirementsFromStringToFunction(childRequirement);
+                  if (childRequirement.type === 'custom') {
+                    const javascript = await getFunctionFromAsyncArrowFromStringFunction(childRequirement.data.javascript);
+
+                    return {
+                      ...childRequirement,
+                      data: {
+                        ...childRequirement.data,
+                        javascript,
+                      },
+                    };
+                  }
+                  return childRequirement;
+                }),
+              ),
             },
           };
         };
 
-        const newRequirements = migrateRequirementsFromStringToFunction(campaign.requirements);
-        const newTriggers = campaign.triggers.map((trigger) => {
-          if (trigger.type === 'custom') {
-            return {
-              ...trigger,
-              data: {
-                ...trigger.data,
-                javascript: getFunctionFromBody({ body: trigger.data.javascript }),
-              },
-            };
-          }
-          return trigger;
-        });
+        const newRequirements = await migrateRequirementsFromStringToFunction(campaign.requirements);
+        const newTriggers = await Promise.all(
+          campaign.triggers.map(async (trigger) => {
+            if (trigger.type === 'custom') {
+              const javascript = await getFunctionFromAsyncArrowFromStringFunction(trigger.data.javascript);
+
+              return {
+                ...trigger,
+                data: {
+                  ...trigger.data,
+                  javascript,
+                },
+              };
+            }
+            return trigger;
+          }),
+        );
         const newVariations = await Promise.all(
           campaign.variations.map(async (variation) => {
+            const javascript = await getFunctionFromAsyncArrowFromStringFunction(variation.javascript);
             return {
               ...variation,
               css: getMinifiedCss(variation.css),
               html: await getMinifiedHtml(variation.html),
-              javascript: getFunctionFromBody({ body: variation.javascript }),
+              javascript,
             };
           }),
         );
@@ -169,10 +179,15 @@ export class ScriptService {
 
   private async getTrackEvents({ tenantId }: { tenantId: number }) {
     const trackEvents = await this.trackEventRepository.getAllTrackEventsForScript({ tenantId });
-    const trackEventsWithFunctions = trackEvents.map((trackEvent) => ({
-      ...trackEvent,
-      javascript: getFunctionFromBody({ body: trackEvent.javascript }),
-    }));
+    const trackEventsWithFunctions = await Promise.all(
+      trackEvents.map(async (trackEvent) => {
+        const javascript = await getFunctionFromAsyncArrowFromStringFunction(trackEvent.javascript);
+        return {
+          ...trackEvent,
+          javascript,
+        };
+      }),
+    );
     return trackEventsWithFunctions;
   }
 
@@ -185,12 +200,9 @@ export class ScriptService {
     const lifecycleHooks = await this.lifecycleHookRepository.getAllLifecycleHooksForScript({ tenantId });
     const lifecycleHooksWithFunctions = await Promise.all(
       lifecycleHooks.map(async (lifecycleHook) => {
-        const result = await minifyJs(lifecycleHook.javascript, {
-          compress: false,
-          format: { comments: false, semicolons: false },
-          mangle: false,
-        });
-        return { ...lifecycleHook, javascript: getFunctionFromAsyncArrow({ javascript: result.code ?? 'async () => {}' }) };
+        const javascript = await getFunctionFromAsyncArrowFromStringFunction(lifecycleHook.javascript);
+
+        return { ...lifecycleHook, javascript };
       }),
     );
     const lifecycleHooksByOption: TypeAbTester['lifecycleHooksData'] = {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { jsCodeHasCorrectSyntax } from '../../libs/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '../../libs/jsCode';
 import commonConstants from '../../libs/sharedConstants';
 
 export const getTrackEventQuerySchema = z
@@ -22,7 +22,7 @@ export const getTrackEventQuerySchema = z
 
 export const trackEventSchema = z
   .object({
-    javascript: z.string().refine((value) => jsCodeHasCorrectSyntax(value), {
+    javascript: z.string().refine(jsCodeIsSingleAsyncArrowFunction, {
       message: 'Invalid JavaScript code',
     }),
     multipleTimes: z.boolean(),

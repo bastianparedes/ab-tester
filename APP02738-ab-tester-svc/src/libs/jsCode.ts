@@ -1,12 +1,3 @@
-export const jsCodeHasCorrectSyntax = (jsCode: string) => {
-  try {
-    new Function(`return (async () => { ${jsCode} })`);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as FunctionConstructor;
 
 const canCompile = (jsCode: string, asynchronous = false): boolean => {
@@ -41,17 +32,8 @@ const skipTrivia = (source: string, start: number): number => {
 const hasValidArrowParameters = (header: string): boolean => {
   if (!header.startsWith('async')) return false;
   const start = skipTrivia(header, 5);
-  if (start === -1 || (start === 5 && header[start] !== '(')) return false;
+  if (start === -1 || start === header.length || header[start] !== '(') return false;
   if (!canCompile(`return (${header} => {});`)) return false;
-
-  if (header[start] !== '(') {
-    try {
-      new AsyncFunction(header.slice(start), '');
-      return true;
-    } catch {
-      return false;
-    }
-  }
 
   for (let end = header.lastIndexOf(')'); end > start; end = header.lastIndexOf(')', end - 1)) {
     if (skipTrivia(header, end + 1) !== header.length) continue;
@@ -80,9 +62,7 @@ const isSingleAsyncArrowExpression = (source: string): boolean => {
     const bodyStart = skipTrivia(source, arrow + 2);
     if (bodyStart === -1) return false;
 
-    if (source[bodyStart] !== '{') {
-      return canCompile(`return true ? ${source.slice(bodyStart)}\n : null;`, true);
-    }
+    if (source[bodyStart] !== '{') return false;
 
     for (let end = source.lastIndexOf('}'); end > bodyStart; end = source.lastIndexOf('}', end - 1)) {
       if (skipTrivia(source, end + 1) === source.length && canCompile(source.slice(bodyStart + 1, end), true)) return true;

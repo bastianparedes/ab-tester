@@ -4,7 +4,7 @@ import { triggerSchema } from '../triggersValidator';
 describe('triggerSchema', () => {
   it.each([
     { data: { selector: '.primary-button' }, id: 1, type: 'clickOnElement' },
-    { data: { javascript: 'return true;', name: 'custom trigger' }, id: 2, type: 'custom' },
+    { data: { javascript: 'async () => { return true; }', name: 'custom trigger' }, id: 2, type: 'custom' },
     { data: {}, id: 3, type: 'pageLoad' },
     { data: { milliseconds: 500 }, id: 4, type: 'timeOnPage' },
   ])('accepts $type triggers', (trigger) => {

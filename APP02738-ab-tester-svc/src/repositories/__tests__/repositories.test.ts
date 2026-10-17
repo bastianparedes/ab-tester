@@ -244,7 +244,7 @@ describe('repositories', () => {
 
   it('creates, updates, queries, filters, and removes track events', async () => {
     const repository = new TrackEventRepository();
-    const event = { javascript: 'return event;', id: 5, name: 'Purchase', status: 'active' };
+    const event = { id: 5, javascript: 'async () => { return event; }', name: 'Purchase', status: 'active' };
     const values = { javascript: event.javascript, name: event.name, status: event.status };
     db.insert.mockReturnValueOnce(createQuery([event]));
     db.update.mockReturnValueOnce(createQuery([event]));

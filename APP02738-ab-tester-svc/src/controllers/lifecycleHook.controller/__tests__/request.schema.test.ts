@@ -12,7 +12,7 @@ describe('lifecycle hook schemas', () => {
   });
 
   it('validates JavaScript and strips unknown fields', () => {
-    const hook = { extra: true, javascript: 'async () => true', name: 'Start', option: 'scriptStart', status: 'active' };
+    const hook = { extra: true, javascript: 'async () => { return true; }', name: 'Start', option: 'scriptStart', status: 'active' };
 
     expect(lifecycleHookSchema.parse(hook)).toEqual({
       javascript: hook.javascript,

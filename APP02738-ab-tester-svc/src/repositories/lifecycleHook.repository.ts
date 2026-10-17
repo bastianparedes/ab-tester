@@ -85,7 +85,10 @@ export class LifecycleHookRepository {
       .limit(quantity)
       .offset(page * quantity);
 
-    const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(schema.lifecycleHooks).where(where);
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)`.mapWith(Number) })
+      .from(schema.lifecycleHooks)
+      .where(where);
 
     return { count: Number(count), lifecycleHooks };
   };

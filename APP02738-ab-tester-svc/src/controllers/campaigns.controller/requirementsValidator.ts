@@ -1,6 +1,6 @@
 import { TypeNodeRequirement } from '@ab-tester/constants/types/campaign';
 import { z } from 'zod';
-import { jsCodeHasCorrectSyntax } from '../../libs/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '../../libs/jsCode';
 import constants from '../../libs/sharedConstants';
 
 const StorageComparatorWithValue = z.enum([constants.comparisons.equal, constants.comparisons.isNot, constants.comparisons.contains, constants.comparisons.doesNotContain]);
@@ -41,7 +41,7 @@ const QueryParamRequirementSchema = z.object({
 
 const CustomRequirementSchema = z.object({
   data: z.object({
-    javascript: z.string().refine((val) => jsCodeHasCorrectSyntax(val), {
+    javascript: z.string().refine(jsCodeIsSingleAsyncArrowFunction, {
       message: 'Invalid JavaScript code',
     }),
     name: z.string(),

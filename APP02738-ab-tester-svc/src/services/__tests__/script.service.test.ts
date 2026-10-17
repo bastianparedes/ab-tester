@@ -21,9 +21,9 @@ const createService = ({ cachedScript = null }: { cachedScript?: string | null }
     requirements: {
       data: {
         children: [
-          { data: { javascript: 'return true;', name: 'custom' }, type: 'custom' },
+          { data: { javascript: 'async () => { return true; }', name: 'custom' }, type: 'custom' },
           {
-            data: { children: [{ data: { javascript: 'return false;', name: 'nested' }, type: 'custom' }], operator: 'or' },
+            data: { children: [{ data: { javascript: 'async () => { return false; }', name: 'nested' }, type: 'custom' }], operator: 'or' },
             type: 'node',
           },
         ],
@@ -32,13 +32,13 @@ const createService = ({ cachedScript = null }: { cachedScript?: string | null }
       type: 'node',
     },
     triggers: [
-      { data: { javascript: 'return true;', name: 'custom trigger' }, id: 1, type: 'custom' },
+      { data: { javascript: 'async () => { return true; }', name: 'custom trigger' }, id: 1, type: 'custom' },
       { data: {}, id: 2, type: 'pageLoad' },
     ],
-    variations: [{ css: 'main { color: red; }', html: '<main> Offer </main>', id: 1, javascript: 'return true;', name: 'A', traffic: 100 }],
+    variations: [{ css: 'main { color: red; }', html: '<main> Offer </main>', id: 1, javascript: 'async () => { return true; }', name: 'A', traffic: 100 }],
   };
   const executionGroups = [{ id: 21, name: 'Main group' }];
-  const trackEvents = [{ javascript: 'return { amount: 1 };', id: 31, name: 'Purchase' }];
+  const trackEvents = [{ id: 31, javascript: 'async () => { return { amount: 1 }; }', name: 'Purchase' }];
   const audiences = [{ id: 41, name: 'Customers' }];
   const lifecycleHooks = [
     { id: 51, javascript: 'async () => { return true; }', option: 'campaignStart' },

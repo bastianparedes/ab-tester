@@ -135,7 +135,7 @@ describe('campaign triggers', () => {
     const { container, rerender } = render(renderTree());
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: 'custom' } });
     rerender(renderTree());
-    expect(campaign.triggers[0]).toMatchObject({ data: { javascript: 'return await new Promise((r) => { r() });', name: '' }, type: 'custom' });
+    expect(campaign.triggers[0]).toMatchObject({ data: { javascript: expect.stringContaining('async () => {'), name: '' }, type: 'custom' });
 
     const buttons = container.querySelectorAll('button');
     fireEvent.click(buttons[1]);
@@ -144,9 +144,9 @@ describe('campaign triggers', () => {
     fireEvent.click(screen.getByTestId('data-testid-button-closer-modal'));
 
     fireEvent.click(container.querySelectorAll('button')[1]);
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return true;' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return true; }' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(campaign.triggers[0]).toMatchObject({ data: { javascript: 'return true;' }, type: 'custom' });
+    expect(campaign.triggers[0]).toMatchObject({ data: { javascript: 'async () => { return true; }' }, type: 'custom' });
   });
 });
 
@@ -224,11 +224,13 @@ describe('campaign variations', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'New variation' }));
 
-    expect(campaign.variations).toEqual([{ css: '', html: '', id: 1, javascript: '', name: 'Variation 1', traffic: 100 }]);
+    expect(campaign.variations).toHaveLength(1);
+    expect(campaign.variations[0]).toMatchObject({ css: '', html: '', id: 1, name: 'Variation 1', traffic: 100 });
+    expect(campaign.variations[0].javascript).toContain('async () => {');
   });
 
   it('saves variation HTML, CSS and valid JavaScript from its editor', () => {
-    let campaign = createCampaign([], [{ ...firstVariation, javascript: 'return true;' }]);
+    let campaign = createCampaign([], [{ ...firstVariation, javascript: 'async () => { return true; }' }]);
     const setCampaign = (update: (value: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => {
       campaign = update(campaign);
     };
@@ -238,20 +240,20 @@ describe('campaign variations', () => {
       </TranslationProvider>,
     );
     fireEvent.click(container.querySelectorAll('button')[1]);
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return false;' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return false; }' } });
     fireEvent.click(screen.getByRole('tab', { name: 'CSS' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: '.variant { color: red; }' } });
     fireEvent.click(screen.getByRole('tab', { name: 'HTML' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: '<div>Variant</div>' } });
     fireEvent.click(screen.getByRole('tab', { name: 'JavaScript' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'return false;' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'JavaScript editor' }), { target: { value: 'async () => { return false; }' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(campaign.variations[0]).toMatchObject({ css: '.variant { color: red; }', html: '<div>Variant</div>', javascript: 'return false;' });
+    expect(campaign.variations[0]).toMatchObject({ css: '.variant { color: red; }', html: '<div>Variant</div>', javascript: 'async () => { return false; }' });
   });
 
   it('normalizes cleared editor values and restores originals when cancelled', () => {
-    let campaign = createCampaign([], [{ ...firstVariation, css: '.original {}', html: '<main>Original</main>', javascript: 'return true;' }]);
+    let campaign = createCampaign([], [{ ...firstVariation, css: '.original {}', html: '<main>Original</main>', javascript: 'async () => { return true; }' }]);
     const setCampaign = (update: (value: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => {
       campaign = update(campaign);
     };
@@ -276,8 +278,8 @@ describe('campaign variations', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'CSS' }));
     expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('.original {}');
     fireEvent.click(screen.getByRole('tab', { name: 'JavaScript' }));
-    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('return true;');
-    expect(campaign.variations[0]).toMatchObject({ css: '.original {}', html: '<main>Original</main>', javascript: 'return true;' });
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('async () => { return true; }');
+    expect(campaign.variations[0]).toMatchObject({ css: '.original {}', html: '<main>Original</main>', javascript: 'async () => { return true; }' });
   });
 });
 

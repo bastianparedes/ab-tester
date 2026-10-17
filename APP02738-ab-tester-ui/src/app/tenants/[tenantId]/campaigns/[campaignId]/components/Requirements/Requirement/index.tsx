@@ -17,6 +17,15 @@ interface Props {
   audiences: TypeAudienceForCampaign[];
 }
 
+const javascript = `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+async () => {
+  /* write your code here */
+  /* Must resolve a boolean. If it's true, it will pass. */
+}
+`;
+
 const Requirement = ({ grandParentNode, id, index, parentNode, requirement, setCampaign, audiences }: Props) => {
   const { translation } = useTranslationContext();
 
@@ -150,7 +159,7 @@ const Requirement = ({ grandParentNode, id, index, parentNode, requirement, setC
       },
       custom: {
         data: {
-          javascript: 'return true;\nreturn await new Promise((r) => r(true));',
+          javascript,
           name: '',
         },
         type: 'custom',

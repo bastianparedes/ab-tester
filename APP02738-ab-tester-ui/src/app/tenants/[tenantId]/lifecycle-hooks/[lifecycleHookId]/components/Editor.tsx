@@ -1,7 +1,7 @@
 'use client';
 
 import Monaco from '@monaco-editor/react';
-import { jsCodeHasCorrectSyntax } from '@/utils/jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '@/utils/jsCode';
 
 type Props = {
   javascript: string;
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default function Editor({ javascript, onChange }: Props) {
-  const isValidJavascript = jsCodeHasCorrectSyntax(javascript);
+  const isValidJavascript = jsCodeIsSingleAsyncArrowFunction(javascript);
 
   return (
     <>

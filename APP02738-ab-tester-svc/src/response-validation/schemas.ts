@@ -254,8 +254,8 @@ export const campaignResponseSchema = z.object({
 
 export const trackEventResponseSchema = z.object({
   createdAt: dateSchema,
-  javascript: z.string(),
   id: idSchema,
+  javascript: z.string(),
   multipleTimes: z.boolean(),
   name: z.string(),
   status: statusSchema,

@@ -21,8 +21,8 @@ export const trackEvents = pgTable('track_events', {
   createdBy: integer('created_by')
     .notNull()
     .references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  javascript: text('get_data').notNull(),
   id: serial('id').primaryKey().unique().notNull(),
+  javascript: text('get_data').notNull(),
   multipleTimes: boolean('multiple_times').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   status: statusEnum('status').notNull().default('inactive'),

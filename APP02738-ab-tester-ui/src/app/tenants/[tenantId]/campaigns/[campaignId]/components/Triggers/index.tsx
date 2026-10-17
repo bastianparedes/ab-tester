@@ -9,6 +9,15 @@ interface Props {
   setCampaign: (campaign: (TypeCampaign: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => void;
 }
 
+const javascript = `
+/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
+
+async () => {
+  /* write your code here */
+  /* Must resolve a boolean. If it's true, it will trigger. */
+}
+`;
+
 const Triggers = ({ setCampaign, triggers }: Props) => {
   const { translation } = useTranslationContext();
 
@@ -44,7 +53,7 @@ const Triggers = ({ setCampaign, triggers }: Props) => {
       else if (newType === 'custom')
         campaign.triggers[index] = {
           data: {
-            javascript: 'return await new Promise((r) => { r() });',
+            javascript,
             name: '',
           },
           id: trigger.id,

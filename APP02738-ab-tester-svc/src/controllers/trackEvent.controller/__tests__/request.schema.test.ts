@@ -12,7 +12,7 @@ describe('track event schemas', () => {
   });
 
   it('validates handlers and strips unknown fields', () => {
-    const event = { extra: true, javascript: 'return { id: 1 };', multipleTimes: true, name: 'Purchase', status: 'active' };
+    const event = { extra: true, javascript: 'async () => { return { id: 1 }; }', multipleTimes: true, name: 'Purchase', status: 'active' };
 
     expect(trackEventSchema.parse(event)).toEqual({
       javascript: event.javascript,
