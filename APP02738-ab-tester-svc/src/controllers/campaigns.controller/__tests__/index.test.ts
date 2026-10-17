@@ -1,6 +1,7 @@
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import { CampaignsController, getCampaignsQuerySchema } from '../index';
+import { CampaignsController } from '../index';
+import { getCampaignsQuerySchema } from '../request.schema';
 
 const body = {
   name: 'Spring campaign',

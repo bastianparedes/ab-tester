@@ -13,18 +13,28 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AccountController, accountSchema, changePasswordSchema } from '../controllers/account.controller';
-import { AudiencesController, audienceSchema } from '../controllers/audiences.controller';
-import { CampaignsController, campaignSchema } from '../controllers/campaigns.controller';
-import { ExecutionGroupsController, executionGroupSchema } from '../controllers/executionGroup.controller';
+import { AccountController } from '../controllers/account.controller';
+import { accountSchema, changePasswordSchema } from '../controllers/account.controller/request.schema';
+import { AudiencesController } from '../controllers/audiences.controller';
+import { audienceSchema } from '../controllers/audiences.controller/request.schema';
+import { CampaignsController } from '../controllers/campaigns.controller';
+import { campaignSchema } from '../controllers/campaigns.controller/request.schema';
+import { ExecutionGroupsController } from '../controllers/executionGroup.controller';
+import { executionGroupSchema } from '../controllers/executionGroup.controller/request.schema';
 import { HealthController } from '../controllers/health.controller';
-import { LifecycleHookController, lifecycleHookSchema } from '../controllers/lifecycleHook.controller';
-import { RolesController, roleSchema } from '../controllers/roles.controller';
-import { TenantsController, tenantSchema } from '../controllers/tenants.controller';
-import { TrackEventController, trackEventSchema } from '../controllers/trackEvent.controller';
-import { newUserSchema, oldUserSchema, UsersController } from '../controllers/users.controller';
+import { LifecycleHookController } from '../controllers/lifecycleHook.controller';
+import { lifecycleHookSchema } from '../controllers/lifecycleHook.controller/request.schema';
+import { RolesController } from '../controllers/roles.controller';
+import { roleSchema } from '../controllers/roles.controller/request.schema';
+import { TenantsController } from '../controllers/tenants.controller';
+import { tenantSchema } from '../controllers/tenants.controller/request.schema';
+import { TrackEventController } from '../controllers/trackEvent.controller';
+import { trackEventSchema } from '../controllers/trackEvent.controller/request.schema';
+import { UsersController } from '../controllers/users.controller';
+import { newUserSchema, oldUserSchema } from '../controllers/users.controller/request.schema';
 import commonConstants from '../libs/sharedConstants';
-import { AuthController, logInSchema } from '../modules/public/controllers/auth.controller';
+import { AuthController } from '../modules/public/controllers/auth.controller';
+import { logInSchema } from '../modules/public/controllers/auth.controller/request.schema';
 import { ScriptController } from '../modules/public/controllers/script.controller';
 import { ApiZodBody } from './decorators';
 

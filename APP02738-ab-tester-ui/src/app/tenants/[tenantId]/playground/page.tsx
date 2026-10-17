@@ -1,8 +1,6 @@
 import { AlertTriangle, CheckCircle, Info, Loader2, Search, ShoppingCart, User } from 'lucide-react';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Navigation } from '@/app/_common/components/navigation';
-import languagesObject from '@/app/_common/contexts/Translation/languages';
 import constants from '@/config/constants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
@@ -16,10 +14,6 @@ type Props = {
 export default async function Page({ params: promiseParams }: Props) {
   const params = await promiseParams;
   const tenantId = Number(params.tenantId);
-  const cookieStore = await cookies();
-  const selectedLanguage = cookieStore.get(constants.cookieNames.lang)?.value;
-  const languageKey = selectedLanguage && selectedLanguage in languagesObject ? (selectedLanguage as keyof typeof languagesObject) : 'english';
-  const translation = languagesObject[languageKey].labels.playgroundDemo;
 
   const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
@@ -39,16 +33,16 @@ export default async function Page({ params: promiseParams }: Props) {
                 </h1>
                 <nav id="main-nav" className="flex space-x-6">
                   <button type="button" id="nav-home" className="text-gray-700 hover:text-indigo-600">
-                    {translation.header.home}
+                    Home
                   </button>
                   <button type="button" id="nav-products" className="text-gray-700 hover:text-indigo-600">
-                    {translation.header.products}
+                    Products
                   </button>
                   <button type="button" id="nav-offers" className="text-gray-700 hover:text-indigo-600">
-                    {translation.header.offers}
+                    Offers
                   </button>
                   <button type="button" id="nav-contact" className="text-gray-700 hover:text-indigo-600">
-                    {translation.header.contact}
+                    Contact
                   </button>
                 </nav>
               </div>
@@ -78,11 +72,11 @@ export default async function Page({ params: promiseParams }: Props) {
                 <input
                   id="search-input"
                   type="text"
-                  placeholder={translation.filters.productSearch}
+                  placeholder="Search products..."
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button type="button" id="search-button" className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                  {translation.filters.search}
+                  Search
                 </button>
               </div>
             </div>
@@ -93,38 +87,39 @@ export default async function Page({ params: promiseParams }: Props) {
         <div id="filters-section" className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-wrap gap-4 items-center">
             <div>
-              <span className="block text-sm font-medium text-gray-700 mb-1">{translation.filters.category}</span>
+              <span className="block text-sm font-medium text-gray-700 mb-1">Category</span>
               <select id="category-filter" className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option>{translation.filters.allProducts}</option>
-                {translation.products.map((product) => (
-                  <option key={product}>{product}</option>
-                ))}
+                <option>All</option>
+                <option>Laptops</option>
+                <option>Phones</option>
+                <option>Tablets</option>
+                <option>Accessories</option>
               </select>
             </div>
             <div>
-              <span className="block text-sm font-medium text-gray-700 mb-1">{translation.filters.price}</span>
+              <span className="block text-sm font-medium text-gray-700 mb-1">Price</span>
               <select id="price-filter" className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option>{translation.filters.anyPrice}</option>
+                <option>Any</option>
                 <option>$0 - $500</option>
                 <option>$500 - $1000</option>
                 <option>$1000+</option>
               </select>
             </div>
             <div>
-              <span className="block text-sm font-medium text-gray-700 mb-1">{translation.filters.brand}</span>
+              <span className="block text-sm font-medium text-gray-700 mb-1">Brand</span>
               <input
                 id="brand-filter"
                 type="text"
-                placeholder={translation.filters.filterByBrand}
+                placeholder="Filter by brand"
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div className="flex items-center mt-6">
               <input type="checkbox" id="stock-filter" className="w-4 h-4 text-indigo-600" />
-              <span className="ml-2 text-sm text-gray-700">{translation.filters.inStockOnly}</span>
+              <span className="ml-2 text-sm text-gray-700">In stock only</span>
             </div>
             <button type="button" id="clear-filters" className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-              {translation.filters.clear}
+              Clear filters
             </button>
           </div>
         </div>
@@ -138,7 +133,7 @@ export default async function Page({ params: promiseParams }: Props) {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  <span className="font-semibold">{translation.banner.title}</span> - {translation.banner.description}
+                  <span className="font-semibold">A/B TEST DEMO PAGE</span> - This is a static demo page for testing. No buttons or features are functional.
                 </p>
               </div>
             </div>
@@ -152,72 +147,72 @@ export default async function Page({ params: promiseParams }: Props) {
               <CheckCircle />
             </div>
             <h2 id="main-title" className="text-4xl font-bold text-gray-900 mb-4">
-              {translation.main.title}
+              A/B Testing Demo Page
             </h2>
             <p id="main-description" className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              {translation.main.description}
+              This static page is designed to test different interface elements, buttons, and forms without any real functionality.
             </p>
             <div id="variant-badge" className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
               <Info />
-              <span className="text-sm text-blue-800 font-medium">{translation.main.variant}</span>
+              <span className="text-sm text-blue-800 font-medium">Test variant: Control v1.0</span>
             </div>
           </div>
 
           {/* Sample Actions Grid */}
           <div id="actions-grid" className="grid grid-cols-3 gap-6 mb-12">
             <div id="primary-actions" className="bg-white p-6 rounded-lg shadow-md border-2 border-transparent hover:border-indigo-500 transition-colors">
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">{translation.actions.primaryTitle}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-900">Primary Actions</h3>
               <div className="space-y-2">
                 <button type="button" id="primary-action-1" className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                  {translation.actions.primary[0]}
+                  Primary Action 1
                 </button>
                 <button type="button" id="primary-action-2" className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                  {translation.actions.primary[1]}
+                  Primary Action 2
                 </button>
                 <button type="button" id="primary-action-3" className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                  {translation.actions.primary[2]}
+                  Primary Action 3
                 </button>
               </div>
             </div>
 
             <div id="secondary-actions" className="bg-white p-6 rounded-lg shadow-md border-2 border-transparent hover:border-green-500 transition-colors">
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">{translation.actions.secondaryTitle}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-900">Secondary Actions</h3>
               <div className="space-y-2">
                 <button
                   type="button"
                   id="secondary-action-1"
                   className="w-full py-2 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  {translation.actions.secondary[0]}
+                  Secondary Action 1
                 </button>
                 <button
                   type="button"
                   id="secondary-action-2"
                   className="w-full py-2 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  {translation.actions.secondary[1]}
+                  Secondary Action 2
                 </button>
                 <button
                   type="button"
                   id="secondary-action-3"
                   className="w-full py-2 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  {translation.actions.secondary[2]}
+                  Secondary Action 3
                 </button>
               </div>
             </div>
 
             <div id="alert-actions" className="bg-white p-6 rounded-lg shadow-md border-2 border-transparent hover:border-red-500 transition-colors">
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">{translation.actions.alertTitle}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-900">Alert Actions</h3>
               <div className="space-y-2">
                 <button type="button" id="alert-action-1" className="w-full py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                  {translation.actions.alert}
+                  Alert Action 1
                 </button>
                 <button type="button" id="warning-action" className="w-full py-2 px-4 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                  {translation.actions.warning}
+                  Warning Action
                 </button>
                 <button type="button" id="success-action" className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  {translation.actions.success}
+                  Success Action
                 </button>
               </div>
             </div>
@@ -225,86 +220,86 @@ export default async function Page({ params: promiseParams }: Props) {
 
           {/* Form Testing Section */}
           <div id="test-form" className="bg-white p-8 rounded-lg shadow-md mb-12">
-            <h3 className="text-2xl font-bold mb-6 text-gray-900">{translation.form.title}</h3>
+            <h3 className="text-2xl font-bold mb-6 text-gray-900">Test Form</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.fullName}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Full name</span>
                 <input
                   id="form-name"
                   type="text"
-                  placeholder={translation.form.namePlaceholder}
+                  placeholder="Jane Smith"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.email}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Email</span>
                 <input
                   id="form-email"
                   type="email"
-                  placeholder={translation.form.emailPlaceholder}
+                  placeholder="name@example.com"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.phone}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Phone</span>
                 <input
                   id="form-phone"
                   type="tel"
-                  placeholder={translation.form.phonePlaceholder}
+                  placeholder="+1 555 123 4567"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.date}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Date</span>
                 <input id="form-date" type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.priceRange}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Price range</span>
                 <input id="form-range" type="range" min="0" max="1000" className="w-full" />
               </div>
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.preferredColor}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Preferred color</span>
                 <input id="form-color" type="color" className="w-full h-10 border border-gray-300 rounded-lg" />
               </div>
               <div className="col-span-2">
-                <span className="block text-sm font-medium text-gray-700 mb-2">{translation.form.message}</span>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Message</span>
                 <textarea
                   id="form-message"
                   rows={4}
-                  placeholder={translation.form.messagePlaceholder}
+                  placeholder="Write your message here..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div className="col-span-2 space-y-3">
                 <div className="flex items-center">
                   <input type="checkbox" id="form-terms" className="w-4 h-4 text-indigo-600" />
-                  <span className="ml-2 text-sm text-gray-700">{translation.form.terms}</span>
+                  <span className="ml-2 text-sm text-gray-700">I agree to the terms and conditions</span>
                 </div>
                 <div className="flex items-center">
                   <input type="checkbox" id="form-newsletter" className="w-4 h-4 text-indigo-600" />
-                  <span className="ml-2 text-sm text-gray-700">{translation.form.updates}</span>
+                  <span className="ml-2 text-sm text-gray-700">I would like to receive news and promotions</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <input type="radio" name="plan" id="form-plan-basic" className="w-4 h-4 text-indigo-600" />
-                    <span className="ml-2 text-sm text-gray-700">{translation.form.basicPlan}</span>
+                    <span className="ml-2 text-sm text-gray-700">Basic Plan</span>
                   </div>
                   <div className="flex items-center">
                     <input type="radio" name="plan" id="form-plan-premium" className="w-4 h-4 text-indigo-600" />
-                    <span className="ml-2 text-sm text-gray-700">{translation.form.premiumPlan}</span>
+                    <span className="ml-2 text-sm text-gray-700">Premium Plan</span>
                   </div>
                   <div className="flex items-center">
                     <input type="radio" name="plan" id="form-plan-enterprise" className="w-4 h-4 text-indigo-600" />
-                    <span className="ml-2 text-sm text-gray-700">{translation.form.enterprisePlan}</span>
+                    <span className="ml-2 text-sm text-gray-700">Enterprise Plan</span>
                   </div>
                 </div>
               </div>
               <div className="col-span-2 flex gap-4">
                 <button type="button" id="form-submit" className="flex-1 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
-                  {translation.form.submit}
+                  Submit Form
                 </button>
                 <button type="button" id="form-cancel" className="flex-1 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-semibold">
-                  {translation.form.cancel}
+                  Cancel
                 </button>
               </div>
             </div>
@@ -312,55 +307,55 @@ export default async function Page({ params: promiseParams }: Props) {
 
           {/* Button Variations */}
           <div id="button-variations" className="bg-white p-8 rounded-lg shadow-md">
-            <h3 className="text-2xl font-bold mb-6 text-gray-900">{translation.buttons.title}</h3>
+            <h3 className="text-2xl font-bold mb-6 text-gray-900">Button Variations for Testing</h3>
             <div className="space-y-6">
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">{translation.buttons.sizesTitle}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Sizes</h4>
                 <div className="flex flex-wrap gap-3">
                   <button type="button" id="btn-size-small" className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
-                    {translation.buttons.small}
+                    Small
                   </button>
                   <button type="button" id="btn-size-medium" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                    {translation.buttons.medium}
+                    Medium
                   </button>
                   <button type="button" id="btn-size-large" className="px-6 py-3 bg-indigo-600 text-white text-lg rounded hover:bg-indigo-700">
-                    {translation.buttons.large}
+                    Large
                   </button>
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">{translation.buttons.stylesTitle}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Styles</h4>
                 <div className="flex flex-wrap gap-3">
                   <button type="button" id="btn-style-solid" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                    {translation.buttons.solid}
+                    Solid
                   </button>
                   <button type="button" id="btn-style-outline" className="px-4 py-2 border-2 border-indigo-600 text-indigo-600 rounded hover:bg-indigo-50">
-                    {translation.buttons.outline}
+                    Outline
                   </button>
                   <button type="button" id="btn-style-text" className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded">
-                    {translation.buttons.text}
+                    Text
                   </button>
                   <button
                     type="button"
                     id="btn-style-gradient"
                     className="px-4 py-2 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded hover:from-indigo-700 hover:to-purple-700"
                   >
-                    {translation.buttons.gradient}
+                    Gradient
                   </button>
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">{translation.buttons.statesTitle}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">States</h4>
                 <div className="flex flex-wrap gap-3">
                   <button type="button" id="btn-state-normal" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                    {translation.buttons.normal}
+                    Normal
                   </button>
                   <button type="button" id="btn-state-disabled" className="px-4 py-2 bg-indigo-600 text-white rounded opacity-50 cursor-not-allowed">
-                    {translation.buttons.disabled}
+                    Disabled
                   </button>
                   <button type="button" id="btn-state-loading" className="px-4 py-2 bg-indigo-600 text-white rounded flex items-center">
                     <Loader2 />
-                    {translation.buttons.loading}
+                    Loading
                   </button>
                 </div>
               </div>
@@ -373,21 +368,16 @@ export default async function Page({ params: promiseParams }: Props) {
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-8">
               <h2 id="newsletter-title" className="text-3xl font-bold mb-2">
-                {translation.newsletter.title}
+                Subscribe to our newsletter
               </h2>
               <p id="newsletter-description" className="text-indigo-200">
-                {translation.newsletter.description}
+                Get exclusive offers and updates
               </p>
             </div>
             <div className="max-w-md mx-auto flex gap-2">
-              <input
-                id="newsletter-email"
-                type="email"
-                placeholder={translation.newsletter.emailPlaceholder}
-                className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none"
-              />
+              <input id="newsletter-email" type="email" placeholder="you@example.com" className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none" />
               <button type="button" id="newsletter-submit" className="px-6 py-3 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 font-semibold">
-                {translation.newsletter.subscribe}
+                Subscribe
               </button>
             </div>
           </div>
@@ -398,72 +388,72 @@ export default async function Page({ params: promiseParams }: Props) {
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-4 gap-8">
               <div>
-                <h3 className="text-white font-semibold mb-4">{translation.footer.aboutUs}</h3>
+                <h3 className="text-white font-semibold mb-4">About Us</h3>
                 <ul className="space-y-2">
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.whoWeAre}
+                      Who We Are
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.careers}
+                      Careers
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.press}
+                      Press
                     </button>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">{translation.footer.help}</h3>
+                <h3 className="text-white font-semibold mb-4">Help</h3>
                 <ul className="space-y-2">
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.faq}
+                      Frequently Asked Questions
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.shipping}
+                      Shipping
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.returns}
+                      Returns
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.warranty}
+                      Warranty
                     </button>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">{translation.footer.contact}</h3>
+                <h3 className="text-white font-semibold mb-4">Contact</h3>
                 <ul className="space-y-2">
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.support}
+                      Support
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.footer.liveChat}
+                      Live chat
                     </button>
                   </li>
                   <li>
                     <button type="button" className="hover:text-white">
-                      {translation.form.email}
+                      Email
                     </button>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">{translation.footer.followUs}</h3>
+                <h3 className="text-white font-semibold mb-4">Follow Us</h3>
                 <div className="flex space-x-4">
                   <button type="button" className="hover:text-white">
                     Facebook
@@ -478,7 +468,7 @@ export default async function Page({ params: promiseParams }: Props) {
               </div>
             </div>
             <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-              <p>{translation.footer.copyright}</p>
+              <p>© 2026 AB Tester. All rights reserved.</p>
             </div>
           </div>
         </footer>

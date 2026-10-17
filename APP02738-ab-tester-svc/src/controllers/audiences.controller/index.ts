@@ -3,39 +3,17 @@ import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
-import commonConstants from '../../libs/sharedConstants';
+import { ZodResponse } from '../../interceptors/zod-response.interceptor';
 import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
-import { NodeRequirementSchema } from './requirementsValidator';
-
-export const getAudiencesQuerySchema = z
-  .object({
-    orderBy: z.enum(['status', 'name', 'id', 'updatedAt']),
-    orderDirection: z.enum(commonConstants.orderDirectionArray),
-    page: z.coerce.number().int(),
-    statusList: z.preprocess(
-      (val) => {
-        if (!val) return [];
-        if (typeof val === 'string') return [val];
-        return val;
-      },
-      z.array(z.enum(commonConstants.arrayStatusArray)),
-    ),
-    textSearch: z.string().default(''),
-  })
-  .strip();
-
-export const audienceSchema = z
-  .object({
-    name: z.string(),
-    requirements: NodeRequirementSchema,
-  })
-  .strip();
+import { audienceSchema, getAudiencesQuerySchema } from './request.schema';
+import { audienceResponseSchemas } from './response.schema';
 
 @Controller('tenants/:tenantId/audiences')
 export class AudiencesController {
   constructor(private readonly dbService: DbService) {}
 
+  @ZodResponse(audienceResponseSchemas.getMany)
   @UseGuards(AuthGuard({ action: 'read', feature: 'audience' }))
   @Get()
   async getMany(
@@ -46,6 +24,7 @@ export class AudiencesController {
     return audiences;
   }
 
+  @ZodResponse(audienceResponseSchemas.getAllForCampaign)
   @UseGuards(AuthGuard({ action: 'read', feature: 'audience' }))
   @Get('getAllForCampaign')
   async getAllForCampaign(@Param('tenantId', ParseIntPipe) tenantId: number): Promise<TypeApiAudiences['getAllForCampaign']['response']> {
@@ -53,6 +32,7 @@ export class AudiencesController {
     return { audiences };
   }
 
+  @ZodResponse(audienceResponseSchemas.get)
   @UseGuards(AuthGuard({ action: 'read', feature: 'audience' }))
   @Get(':audienceId')
   async get(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('audienceId', ParseIntPipe) audienceId: number): Promise<TypeApiAudiences['get']['response']> {
@@ -61,6 +41,7 @@ export class AudiencesController {
     return result;
   }
 
+  @ZodResponse(audienceResponseSchemas.create)
   @UseGuards(AuthGuard({ action: 'create', feature: 'audience' }))
   @Post()
   async create(
@@ -75,6 +56,7 @@ export class AudiencesController {
     return {};
   }
 
+  @ZodResponse(audienceResponseSchemas.update)
   @UseGuards(AuthGuard({ action: 'update', feature: 'audience' }))
   @Put(':audienceId')
   async update(
@@ -90,6 +72,7 @@ export class AudiencesController {
     return {};
   }
 
+  @ZodResponse(audienceResponseSchemas.remove)
   @UseGuards(AuthGuard({ action: 'delete', feature: 'audience' }))
   @Delete(':audienceId')
   async remove(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('audienceId', ParseIntPipe) audienceId: number): Promise<TypeApiAudiences['delete']['response']> {

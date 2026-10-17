@@ -1,6 +1,7 @@
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
-import { AudiencesController, getAudiencesQuerySchema } from '../index';
+import { AudiencesController } from '../index';
+import { getAudiencesQuerySchema } from '../request.schema';
 
 describe('AudiencesController', () => {
   it('normalizes audience query values and status filters', () => {

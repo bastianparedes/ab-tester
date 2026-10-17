@@ -3,45 +3,17 @@ import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
-import commonConstants from '../../libs/sharedConstants';
+import { ZodResponse } from '../../interceptors/zod-response.interceptor';
 import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
-import { nodeRequirementSchema } from './requirementsValidator';
-import { triggerSchema } from './triggersValidator';
-import { variationSchema } from './variationsValidator';
-
-export const getCampaignsQuerySchema = z
-  .object({
-    orderBy: z.enum(['status', 'name', 'id', 'updatedAt']),
-    orderDirection: z.enum(commonConstants.orderDirectionArray),
-    page: z.coerce.number().int(),
-    quantity: z.coerce.number(),
-    statusList: z.preprocess(
-      (val) => {
-        if (!val) return [];
-        if (typeof val === 'string') return [val];
-        return val;
-      },
-      z.array(z.enum(commonConstants.arrayStatusArray)),
-    ),
-    textSearch: z.string().default(''),
-  })
-  .strip();
-
-export const campaignSchema = z
-  .object({
-    name: z.string(),
-    requirements: nodeRequirementSchema,
-    status: z.enum(commonConstants.arrayStatusArray),
-    triggers: triggerSchema,
-    variations: variationSchema,
-  })
-  .strip();
+import { campaignSchema, getCampaignsQuerySchema } from './request.schema';
+import { campaignResponseSchemas } from './response.schema';
 
 @Controller('tenants/:tenantId/campaigns')
 export class CampaignsController {
   constructor(private readonly dbService: DbService) {}
 
+  @ZodResponse(campaignResponseSchemas.getMany)
   @UseGuards(AuthGuard({ action: 'read', feature: 'campaign' }))
   @Get()
   async getMany(
@@ -52,6 +24,7 @@ export class CampaignsController {
     return campaigns;
   }
 
+  @ZodResponse(campaignResponseSchemas.getAllForExecutionGroup)
   @UseGuards(AuthGuard({ action: 'read', feature: 'campaign' }))
   @Get('getAllForExecutionGroup')
   async getAllLightVersion(@Param('tenantId', ParseIntPipe) tenantId: number): Promise<TypeApiCampaigns['getAllForExecutionGroup']['response']> {
@@ -59,6 +32,7 @@ export class CampaignsController {
     return { campaigns };
   }
 
+  @ZodResponse(campaignResponseSchemas.get)
   @UseGuards(AuthGuard({ action: 'read', feature: 'campaign' }))
   @Get(':campaignId')
   async get(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('campaignId', ParseIntPipe) campaignId: number): Promise<TypeApiCampaigns['get']['response']> {
@@ -67,6 +41,7 @@ export class CampaignsController {
     return result;
   }
 
+  @ZodResponse(campaignResponseSchemas.create)
   @UseGuards(AuthGuard({ action: 'create', feature: 'campaign' }))
   @Post()
   async create(
@@ -81,6 +56,7 @@ export class CampaignsController {
     return {};
   }
 
+  @ZodResponse(campaignResponseSchemas.update)
   @UseGuards(AuthGuard({ action: 'update', feature: 'campaign' }))
   @Put(':campaignId')
   async update(
@@ -96,6 +72,7 @@ export class CampaignsController {
     return {};
   }
 
+  @ZodResponse(campaignResponseSchemas.remove)
   @UseGuards(AuthGuard({ action: 'delete', feature: 'campaign' }))
   @Delete(':campaignId')
   async remove(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('campaignId', ParseIntPipe) campaignId: number): Promise<TypeApiCampaigns['delete']['response']> {

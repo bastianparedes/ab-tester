@@ -1,7 +1,7 @@
 {
   "author": "Bastián Paredes",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.8",
+    "@biomejs/biome": "2.5.15",
     "typescript": "^5.9.3"
   },
   "exports": {
