@@ -32,4 +32,21 @@ describe('getUserFromCookies', () => {
       permissions: ['campaign:read', 'user:read', 'campaign:write'],
     });
   });
+
+  it('falls back to an empty permission list if role reduction returns no value', async () => {
+    const user: TypeUser = {
+      email: 'ana@example.test',
+      id: 7,
+      name: 'Ana',
+      roles: new Proxy([], {
+        get(target, property, receiver) {
+          if (property === 'reduce') return () => null;
+          return Reflect.get(target, property, receiver);
+        },
+      }),
+    };
+    getUser.mockResolvedValue({ json: async () => user, ok: true } as Awaited<ReturnType<typeof apiCaller.users.get>>);
+
+    await expect(getUserFromCookies()).resolves.toEqual({ data: user, isLogedIn: true, permissions: [] });
+  });
 });

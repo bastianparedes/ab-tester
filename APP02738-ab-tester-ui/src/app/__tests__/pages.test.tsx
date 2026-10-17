@@ -15,6 +15,7 @@ import ExecutionGroupCreatePage from '../tenants/[tenantId]/execution-groups/und
 import LifecycleHookDetailPage from '../tenants/[tenantId]/lifecycle-hooks/[lifecycleHookId]/page';
 import LifecycleHooksPage from '../tenants/[tenantId]/lifecycle-hooks/page';
 import LifecycleHookCreatePage from '../tenants/[tenantId]/lifecycle-hooks/undefined/page';
+import PlaygroundPage from '../tenants/[tenantId]/playground/page';
 import ScriptPage from '../tenants/[tenantId]/script/page';
 import TrackEventDetailPage from '../tenants/[tenantId]/track-events/[trackEventId]/page';
 import TrackEventsPage from '../tenants/[tenantId]/track-events/page';
@@ -349,6 +350,20 @@ describe('server route pages', () => {
     ).rejects.toBeTruthy();
   });
 
+  it('redirects when lifecycle hook creation cannot load the tenant or clone', async () => {
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(
+      LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
+    ).rejects.toBeTruthy();
+
+    vi.restoreAllMocks();
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
+    vi.spyOn(apiCaller.lifecycleHooks, 'get').mockResolvedValue({ ok: false });
+    await expect(
+      LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({ cloneFrom: '6' }) }),
+    ).rejects.toBeTruthy();
+  });
+
   it('creates an execution group with its default campaign rules', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
     const campaigns = [{ id: 5, name: 'Spring test' }];
@@ -371,6 +386,27 @@ describe('server route pages', () => {
         waitForEveryCampaignToBeEvaluated: true,
       },
     });
+  });
+
+  it('redirects execution-group creation when tenant or campaign data is unavailable', async () => {
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(ExecutionGroupCreatePage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+
+    vi.restoreAllMocks();
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
+    vi.spyOn(apiCaller.campaigns, 'getAllForExecutionGroup').mockResolvedValue({ ok: false });
+    await expect(ExecutionGroupCreatePage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
+  });
+
+  it('loads the playground for its tenant and redirects when the tenant is unavailable', async () => {
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
+    const result = (await PlaygroundPage({ params: Promise.resolve({ tenantId: '12' }) })) as unknown as NavigationResult;
+    expect(result.props.tenant).toEqual(tenant);
+    expect(result.props.breadcrumb?.at(-1)?.name).toBe('Playground');
+
+    vi.restoreAllMocks();
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(PlaygroundPage({ params: Promise.resolve({ tenantId: '12' }) })).rejects.toBeTruthy();
   });
 
   it('redirects to the track-event list when an audience has no tracking events', async () => {
@@ -401,6 +437,18 @@ describe('server route pages', () => {
     vi.spyOn(apiCaller.trackEvents, 'get').mockResolvedValue({ ok: false });
 
     await expect(TrackEventDetailPage({ params: Promise.resolve({ tenantId: '12', trackEventId: '8' }) })).rejects.toBeTruthy();
+  });
+
+  it('redirects track-event detail when its tenant cannot be loaded', async () => {
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(TrackEventDetailPage({ params: Promise.resolve({ tenantId: '12', trackEventId: '8' }) })).rejects.toBeTruthy();
+  });
+
+  it('redirects track-event creation when its tenant cannot be loaded', async () => {
+    vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
+    await expect(
+      TrackEventCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
+    ).rejects.toBeTruthy();
   });
 
   it.each(['tenant', 'audience', 'track events'] as const)('redirects audience detail when %s data fails', async (failedResource) => {

@@ -18,8 +18,11 @@ import { LiveViewersNavbar as TrackEventLiveViewers } from '../tenants/[tenantId
 
 const socketHandlers = vi.hoisted(() => new Map<string, (payload: unknown) => void>());
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ onChange, value }: { onChange?: (value: string) => void; value: string }) => (
-    <textarea aria-label="JavaScript editor" onChange={(event) => onChange?.(event.target.value)} value={value} />
+  default: ({ onChange, value }: { onChange?: (value: string | undefined) => void; value: string }) => (
+    <>
+      <textarea aria-label="JavaScript editor" onChange={(event) => onChange?.(event.target.value)} value={value} />
+      <button type="button" aria-label="Clear JavaScript editor" onClick={() => onChange?.(undefined)} />
+    </>
   ),
 }));
 vi.mock('socket.io-client', () => ({
@@ -148,6 +151,18 @@ describe('track event custom code editor', () => {
     expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('async () => { return false; }');
     expect(currentCampaign.requirements.data.children[0]).toEqual(requirement);
   });
+
+  it('normalizes an undefined editor change and disables saving', () => {
+    renderWithUser(
+      <CustomRequirementEditor requirement={requirement} setCampaign={() => {}} />,
+      currentUser,
+    );
+    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear JavaScript editor' }));
+
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('');
+    expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
+  });
 });
 
 describe('track event editor', () => {
@@ -176,6 +191,33 @@ describe('track event editor', () => {
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'active' } });
     fireEvent.click(screen.getByRole('checkbox'));
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('normalizes an undefined Monaco value and disables saving', () => {
+    renderWithUser(<TrackEventEditor initialTrackEvent={{ ...initialTrackEvent, javascript: validJavaScript }} tenantId={12} trackEventId={undefined} />, {
+      data: currentUser.data,
+      isLogedIn: true,
+      permissions: [getStringPermission({ action: 'create', feature: 'track-event', tenantId: 12 })],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear JavaScript editor' }));
+
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('');
+    expect((screen.getByRole('button', { name: 'Save track event' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('uses the fallback status color for an unsupported track-event status', () => {
+    const unknownStatusTrackEvent: TypeTrackEventWithOptionalId = {
+      ...initialTrackEvent,
+      // @ts-expect-error Exercise defensive styling for unsupported API data.
+      status: 'archived',
+    };
+    const { container } = renderWithUser(<TrackEventEditor initialTrackEvent={unknownStatusTrackEvent} tenantId={12} trackEventId={undefined} />, {
+      data: currentUser.data,
+      isLogedIn: true,
+      permissions: [getStringPermission({ action: 'create', feature: 'track-event', tenantId: 12 })],
+    });
+
+    expect((container.querySelector('select') as HTMLSelectElement).className).toContain('bg-red-500');
   });
 
   it('hides the save action when the user cannot create track events', () => {

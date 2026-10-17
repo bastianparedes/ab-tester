@@ -15,6 +15,7 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     '((async (input) => {}))',
     '/* leading comment */ async /* before args */ (input /* arg comment */) /* before arrow */ => /* before body */ {}',
     'async /* comment with => and } */ (first, second) => {}',
+    'async (value) /* unmatched ) inside a valid comment */ => {}',
     'async (\n  first,\n  second,\n) => {}',
     'async () => { return true; }',
     'async () => { const value = 1; }',
@@ -71,9 +72,15 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     'async () => {} /* trailing comment */ extra',
     'async () => { const value = ; }',
     'async () => { await ; }',
+    '42',
+    '({ value: true })',
     'value => {}',
     ';suffix',
   ])('rejects code that is not exactly one async arrow with parenthesized parameters and a block body: %s', (jsCode) => {
     expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
+  });
+
+  it('returns false rather than throwing for a non-string runtime value', () => {
+    expect(jsCodeIsSingleAsyncArrowFunction(null as never)).toBe(false);
   });
 });

@@ -194,6 +194,15 @@ describe('campaign list client page', () => {
     await waitFor(() => expect(getMany).toHaveBeenCalledOnce());
     expect(screen.getByText('No tests found that match the filters')).toBeTruthy();
   });
+
+  it('uses the neutral status style for an unknown campaign status', async () => {
+    const unknownCampaign = { ...campaign, status: 'archived' };
+    vi.spyOn(apiCaller.campaigns, 'getMany').mockImplementation(async () => successfulResponse({ campaigns: [unknownCampaign], count: 1 }));
+    renderWithProviders(<CampaignList tenantId={tenantId} />);
+
+    const row = (await screen.findByText('Spring campaign')).closest('tr') as HTMLElement;
+    expect(row.querySelector('.bg-gray-100')).not.toBeNull();
+  });
 });
 
 it('shows clone/edit/group links according to campaign permissions and status', async () => {
@@ -251,6 +260,10 @@ describe('execution group list client page', () => {
         queryParams: { orderBy: 'name', orderDirection: 'asc', page: 0, quantity: 25, statusList: ['active', 'inactive'], textSearch: '' },
       }),
     );
+    fireEvent.click(screen.getByRole('columnheader', { name: /Status/ }));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status' }) })),
+    );
   });
 
   it('covers execution-group sort toggles, filters, pagination and create access', async () => {
@@ -262,6 +275,10 @@ describe('execution group list client page', () => {
     fireEvent.click(screen.getByRole('columnheader', { name: /ID/ }));
     await waitFor(() =>
       expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'id', orderDirection: 'desc' }) })),
+    );
+    fireEvent.click(screen.getByRole('columnheader', { name: /Name/ }));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'name', orderDirection: 'asc' }) })),
     );
     fireEvent.click(screen.getByRole('columnheader', { name: /Updated at/ }));
     await waitFor(() =>
@@ -361,6 +378,15 @@ describe('execution group list client page', () => {
     await screen.findByText('Primary group');
 
     expect(screen.getByRole('link').getAttribute('href')).toBe('/tenants/12/execution-groups/8');
+  });
+
+  it('uses the neutral status style for an unknown execution-group status', async () => {
+    const unknownGroup = { ...executionGroup, status: 'archived' };
+    vi.spyOn(apiCaller.executionGroups, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, executionGroups: [unknownGroup] }));
+    renderWithProviders(<ExecutionGroupList tenantId={tenantId} />);
+
+    const row = (await screen.findByText('Primary group')).closest('tr') as HTMLElement;
+    expect(row.querySelector('.bg-gray-100')).not.toBeNull();
   });
 });
 
@@ -531,6 +557,15 @@ describe('track event list client page', () => {
     const eventRow = screen.getByText('Checkout').closest('tr') as HTMLElement;
     expect(within(eventRow).getByText('Inactive').className).toContain('bg-yellow-100');
   });
+
+  it('uses the neutral status style for an unknown track-event status', async () => {
+    const unknownTrackEvent = { ...trackEvent, status: 'archived' };
+    vi.spyOn(apiCaller.trackEvents, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, trackEvents: [unknownTrackEvent] }));
+    renderWithProviders(<TrackEventList tenantId={tenantId} />);
+
+    const row = (await screen.findByText('Checkout')).closest('tr') as HTMLElement;
+    expect(row.querySelector('.bg-gray-100')).not.toBeNull();
+  });
 });
 
 describe('lifecycle hook list client page', () => {
@@ -578,6 +613,13 @@ describe('lifecycle hook list client page', () => {
       expect(getMany).toHaveBeenLastCalledWith({
         pathParams: { tenantId },
         queryParams: { orderBy: 'name', orderDirection: 'desc', page: 0, quantity: 50, statusList: ['inactive'], textSearch: 'script' },
+      }),
+    );
+    fireEvent.click(screen.getByRole('columnheader', { name: /Name/ }));
+    await waitFor(() =>
+      expect(getMany).toHaveBeenLastCalledWith({
+        pathParams: { tenantId },
+        queryParams: { orderBy: 'name', orderDirection: 'asc', page: 0, quantity: 50, statusList: ['inactive'], textSearch: 'script' },
       }),
     );
 
@@ -674,4 +716,14 @@ describe('lifecycle hook list client page', () => {
     await waitFor(() => expect(getMany).toHaveBeenCalledOnce());
     expect(screen.getByText('No lifecycle hooks found that match the filters')).toBeTruthy();
   });
+
+  it('uses the neutral status style for an unknown lifecycle-hook status', async () => {
+    const unknownHook = { createdAt, id: 17, name: 'Unknown status hook', option: 'scriptStart', status: 'archived', updatedAt };
+    vi.spyOn(apiCaller.lifecycleHooks, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, lifecycleHooks: [unknownHook] }));
+    renderWithProviders(<LifecycleHookList tenantId={tenantId} />);
+
+    const row = (await screen.findByText('Unknown status hook')).closest('tr') as HTMLElement;
+    expect(row.querySelector('.bg-gray-100')).not.toBeNull();
+  });
+
 });

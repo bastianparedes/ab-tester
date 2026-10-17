@@ -19,6 +19,7 @@ describe('initCampaigns', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     session.clear();
+    window.ab_tester.serviceBaseUrl = 'http://localhost:4000';
     Object.defineProperty(globalThis, 'location', { configurable: true, value: { search: '' } });
     Object.defineProperty(globalThis, 'sessionStorage', {
       configurable: true,
@@ -105,5 +106,18 @@ describe('initCampaigns', () => {
 
     expect(session.get(abTesterCallDebugPanel)).toBe('false');
     expect(initExecutionGroups).toHaveBeenCalledOnce();
+  });
+
+  it('loads the debug panel when its query preference is enabled', async () => {
+    window.ab_tester.serviceBaseUrl = 'data:text/javascript,export default true; //';
+    Object.defineProperty(globalThis, 'location', {
+      configurable: true,
+      value: { search: `?${abTesterCallDebugPanel}=true` },
+    });
+
+    initCampaigns();
+
+    expect(session.get(abTesterCallDebugPanel)).toBe('true');
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 });

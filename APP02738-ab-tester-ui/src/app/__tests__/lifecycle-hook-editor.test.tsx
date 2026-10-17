@@ -104,6 +104,25 @@ describe('lifecycle hook editor', () => {
     await waitFor(() => expect(location.href).toBe('/tenants/12/lifecycle-hooks'));
   });
 
+  it('creates a hook successfully and accepts an inactive status selection', async () => {
+    const response = new Response('{}', { status: 200 });
+    const responseOk = vi.spyOn(response, 'ok', 'get').mockReturnValue(true);
+    const create = vi.spyOn(apiCaller.lifecycleHooks, 'create').mockResolvedValue(response);
+    vi.stubGlobal('location', { href: '' });
+    renderHookEditor({ javascript: validJavaScript, name: 'Hook', status: 'active', tenantId: 12, trigger: 'scriptStart' });
+    fireEvent.change(screen.getByLabelText('Lifecycle hook status'), { target: { value: 'inactive' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith({
+        body: { javascript: validJavaScript, name: 'Hook', option: 'scriptStart', status: 'inactive' },
+        pathParams: { tenantId: 12 },
+      }),
+    );
+    expect(responseOk).toHaveBeenCalled();
+    await waitFor(() => expect(location.href).toBe('/tenants/12/lifecycle-hooks'));
+  });
+
   it('redirects to the hook list when exiting without saving', () => {
     vi.stubGlobal('location', { href: '' });
     renderHookEditor({ javascript: validJavaScript, name: 'Hook', status: 'active', tenantId: 12, trigger: 'scriptStart' });

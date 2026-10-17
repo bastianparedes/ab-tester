@@ -117,4 +117,13 @@ describe('Toast', () => {
     );
     expect(screen.queryByTestId('close-button')).toBeNull();
   });
+
+  it('throws a clear error when useToast is called outside its provider', () => {
+    const Consumer = () => {
+      useToast();
+      return null;
+    };
+
+    expect(() => render(<Consumer />)).toThrow('useToast must be used inside ToastProvider');
+  });
 });

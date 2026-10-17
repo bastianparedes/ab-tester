@@ -53,4 +53,14 @@ describe('DynamicDialog', () => {
 
     await expect(result).resolves.toBeNull();
   });
+
+  it('resolves with null when the dialog is dismissed through its close control', async () => {
+    const confirmation = useDialogStore.getState().confirm({ title: 'Dismiss me' });
+    renderDialog();
+
+    fireEvent.click(screen.getAllByRole('button', { name: '' })[1]);
+
+    await expect(confirmation).resolves.toBeNull();
+    await waitFor(() => expect(screen.queryByText('Dismiss me')).toBeNull());
+  });
 });

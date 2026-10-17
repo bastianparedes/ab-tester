@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useDialogStore } from '../state';
 
+const initialResolver = useDialogStore.getState().resolver;
+
 describe('useDialogStore', () => {
   beforeEach(() => {
     useDialogStore.setState({
       data: null,
       description: null,
       isOpen: false,
-      resolver: () => {},
+      resolver: initialResolver,
       title: null,
     });
   });
@@ -63,5 +65,10 @@ describe('useDialogStore', () => {
     expect(useDialogStore.getState()).toMatchObject({ description: null, title: null });
     useDialogStore.getState().completeResolver(false);
     await expect(confirmationWithoutDetails).resolves.toBe(false);
+  });
+
+  it('safely completes a dialog before a resolver has been registered', () => {
+    expect(() => useDialogStore.getState().completeResolver(null)).not.toThrow();
+    expect(useDialogStore.getState()).toMatchObject({ data: null, isOpen: false, title: null });
   });
 });

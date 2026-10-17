@@ -9,6 +9,7 @@ import AudienceRequirements from '../tenants/[tenantId]/audiences/[audienceId]/c
 import BooleanAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/BooleanComponent';
 import NumberAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/NumberComponent';
 import StringAudienceRequirement from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific/StringComponent';
+import AudienceRequirementSpecific from '../tenants/[tenantId]/audiences/[audienceId]/components/Requirements/Requirement/RequirementSpecific';
 import AudienceRequirement from '../tenants/[tenantId]/campaigns/[campaignId]/components/Requirements/Requirement/RequirementSpecific/Audience';
 import CustomRequirement from '../tenants/[tenantId]/campaigns/[campaignId]/components/Requirements/Requirement/RequirementSpecific/Custom';
 import CustomRequirementEditor from '../tenants/[tenantId]/campaigns/[campaignId]/components/Requirements/Requirement/RequirementSpecific/Custom/Editor';
@@ -17,8 +18,11 @@ import StorageRequirement from '../tenants/[tenantId]/campaigns/[campaignId]/com
 import UrlRequirement from '../tenants/[tenantId]/campaigns/[campaignId]/components/Requirements/Requirement/RequirementSpecific/Url';
 
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ onChange, value }: { onChange?: (value: string) => void; value: string }) => (
-    <textarea aria-label="JavaScript editor" onChange={(event) => onChange?.(event.target.value)} value={value} />
+  default: ({ onChange, value }: { onChange?: (value: string | undefined) => void; value: string }) => (
+    <>
+      <textarea aria-label="JavaScript editor" onChange={(event) => onChange?.(event.target.value)} value={value} />
+      <button type="button" aria-label="Clear JavaScript editor" onClick={() => onChange?.(undefined)} />
+    </>
   ),
 }));
 
@@ -279,6 +283,29 @@ describe('audience requirement-specific controls', () => {
     expect(screen.getByText('Restrictions')).toBeTruthy();
     expect(screen.queryByPlaceholderText('Value')).toBeNull();
   });
+
+  it('renders no editor for an any requirement when rendered directly', () => {
+    const requirement: TypeAudienceWithOptionalId['requirements']['data']['children'][number] = {
+      data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1 },
+      type: 'any',
+    };
+
+    const { container } = renderWithTranslations(<AudienceRequirementSpecific requirement={requirement} setAudience={setAudience} />);
+
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders no editor for an unknown runtime requirement type', () => {
+    const requirement: TypeAudienceWithOptionalId['requirements']['data']['children'][number] = {
+      data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 1, timeUnit: 'days', trackEventId: 1 },
+      type: 'any',
+    };
+    Object.defineProperty(requirement, 'type', { value: 'unsupported' });
+
+    const { container } = renderWithTranslations(<AudienceRequirementSpecific requirement={requirement} setAudience={setAudience} />);
+
+    expect(container.firstChild).toBeNull();
+  });
 });
 
 describe('custom requirement code editor', () => {
@@ -297,5 +324,15 @@ describe('custom requirement code editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(requirement.data.javascript).toBe('async () => { return false; }');
+  });
+
+  it('normalizes an undefined editor change and disables saving', () => {
+    const requirement: TypeCustomRequirement = { data: { javascript: 'async () => { return true; }', name: 'Custom' }, type: 'custom' };
+    renderWithTranslations(<CustomRequirementEditor requirement={requirement} setCampaign={setCampaign} />);
+    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear JavaScript editor' }));
+
+    expect((screen.getByRole('textbox', { name: 'JavaScript editor' }) as HTMLTextAreaElement).value).toBe('');
+    expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

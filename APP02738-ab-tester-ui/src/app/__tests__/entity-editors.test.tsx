@@ -155,6 +155,20 @@ describe('campaign editor', () => {
 });
 
 describe('execution group editor', () => {
+  it('uses the fallback status color for an unknown execution-group status', () => {
+    const unknownStatusGroup: TypeExecutionGroupWithOptionalId = {
+      ...executionGroup,
+      // @ts-expect-error Exercise defensive styling for unsupported API data.
+      status: 'archived',
+    };
+    const { container } = renderWithPermissions(
+      <ExecutionGroupEditor allCampaigns={campaigns} executionGroupId={undefined} initialCampaigns={[]} initialExecutionGroup={unknownStatusGroup} tenantId={12} />,
+      [getStringPermission({ action: 'create', feature: 'execution-group', tenantId: 12 })],
+    );
+
+    expect((container.querySelector('select') as HTMLSelectElement).className).toContain('bg-red-500');
+  });
+
   it('updates configuration toggles and adds a searched campaign', () => {
     vi.stubGlobal('location', { href: '' });
     const { container } = renderWithPermissions(

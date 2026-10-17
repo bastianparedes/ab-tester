@@ -161,6 +161,13 @@ describe('audience editor client page', () => {
     await waitFor(() => expect(location.href).toBe('/tenants/12/audiences'));
   });
 
+  it('renders requirement controls when tracking events are available', () => {
+    renderWithUser(<AudienceEditor initialAudience={initialAudience} tenantId={12} trackEvents={[{ id: 8, name: 'Checkout' }]} />, []);
+
+    expect(screen.getByText('Restrictions')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'New restriction' })).toBeTruthy();
+  });
+
   it('updates an existing audience when update permission is present', async () => {
     const update = vi.spyOn(apiCaller.audiences, 'update').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });

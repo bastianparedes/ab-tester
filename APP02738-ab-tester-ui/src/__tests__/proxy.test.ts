@@ -37,7 +37,8 @@ describe('auth proxy', () => {
   it('copies refreshed cookies and their supported attributes onto the response', async () => {
     const backendResponse = new Response(null, {
       headers: {
-        'set-cookie': 'accessToken=next-access; Path=/; HttpOnly; Secure; SameSite=Lax, refreshToken=next-refresh; Path=/api; Max-Age=3600; SameSite=Strict',
+        'set-cookie':
+          'accessToken=next-access; Path=/; Expires=Mon, 21 Oct 2030 07:28:00 GMT; HttpOnly; Secure; SameSite=Lax, refreshToken=next-refresh; Path=/api; Max-Age=3600; SameSite=Strict',
       },
     });
     vi.spyOn(apiCaller.sessions, 'refreshAccessToken').mockResolvedValue(backendResponse);
@@ -48,6 +49,7 @@ describe('auth proxy', () => {
     expect(response.cookies.get(sharedConstants.cookieNames.refreshToken)?.value).toBe('next-refresh');
     expect(response.headers.get('set-cookie')).toContain('HttpOnly');
     expect(response.headers.get('set-cookie')).toContain('Secure');
+    expect(response.headers.get('set-cookie')).toContain('Expires=Mon, 21 Oct 2030 07:28:00 GMT');
     expect(response.headers.get('set-cookie')).toContain('SameSite=lax');
     expect(response.headers.get('set-cookie')).toContain('Max-Age=3600');
   });

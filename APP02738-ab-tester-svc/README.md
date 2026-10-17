@@ -1,89 +1,117 @@
-# 🚀 AB Tester Project
+# AB Tester Service
 
-This project uses Docker to easily run all required services (backend, frontend, database, and cache).
+The AB Tester backend API, built with NestJS. It provides the REST and
+Socket.IO services used by the AB Tester UI and client script.
 
-## 📦 Requirements
+## Requirements
 
-Make sure you have installed:
+- Docker Desktop with Docker Compose, for the recommended setup
+- Node.js 26 and npm, for local development and running project commands
+- The team's `.npmrc` configuration to install private `@ab-tester/*` packages
 
-* Docker  
-* Docker Compose  
+Ask a team member for `.npmrc` if you do not have access. Do not commit
+`.npmrc` or registry credentials.
 
-## 📁 Important Structure
+## Run the full application with Docker Compose
 
-For the project to work correctly, your folder structure should look like this:
+The Compose file in this repository starts PostgreSQL, Redis, the backend, and
+the UI. The UI directory must be a sibling of this service directory, or
+`AB_TESTER_UI_PATH` must point to its location.
 
-    /parent-folder
-    │
-    ├── ab-tester-ui
-    │   ├── docker-compose.yml
-    │   ├── .env
-    │   └── /src
-    │
-    └── ab-tester-ui   ← IMPORTANT (must be a sibling folder, not inside backend)
+1. From this directory, create your local environment file:
 
-⚠️ **The `ab-tester-ui` folder must NOT be inside the backend project.**  
-It needs to be at the same level (as a sibling directory), because the `frontend` service mounts it as a volume using a relative path (`../ab-tester-ui`).
+   ```powershell
+   Copy-Item .env.example .env
+   ```
 
-## ⚙️ Setup
+2. Edit `.env`. In particular, replace the example database password, JWT
+   secret, and administrator password with values appropriate for your local
+   environment. Verify that `AB_TESTER_UI_PATH` points to the UI directory.
+3. Start the application:
 
-1. Copy the environment variables file:
+   ```powershell
+   docker compose up --build
+   ```
 
-```bash
-cp .env.example .env
-```
+Services are available at:
 
-2. Edit the `.env` file if you need to customize any values.
+| Service | Local address |
+| --- | --- |
+| UI | [http://localhost:3000](http://localhost:3000) |
+| Backend | [http://localhost:4000](http://localhost:4000) |
+| Swagger UI | [http://localhost:4000/docs](http://localhost:4000/docs) |
+| OpenAPI document | [http://localhost:4000/docs-json](http://localhost:4000/docs-json) |
+| PostgreSQL | `localhost:5432` |
+| Redis | `localhost:6379` |
 
-## ▶️ Run the project
+Stop the services with `Ctrl+C`. To stop and remove the Compose containers,
+run `docker compose down`.
 
-To start all services, run:
+### Environment variables
 
-```bash
-docker compose up
-```
+The Compose setup reads its configuration from `.env`. Required backend
+settings include:
 
-This will start:
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL_POSTGRES` | PostgreSQL connection string. In Compose, use the `db-postgres` service as the host. |
+| `DATABASE_URL_REDIS` | Redis connection URL. In Compose, use the `db-redis` service as the host. |
+| `JWT_SECRET` | Secret used to sign and verify authentication tokens. |
+| `SALT_ROUNDS` | Work factor used when hashing passwords. |
+| `SERVICE_BASE_URL` | Base URL used by the service when building public resource URLs. |
+| `PORT` | HTTP port; defaults to `4000` when omitted. |
 
-* 🐘 PostgreSQL on port `5432`  
-* ⚡ Redis on port `6379`  
-* 🧠 Backend at `http://localhost:4000`  
-* 💻 Frontend at `http://localhost:3000`  
+Other settings used by Compose:
 
-## 📖 API documentation
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL container initialization. |
+| `AB_TESTER_UI_PATH` | Path to the sibling UI directory, relative to this repository or as an absolute path. |
+| `NEXT_PUBLIC_BACKEND_URL_FROM_SERVER_SIDE` | Backend URL reachable by the UI server. |
+| `NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE` | Backend URL reachable by the user's browser. |
+| `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` | Optional initial super-admin credentials. |
+| `DOMAIN` | Optional cookie/domain configuration. |
 
-With the backend running, open the interactive Swagger UI at
-[`http://localhost:4000/docs`](http://localhost:4000/docs). The OpenAPI document is
-available at [`http://localhost:4000/docs-json`](http://localhost:4000/docs-json).
+The committed `.env.example` provides a local Compose template. Review and
+replace example credentials before use; never use them in a shared or
+production environment. Keep `.env` private; it is ignored by Git.
 
-Use **Authorize** in Swagger UI to provide a JWT bearer token or the `refreshToken`
-cookie for protected endpoints.
+## Run the backend directly
 
-## 🔄 Development
-
-Code changes are automatically reflected thanks to the configured Docker volumes.
-
-## 🧩 Additional Notes
-
-* A `.npmrc` file is required in **both the backend and frontend folders**.  
-  This file is **not included in the repository** and must be requested from another developer on the team.
-
-* If you run into dependency issues, rebuild the images:
-
-```bash
-docker compose up --build
-```
-
-* If TypeScript types or IntelliSense are not working properly in Visual Studio Code, you can install dependencies locally with:
+For development without the full Compose stack, start PostgreSQL and Redis
+separately and set the required backend environment variables in your shell.
+The `start:dev` script uses POSIX shell syntax; use Bash (including Git Bash),
+or use Docker Compose on Windows:
 
 ```bash
 npm ci
+npm run start:dev
 ```
 
-This helps ensure your editor correctly recognizes types and avoids IDE-related issues.
+The development command watches the NestJS service and rebuilds the client
+script when its sources change. Configure database connection URLs to use the
+addresses of your local PostgreSQL and Redis instances.
 
-* Make sure ports `3000`, `4000`, `5432`, and `6379` are available.
+## Development commands
 
----
+| Command | Description |
+| --- | --- |
+| `npm run build` | Compile the NestJS service. |
+| `npm run build:script` | Build the client script. |
+| `npm run start:prod` | Run the compiled service from `dist`. |
+| `npm run lint` | Check the project with Biome. |
+| `npm test` | Run Vitest with coverage; configured thresholds are 100%. |
+| `npm run test:watch` | Run Vitest in watch mode. |
+| `npm run generate-migration` | Generate a PostgreSQL migration from the Drizzle schema. |
 
-You're all set! 🚀
+## API documentation
+
+When the service is running, use [Swagger UI](http://localhost:4000/docs) to
+explore the API, request and response schemas, and examples. The generated
+OpenAPI JSON is available at
+[http://localhost:4000/docs-json](http://localhost:4000/docs-json).
+
+Authentication uses secure `accessToken` and `refreshToken` cookies. Swagger
+cannot set an `HttpOnly` cookie through its **Authorize** dialog. Establish a
+session by calling the sign-in or refresh endpoint from the Swagger UI; see the
+authentication workflow at the top of the Swagger page.

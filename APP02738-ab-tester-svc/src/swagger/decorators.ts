@@ -55,8 +55,7 @@ function deriveExampleFromJsonSchema(schema: SchemaObject | undefined, propertyN
   if (resolvedSchema.example !== undefined) return resolvedSchema.example;
   if (resolvedSchema.default !== undefined) return resolvedSchema.default;
 
-  const schemaAny = resolvedSchema as any;
-  if (schemaAny.const !== undefined) return schemaAny.const;
+  if ('const' in resolvedSchema && resolvedSchema.const !== undefined) return resolvedSchema.const;
   if (resolvedSchema.enum && resolvedSchema.enum.length > 0) return resolvedSchema.enum[0];
 
   const variants = [resolvedSchema.anyOf, resolvedSchema.oneOf, resolvedSchema.allOf].filter(Array.isArray);

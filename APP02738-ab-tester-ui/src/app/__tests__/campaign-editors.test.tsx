@@ -33,6 +33,22 @@ const createCampaign = (triggers: TypeTriggerData[] = [], variations: TypeVariat
 const firstVariation: TypeVariationData = { css: '', html: '', id: 1, javascript: '', name: 'Control', traffic: 100 };
 
 describe('campaign triggers', () => {
+  it('does not change a trigger for an unsupported type value', () => {
+    let campaign = createCampaign([{ data: {}, id: 1, type: 'pageLoad' }]);
+    const setCampaign = (update: (value: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => {
+      campaign = update(campaign);
+    };
+    render(
+      <TranslationProvider language="english">
+        <Triggers setCampaign={setCampaign} triggers={campaign.triggers} />
+      </TranslationProvider>,
+    );
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'unsupported' } });
+
+    expect(campaign.triggers).toEqual([{ data: {}, id: 1, type: 'pageLoad' }]);
+  });
+
   it('adds a page-load trigger with a new id', () => {
     let campaign = createCampaign([{ data: {}, id: 3, type: 'pageLoad' }]);
     const setCampaign = vi.fn((update: (value: TypeCampaignWithOptionalId) => TypeCampaignWithOptionalId) => {

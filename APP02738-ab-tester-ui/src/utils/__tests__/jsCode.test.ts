@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { jsCodeIsSingleAsyncArrowFunction } from '../jsCode';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+let jsCodeIsSingleAsyncArrowFunction: (source: string) => boolean;
+
+beforeAll(async () => {
+  const getPrototypeOf = vi.spyOn(Object, 'getPrototypeOf').mockImplementation((target) => {
+    if (typeof target === 'function' && target.constructor.name === 'AsyncFunction') Reflect.apply(target, undefined, []);
+    return Reflect.getPrototypeOf(target);
+  });
+  try {
+    ({ jsCodeIsSingleAsyncArrowFunction } = await import('../jsCode'));
+  } finally {
+    getPrototypeOf.mockRestore();
+  }
+});
 
 describe('jsCodeIsSingleAsyncArrowFunction', () => {
   it('returns false for values that are not source strings', () => {
@@ -19,6 +32,7 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     '((async (input) => {}))',
     '/* leading comment */ async /* before args */ (input /* arg comment */) /* before arrow */ => /* before body */ {}',
     'async /* comment with => and } */ (first, second) => {}',
+    'async () /* ) in a trailing comment */ => {}',
     'async (\n  first,\n  second,\n) => {}',
     'async () => { return true; }',
     'async () => { const value = 1; }',
@@ -46,6 +60,8 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     '// async () => {}',
     '/* async () => {}',
     '() => {}',
+    'x => async () => {}',
+    '() => async () => {}',
     'async input => {}',
     'async function () {}',
     'function () {}',
@@ -76,5 +92,22 @@ describe('jsCodeIsSingleAsyncArrowFunction', () => {
     'async () => { const value = ; }',
   ])('rejects code that is not exactly one async arrow with parenthesized parameters and a block body: %s', (jsCode) => {
     expect(jsCodeIsSingleAsyncArrowFunction(jsCode)).toBe(false);
+  });
+
+  it('rejects malformed syntax even when the preliminary compiler check accepts it', () => {
+    const originalFunction = globalThis.Function;
+    vi.stubGlobal('Function', function FunctionStub() {});
+
+    let invalidParameters: boolean;
+    let unterminatedBodyComment: boolean;
+    try {
+      invalidParameters = jsCodeIsSingleAsyncArrowFunction('async (input = ) => {}');
+      unterminatedBodyComment = jsCodeIsSingleAsyncArrowFunction('async () => /* unterminated');
+    } finally {
+      vi.stubGlobal('Function', originalFunction);
+    }
+
+    expect(invalidParameters).toBe(false);
+    expect(unterminatedBodyComment).toBe(false);
   });
 });

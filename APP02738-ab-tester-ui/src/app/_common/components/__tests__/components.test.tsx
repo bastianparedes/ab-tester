@@ -6,6 +6,7 @@ import { DynamicForm } from '@/app/_common/contexts/Dialog/Component/DynamicForm
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
 import { Button } from '../button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../card';
+import { Dialog } from '../dialog';
 import { FormSection } from '../FormSection';
 import { Input } from '../input';
 import Modal from '../Modal';
@@ -52,6 +53,38 @@ describe('Button', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it('falls back to default styles for unknown runtime variants and sizes', () => {
+    // @ts-expect-error The fallback handles values that can arrive from untyped callers.
+    render(<Button size="unknown" variant="unknown">Fallback</Button>);
+
+    const button = screen.getByRole('button', { name: 'Fallback' });
+    expect(button.className).toContain('bg-blue-600');
+    expect(button.className).toContain('h-9');
+  });
+});
+
+describe('Dialog', () => {
+  it('renders optional title, description, content, and footer and closes from the overlay', () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog content={<p>Dialog content</p>} description="A description" footer={<button type="button">Save</button>} onClose={onClose} title="Dialog title" />,
+    );
+
+    expect(screen.getByText('Dialog title')).toBeTruthy();
+    expect(screen.getByText('A description')).toBeTruthy();
+    expect(screen.getByText('Dialog content')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: '' })[0]);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('renders without optional content when no title, description, body, or footer is supplied', () => {
+    render(<Dialog onClose={() => {}} />);
+
+    expect(screen.queryByText('Dialog content')).toBeNull();
+    expect(screen.queryByText('Dialog title')).toBeNull();
+  });
 });
 
 describe('Pagination', () => {
@@ -91,6 +124,18 @@ describe('Pagination', () => {
     expect(onChange).toHaveBeenLastCalledWith(0);
     fireEvent.click(buttons[buttons.length - 1]);
     expect(onChange).toHaveBeenLastCalledWith(2);
+  });
+
+  it('ignores navigation requests outside the available page range', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<Pagination onChange={onChange} page={3} totalPages={3} />);
+
+    fireEvent.click(screen.getAllByRole('button').at(-1) as HTMLButtonElement);
+    expect(onChange).not.toHaveBeenCalled();
+
+    rerender(<Pagination onChange={onChange} page={-1} totalPages={3} />);
+    fireEvent.click(screen.getAllByRole('button')[0]);
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
 
@@ -246,6 +291,36 @@ describe('MultiSelect', () => {
 
     fireEvent.mouseDown(document.body);
     expect(screen.queryByRole('checkbox', { name: 'Alpha' })).toBeNull();
+  });
+
+  it('ignores a pending outside click after its element has unmounted', () => {
+    const addEventListener = vi.spyOn(document, 'addEventListener');
+    const { unmount } = render(
+      <TranslationProvider language="english">
+        <MultiSelect onChange={vi.fn()} options={options} value={[]} />
+      </TranslationProvider>,
+    );
+    const listener = addEventListener.mock.calls.find(([type, callback]) => type === 'mousedown' && typeof callback === 'function')?.[1];
+    addEventListener.mockRestore();
+
+    if (typeof listener !== 'function') throw new Error('The outside-click listener was not registered');
+    unmount();
+
+    expect(() => listener(new MouseEvent('mousedown'))).not.toThrow();
+  });
+
+  it('shows the translated placeholder and no-results message for an empty search', () => {
+    render(
+      <TranslationProvider language="english">
+        <MultiSelect onChange={vi.fn()} options={options} value={[]} />
+      </TranslationProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select options' }));
+    fireEvent.change(screen.getByPlaceholderText('Search...'), { target: { value: 'missing' } });
+
+    expect(screen.getByText('No results found')).toBeTruthy();
+    expect(screen.queryByRole('checkbox')).toBeNull();
   });
 });
 

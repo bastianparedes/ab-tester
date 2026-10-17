@@ -3,6 +3,7 @@
 import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as translationContext from '@/app/_common/contexts/Translation';
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
 import { UserProvider } from '@/app/_common/contexts/User';
 import { getStringPermission } from '@/config/constants';
@@ -67,6 +68,19 @@ describe('navigation controls', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /English✓/ }));
     expect(screen.getAllByRole('button', { name: 'English' })).toHaveLength(1);
+  });
+
+  it('styles a language differently when it is not the current selection', () => {
+    const useOriginalTranslationContext = translationContext.useTranslationContext;
+    vi.spyOn(translationContext, 'useTranslationContext').mockImplementation(() => {
+      const context = useOriginalTranslationContext();
+      Object.defineProperty(context.selectedLanguage, 'key', { value: 'not-selected' });
+      return context;
+    });
+    renderWithProviders(<ComponentLanguage />);
+    fireEvent.click(screen.getByRole('button', { name: 'English' }));
+
+    expect(screen.getAllByRole('button', { name: 'English' })[0].className).toContain('text-gray-300');
   });
 
   it('renders translated breadcrumbs and opens the user menu', async () => {
