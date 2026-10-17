@@ -39,7 +39,7 @@ describe('TrackEventController', () => {
 
   it('requires an authenticated user to create and update events', async () => {
     const controller = new TrackEventController({ trackEvents: {} } as never);
-    const body = { getData: 'return {};', multipleTimes: false, name: 'Purchase', status: 'active' };
+    const body = { javascript: 'return {};', multipleTimes: false, name: 'Purchase', status: 'active' };
 
     await expect(controller.create(3, body as never, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
     await expect(controller.update(3, 6, body as never, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
@@ -54,7 +54,7 @@ describe('TrackEventController', () => {
         update: async (input: unknown) => calls.push(input),
       },
     } as never);
-    const body = { getData: 'return {};', multipleTimes: false, name: 'Purchase', status: 'active' };
+    const body = { javascript: 'return {};', multipleTimes: false, name: 'Purchase', status: 'active' };
     const request = { user: { id: 8 } };
 
     await expect(controller.create(3, body as never, request as never)).resolves.toEqual({});

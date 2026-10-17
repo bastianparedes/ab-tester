@@ -6,7 +6,7 @@ import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
 import { ClientPage } from '../[trackEventId]/clientPage';
 
-const getDataInitialValue = `
+const javascriptInitialValue = `
 /* ############ IT IS VERY IMPORTANT TO REMOVE UNUSED LISTENERS AND INTERVALS ############ */
 /* ############ RESOLVE ONLY string, number, boolean, undefined ############ */
 
@@ -21,7 +21,7 @@ return new Promise((r) => {
 
 const getTrackEventInitialData = async ({ tenantId, cloneFrom }: { tenantId: number; cloneFrom: string | undefined }): Promise<TypeTrackEventWithOptionalId> => {
   const fallbackValue = {
-    getData: getDataInitialValue,
+    javascript: javascriptInitialValue,
     id: undefined,
     multipleTimes: false,
     name: 'New Track Event Name',

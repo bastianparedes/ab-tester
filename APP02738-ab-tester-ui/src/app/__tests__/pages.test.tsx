@@ -280,12 +280,12 @@ describe('server route pages', () => {
       status: 'active',
       tenantId: 12,
     });
-    expect((result.props.children.props.initialTrackEvent as { getData: string }).getData).toContain('window.addEventListener');
+    expect((result.props.children.props.initialTrackEvent as { javascript: string }).javascript).toContain('window.addEventListener');
   });
 
   it('clones a track event while clearing its original id', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
-    const sourceTrackEvent = { getData: 'return 7;', id: 8, multipleTimes: true, name: 'Checkout', status: 'inactive', tenantId: 12 };
+    const sourceTrackEvent = { javascript: 'return 7;', id: 8, multipleTimes: true, name: 'Checkout', status: 'inactive', tenantId: 12 };
     const getTrackEvent = vi.spyOn(apiCaller.trackEvents, 'get').mockResolvedValue(successfulResponse({ trackEvent: sourceTrackEvent }));
 
     const result = (await TrackEventCreatePage({

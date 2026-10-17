@@ -149,7 +149,7 @@ describe('track event custom code editor', () => {
 
 describe('track event editor', () => {
   const initialTrackEvent: TypeTrackEventWithOptionalId = {
-    getData: 'invalid (',
+    javascript: 'invalid (',
     multipleTimes: false,
     name: 'Checkout',
     status: 'inactive',
@@ -183,7 +183,7 @@ describe('track event editor', () => {
   it('creates a valid track event and redirects to its list', async () => {
     const create = vi.spyOn(apiCaller.trackEvents, 'create').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });
-    const validTrackEvent = { ...initialTrackEvent, getData: 'return true;' };
+    const validTrackEvent = { ...initialTrackEvent, javascript: 'return true;' };
     renderWithUser(<TrackEventEditor initialTrackEvent={validTrackEvent} tenantId={12} trackEventId={undefined} />, {
       data: currentUser.data,
       isLogedIn: true,
@@ -198,7 +198,7 @@ describe('track event editor', () => {
   it('updates an existing track event with its current fields', async () => {
     const update = vi.spyOn(apiCaller.trackEvents, 'update').mockResolvedValue(new Response('{}', { status: 200 }));
     vi.stubGlobal('location', { href: '' });
-    const existingTrackEvent = { ...initialTrackEvent, getData: 'return true;', id: 8, multipleTimes: true, name: 'Checkout complete', status: 'active' as const };
+    const existingTrackEvent = { ...initialTrackEvent, javascript: 'return true;', id: 8, multipleTimes: true, name: 'Checkout complete', status: 'active' as const };
     renderWithUser(<TrackEventEditor initialTrackEvent={existingTrackEvent} tenantId={12} trackEventId={8} />, {
       data: currentUser.data,
       isLogedIn: true,
@@ -211,7 +211,7 @@ describe('track event editor', () => {
   });
 
   it('shows the live-view warning and disables save after another event editor changes it', () => {
-    const existingTrackEvent = { ...initialTrackEvent, getData: 'return true;', id: 8 };
+    const existingTrackEvent = { ...initialTrackEvent, javascript: 'return true;', id: 8 };
     renderWithUser(<TrackEventEditor initialTrackEvent={existingTrackEvent} tenantId={12} trackEventId={8} />, {
       data: currentUser.data,
       isLogedIn: true,

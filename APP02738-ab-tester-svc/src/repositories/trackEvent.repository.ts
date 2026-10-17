@@ -102,7 +102,7 @@ export class TrackEventRepository {
       .where(
         and(
           eq(schema.trackEvents.tenantId, tenantId),
-          or(ilike(schema.trackEvents.name, treatedTextSearch), sql`${schema.trackEvents.getData}::text ILIKE ${treatedTextSearch}`),
+          or(ilike(schema.trackEvents.name, treatedTextSearch), sql`${schema.trackEvents.javascript}::text ILIKE ${treatedTextSearch}`),
         ),
       )
       .orderBy(sort(schema.trackEvents[orderBy]))
@@ -145,7 +145,7 @@ export class TrackEventRepository {
   getAllTrackEventsForScript = async ({ tenantId }: { tenantId: TypeTenant['id'] }) => {
     const trackEvents = await db.query.trackEvents.findMany({
       columns: {
-        getData: true,
+        javascript: true,
         id: true,
         multipleTimes: true,
         name: true,
@@ -153,7 +153,7 @@ export class TrackEventRepository {
       where: and(eq(schema.trackEvents.tenantId, tenantId), eq(schema.trackEvents.status, 'active')),
     });
     return trackEvents.filter((trackEvent) => {
-      return trackEvent.getData.length > 0;
+      return trackEvent.javascript.length > 0;
     });
   };
 }

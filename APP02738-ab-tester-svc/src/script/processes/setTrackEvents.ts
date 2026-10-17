@@ -16,7 +16,7 @@ const applyTrackEvent = async (eventData: (typeof window.ab_tester.trackEventsDa
 
   async function* generatorFunction() {
     while (true) {
-      yield await eventData.getData();
+      yield await eventData.javascript();
       if (!eventData.multipleTimes) return;
     }
   }

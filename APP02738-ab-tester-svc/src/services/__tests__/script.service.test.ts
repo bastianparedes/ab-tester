@@ -38,7 +38,7 @@ const createService = ({ cachedScript = null }: { cachedScript?: string | null }
     variations: [{ css: 'main { color: red; }', html: '<main> Offer </main>', id: 1, javascript: 'return true;', name: 'A', traffic: 100 }],
   };
   const executionGroups = [{ id: 21, name: 'Main group' }];
-  const trackEvents = [{ getData: 'return { amount: 1 };', id: 31, name: 'Purchase' }];
+  const trackEvents = [{ javascript: 'return { amount: 1 };', id: 31, name: 'Purchase' }];
   const audiences = [{ id: 41, name: 'Customers' }];
   const lifecycleHooks = [
     { id: 51, javascript: 'async () => { return true; }', option: 'campaignStart' },

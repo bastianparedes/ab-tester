@@ -22,7 +22,7 @@ export const getTrackEventQuerySchema = z
 
 export const trackEventSchema = z
   .object({
-    getData: z.string().refine((value) => jsCodeHasCorrectSyntax(value), {
+    javascript: z.string().refine((value) => jsCodeHasCorrectSyntax(value), {
       message: 'Invalid JavaScript code',
     }),
     multipleTimes: z.boolean(),

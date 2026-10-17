@@ -1,7 +1,7 @@
 {
   "author": "Bastián Gabriel Paredes Padget",
   "dependencies": {
-    "@ab-tester/constants": "^0.0.19",
+    "@ab-tester/constants": "^0.0.20",
     "@ab-tester/debug-panel": "^0.0.6",
     "@nestjs/cli": "^12.0.8",
     "@nestjs/common": "^12.1.3",

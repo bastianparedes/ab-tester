@@ -33,7 +33,7 @@ const ClientPage = ({ initialTrackEvent, tenantId, trackEventId }: Props) => {
   const user = useUser();
 
   const isNewTrackEvent = trackEvent.id === undefined;
-  const getDataIsValidJavascript = jsCodeHasCorrectSyntax(trackEvent.getData);
+  const javascriptIsValid = jsCodeHasCorrectSyntax(trackEvent.javascript);
 
   const returnToTrackEvents = () => {
     location.href = constants.pages.trackEvents({ tenantId: trackEvent.tenantId });
@@ -180,9 +180,9 @@ const ClientPage = ({ initialTrackEvent, tenantId, trackEventId }: Props) => {
               theme="vs-dark"
               language="javascript"
               onChange={(javascript: string | undefined) => {
-                setTrackEvent({ ...trackEvent, getData: javascript ?? '' });
+                setTrackEvent({ ...trackEvent, javascript: javascript ?? '' });
               }}
-              value={trackEvent.getData}
+              value={trackEvent.javascript}
             />
           </div>
         </FormSection>
@@ -193,7 +193,7 @@ const ClientPage = ({ initialTrackEvent, tenantId, trackEventId }: Props) => {
           </Button>
           {((isNewTrackEvent && user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId }))) ||
             (!isNewTrackEvent && user.permissions.includes(getStringPermission({ action: 'update', feature: 'track-event', tenantId })))) && (
-            <Button disabled={!!userMadeChange || !getDataIsValidJavascript} onClick={handleOnSave} variant="default">
+            <Button disabled={!!userMadeChange || !javascriptIsValid} onClick={handleOnSave} variant="default">
               Save track event
             </Button>
           )}

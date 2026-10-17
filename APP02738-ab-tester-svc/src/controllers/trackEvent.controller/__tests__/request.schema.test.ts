@@ -12,14 +12,14 @@ describe('track event schemas', () => {
   });
 
   it('validates handlers and strips unknown fields', () => {
-    const event = { extra: true, getData: 'return { id: 1 };', multipleTimes: true, name: 'Purchase', status: 'active' };
+    const event = { extra: true, javascript: 'return { id: 1 };', multipleTimes: true, name: 'Purchase', status: 'active' };
 
     expect(trackEventSchema.parse(event)).toEqual({
-      getData: event.getData,
+      javascript: event.javascript,
       multipleTimes: true,
       name: 'Purchase',
       status: 'active',
     });
-    expect(trackEventSchema.safeParse({ ...event, getData: 'const = 1;' }).success).toBe(false);
+    expect(trackEventSchema.safeParse({ ...event, javascript: 'const = 1;' }).success).toBe(false);
   });
 });

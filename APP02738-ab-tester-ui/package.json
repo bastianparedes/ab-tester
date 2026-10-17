@@ -1,7 +1,7 @@
 {
   "author": "Bastián Gabriel Paredes Padget",
   "dependencies": {
-    "@ab-tester/constants": "^0.0.19",
+    "@ab-tester/constants": "^0.0.20",
     "@monaco-editor/react": "^4.7.0",
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^1.58.0",

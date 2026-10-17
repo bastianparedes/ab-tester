@@ -50,7 +50,7 @@ export type TypeExecutionGroupScript = {
 export type TypeTrackEventScript = {
   id: TypeTrackEvent['id'];
   name: TypeTrackEvent['name'];
-  getData: () => Promise<unknown>;
+  javascript: () => Promise<unknown>;
   multipleTimes: TypeTrackEvent['multipleTimes'];
 };
 

@@ -487,8 +487,8 @@ export function applySwaggerDocumentation(): void {
       ApiOperation({ description: 'Registers an event with valid JavaScript code to extract its data.', summary: 'Create tracking event' }),
       ...authorized,
       tenantParam,
-      ApiZodBody(trackEventSchema, 'The `getData` property must contain syntactically valid JavaScript code.', {
-        getData: 'return { orderId: 123 };',
+      ApiZodBody(trackEventSchema, 'The `javascript` property must contain syntactically valid JavaScript code.', {
+        javascript: 'return { orderId: 123 };',
         multipleTimes: false,
         name: 'Purchase completed',
         status: 'active',
@@ -533,8 +533,8 @@ export function applySwaggerDocumentation(): void {
       ...authorized,
       tenantParam,
       ApiParam({ description: 'Numeric tracking event identifier.', example: 1, name: 'trackEventId', type: Number }),
-      ApiZodBody(trackEventSchema, 'The `getData` property must contain syntactically valid JavaScript code.', {
-        getData: 'return { orderId: 123 };',
+      ApiZodBody(trackEventSchema, 'The `javascript` property must contain syntactically valid JavaScript code.', {
+        javascript: 'return { orderId: 123 };',
         multipleTimes: false,
         name: 'Purchase completed',
         status: 'active',

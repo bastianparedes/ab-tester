@@ -244,8 +244,8 @@ describe('repositories', () => {
 
   it('creates, updates, queries, filters, and removes track events', async () => {
     const repository = new TrackEventRepository();
-    const event = { getData: 'return event;', id: 5, name: 'Purchase', status: 'active' };
-    const values = { getData: event.getData, name: event.name, status: event.status };
+    const event = { javascript: 'return event;', id: 5, name: 'Purchase', status: 'active' };
+    const values = { javascript: event.javascript, name: event.name, status: event.status };
     db.insert.mockReturnValueOnce(createQuery([event]));
     db.update.mockReturnValueOnce(createQuery([event]));
     db.select
@@ -253,7 +253,7 @@ describe('repositories', () => {
       .mockReturnValueOnce(createQuery([event]))
       .mockReturnValueOnce(createQuery([{ count: '1' }]));
     db.delete.mockReturnValueOnce(createQuery([event]));
-    db.query.trackEvents.findMany.mockResolvedValueOnce([event]).mockResolvedValueOnce([event, { ...event, getData: '' }]);
+    db.query.trackEvents.findMany.mockResolvedValueOnce([event]).mockResolvedValueOnce([event, { ...event, javascript: '' }]);
     db.query.trackEvents.findFirst.mockResolvedValueOnce(event);
 
     await expect(repository.create({ tenantId: 3, userId: 4, values } as never)).resolves.toBe(event);

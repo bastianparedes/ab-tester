@@ -169,7 +169,10 @@ export class ScriptService {
 
   private async getTrackEvents({ tenantId }: { tenantId: number }) {
     const trackEvents = await this.trackEventRepository.getAllTrackEventsForScript({ tenantId });
-    const trackEventsWithFunctions = trackEvents.map((trackEvent) => ({ ...trackEvent, getData: getFunctionFromBody({ body: trackEvent.getData }) }));
+    const trackEventsWithFunctions = trackEvents.map((trackEvent) => ({
+      ...trackEvent,
+      javascript: getFunctionFromBody({ body: trackEvent.javascript }),
+    }));
     return trackEventsWithFunctions;
   }
 
