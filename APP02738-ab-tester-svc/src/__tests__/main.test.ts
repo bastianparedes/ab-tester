@@ -55,6 +55,10 @@ vi.mock('../adapters/redis-socket-io', () => ({
     connectToRedis = redisAdapter.connectToRedis;
   },
 }));
+vi.mock('../swagger/zod-openapi', () => ({
+  appendZodResponseSchemas: vi.fn(),
+  registerZodResponseSchema: vi.fn(),
+}));
 
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -79,6 +83,7 @@ describe('application bootstrap', () => {
       customSiteTitle: 'AB Tester API | Swagger',
       swaggerOptions: {
         deepLinking: true,
+        defaultModelsExpandDepth: -1,
         displayRequestDuration: true,
         docExpansion: 'list',
         filter: true,

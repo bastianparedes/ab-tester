@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AccountController } from '../../controllers/account.controller';
+import { getCampaignsQuerySchema } from '../../controllers/campaigns.controller/request.schema';
+import { zodQueryParameters } from '../decorators';
 import { applySwaggerDocumentation } from '../documentation';
 
 describe('Swagger documentation binding', () => {
@@ -25,5 +27,25 @@ describe('Swagger documentation binding', () => {
     });
 
     expect(applySwaggerDocumentation).toThrow('Swagger documentation refers to missing handler AccountController.updateAccount');
+  });
+
+  it('generates query parameters from the Zod schema and marks preprocessed status filters optional', () => {
+    const parameters = zodQueryParameters(getCampaignsQuerySchema);
+
+    expect(parameters.find(({ name }) => name === 'page')).toMatchObject({
+      example: 0,
+      name: 'page',
+      required: true,
+      schema: { type: 'integer' },
+    });
+    expect(parameters.find(({ name }) => name === 'statusList')).toMatchObject({
+      description: 'Repeat this parameter to filter by status.',
+      example: ['active'],
+      explode: true,
+      name: 'statusList',
+      required: false,
+      schema: { items: { enum: ['inactive', 'active'], type: 'string' }, type: 'array' },
+      style: 'form',
+    });
   });
 });

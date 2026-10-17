@@ -3,7 +3,7 @@ import commonConstants from '../libs/sharedConstants';
 
 const idSchema = z.number().int();
 const statusSchema = z.enum(commonConstants.arrayStatusArray);
-const dateSchema = z.date();
+const dateSchema = z.date().meta({ format: 'date-time', type: 'string' });
 
 export const emptyResponseSchema = z.object({});
 
