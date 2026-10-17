@@ -2,22 +2,8 @@ import { redirect } from 'next/navigation';
 import { Navigation } from '@/app/_common/components/navigation';
 import constants from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
+import { createInitialLifecycleHookJavascript } from '../lifecycleHookJavascript';
 import { ClientPage, type TypeLifecycleHook } from '../[lifecycleHookId]/clientPage';
-
-const initialJavascript = `
-/* ############ WRITE NEW CODE ONLY INSIDE OF THIS async arrow function ############ */
-
-/**
-  * @param {{
-  *   executionGroup?: { id: number, name: string },
-  *   campaign?: { id: number, name: string },
-  *   variation?: { id: number, name: string }
-  * }} props
-  */
-async (props) => {
-  /* write your code here */
-}
-`.trim();
 
 type PageProps = {
   params: Promise<{
@@ -35,7 +21,7 @@ export default async function Page({ params, searchParams }: PageProps) {
   const tenant = await response.json();
   const { cloneFrom } = await searchParams;
   let initialLifecycleHook: TypeLifecycleHook = {
-    javascript: initialJavascript,
+    javascript: createInitialLifecycleHookJavascript('scriptStart'),
     name: '',
     status: 'inactive',
     tenantId,

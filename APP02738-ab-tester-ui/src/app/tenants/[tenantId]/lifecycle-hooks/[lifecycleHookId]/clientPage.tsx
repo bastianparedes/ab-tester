@@ -9,6 +9,7 @@ import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import constants from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
 import { jsCodeIsSingleAsyncArrowFunction } from '@/utils/jsCode';
+import { createInitialLifecycleHookJavascript } from '../lifecycleHookJavascript';
 import Editor from './components/Editor';
 
 export const lifecycleHookOptions = [
@@ -80,6 +81,14 @@ export function ClientPage({ tenantId, initialLifecycleHook }: PageProps) {
     location.href = constants.pages.lifecycleHooks({ tenantId });
   };
 
+  const handleTriggerChange = (trigger: TypeLifecycleHook['trigger']) => {
+    setLifecycleHook((current) => ({
+      ...current,
+      javascript: createInitialLifecycleHookJavascript(trigger),
+      trigger,
+    }));
+  };
+
   return (
     <div className="w-9/10 mx-auto my-8 relative flex flex-col gap-8">
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -133,7 +142,7 @@ export function ClientPage({ tenantId, initialLifecycleHook }: PageProps) {
                 name="lifecycle-hook-option"
                 value={option}
                 checked={lifecycleHook.trigger === option}
-                onChange={() => setLifecycleHook((current) => ({ ...current, trigger: option }))}
+                onChange={() => handleTriggerChange(option)}
                 className="h-4 w-4 shrink-0 accent-blue-600"
               />
               <span>{translation.lifecycleHooks.triggerOptions[option]}</span>
