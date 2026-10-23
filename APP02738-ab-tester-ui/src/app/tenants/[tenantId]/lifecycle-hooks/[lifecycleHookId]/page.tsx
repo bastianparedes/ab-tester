@@ -32,7 +32,7 @@ export default async function Page({ params }: PageProps) {
       tenant={tenant}
       breadcrumb={[
         { name: 'Tenants', path: constants.pages.tenants() },
-        { name: tenant.name },
+        { name: tenant.name, path: constants.pages.tenant({ tenantId }) },
         { name: 'Lifecycle hooks', path: constants.pages.lifecycleHooks({ tenantId }) },
         { name: lifecycleHook.name },
       ]}

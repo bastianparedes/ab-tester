@@ -25,7 +25,7 @@ const Page = async (props: PageProps) => {
       tenant={tenant}
       breadcrumb={[
         { name: 'Tenants', path: constants.pages.tenants() },
-        { name: tenant.name },
+        { name: tenant.name, path: constants.pages.tenant({ tenantId }) },
         { name: 'Execution groups', path: constants.pages.executionGroups({ tenantId }) },
         { name: 'New execution group' },
       ]}

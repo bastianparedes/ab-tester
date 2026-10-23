@@ -39,7 +39,9 @@ describe('Sidebar', () => {
   it('shows only global navigation links when there is no tenant scope', () => {
     renderWithProviders(<Sidebar>Content</Sidebar>, [getStringPermission({ action: 'read', feature: 'role' }), getStringPermission({ action: 'read', feature: 'user' })]);
 
-    expect(screen.getByRole('link', { name: 'Tenants' }).getAttribute('href')).toBe('/tenants');
+    const tenantsLink = screen.getByRole('link', { name: 'Tenants' });
+    expect(tenantsLink.getAttribute('href')).toBe('/tenants');
+    expect(tenantsLink.parentElement).toBe(screen.getByRole('link', { name: 'Roles' }).parentElement);
     expect(screen.getByRole('link', { name: 'Roles' }).getAttribute('href')).toBe('/admin/roles');
     expect(screen.queryByRole('link', { name: 'Campaigns' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Users' }).getAttribute('href')).toBe('/admin/users');
@@ -58,6 +60,58 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Audiences' }).getAttribute('href')).toBe('/tenants/12/audiences');
     expect(screen.getByRole('link', { name: 'Campaigns' }).getAttribute('href')).toBe('/tenants/12/campaigns');
     expect(screen.getByRole('link', { name: 'Execution groups' }).getAttribute('href')).toBe('/tenants/12/execution-groups');
+  });
+
+  it('collapses and expands the Testing navigation independently', () => {
+    renderWithProviders(<Sidebar tenant={tenant}>Content</Sidebar>, [getStringPermission({ action: 'read', feature: 'audience', tenantId: tenant.id })]);
+
+    const testingButton = screen.getByRole('button', { name: 'Testing' });
+    const administrationButton = screen.getByRole('button', { name: 'Administration' });
+
+    expect(testingButton.getAttribute('aria-expanded')).toBe('true');
+    expect(testingButton.getAttribute('aria-controls')).toBe('testing-navigation');
+    expect(screen.getByRole('link', { name: 'Audiences' })).toBeTruthy();
+
+    fireEvent.click(testingButton);
+
+    expect(testingButton.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('link', { name: 'Audiences' })).toBeNull();
+    expect(administrationButton.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Tenants' })).toBeTruthy();
+
+    fireEvent.click(testingButton);
+
+    expect(testingButton.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Audiences' })).toBeTruthy();
+  });
+
+  it('collapses and expands the Administration navigation independently', () => {
+    renderWithProviders(<Sidebar tenant={tenant}>Content</Sidebar>, [
+      getStringPermission({ action: 'read', feature: 'audience', tenantId: tenant.id }),
+      getStringPermission({ action: 'read', feature: 'role' }),
+    ]);
+
+    const testingButton = screen.getByRole('button', { name: 'Testing' });
+    const administrationButton = screen.getByRole('button', { name: 'Administration' });
+
+    expect(administrationButton.getAttribute('aria-expanded')).toBe('true');
+    expect(administrationButton.getAttribute('aria-controls')).toBe('administration-navigation');
+    expect(screen.getByRole('link', { name: 'Tenants' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Roles' })).toBeTruthy();
+
+    fireEvent.click(administrationButton);
+
+    expect(administrationButton.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('link', { name: 'Tenants' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Roles' })).toBeNull();
+    expect(testingButton.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Audiences' })).toBeTruthy();
+
+    fireEvent.click(administrationButton);
+
+    expect(administrationButton.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Tenants' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Roles' })).toBeTruthy();
   });
 });
 

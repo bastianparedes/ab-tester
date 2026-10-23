@@ -20,7 +20,10 @@ export default async function Page({ params: promiseParams }: Props) {
   const tenant = await tenantResponse.json();
 
   return (
-    <Navigation tenant={tenant} breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name }, { name: 'Playground' }]}>
+    <Navigation
+      tenant={tenant}
+      breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name, path: constants.pages.tenant({ tenantId }) }, { name: 'Playground' }]}
+    >
       <script type="module" src={`${env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE}/public/tenants/${tenantId}/script`}></script>
       <div className="bg-gray-100">
         {/* Header */}

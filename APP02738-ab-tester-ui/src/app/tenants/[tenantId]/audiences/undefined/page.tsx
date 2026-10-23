@@ -55,7 +55,7 @@ const Page = async (props: PageProps) => {
       tenant={tenant}
       breadcrumb={[
         { name: 'Tenants', path: constants.pages.tenants() },
-        { name: tenant.name },
+        { name: tenant.name, path: constants.pages.tenant({ tenantId }) },
         { name: 'Audiences', path: constants.pages.audiences({ tenantId }) },
         { name: 'New audience' },
       ]}

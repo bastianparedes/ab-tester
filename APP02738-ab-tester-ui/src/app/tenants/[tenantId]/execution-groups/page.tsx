@@ -18,7 +18,10 @@ export default async function Page({ params }: PageProps) {
   const tenant = await response.json();
 
   return (
-    <Navigation tenant={tenant} breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name }, { name: 'Execution Groups' }]}>
+    <Navigation
+      tenant={tenant}
+      breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name, path: constants.pages.tenant({ tenantId }) }, { name: 'Execution Groups' }]}
+    >
       <ClientPage tenantId={tenantId} />
     </Navigation>
   );

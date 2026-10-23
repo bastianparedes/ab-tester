@@ -41,6 +41,7 @@ const constants = {
     playgroundEmbed: ({ tenantId }: { tenantId: number | string }) => `/tenants/${tenantId}/playground/embed`,
     roles: () => '/admin/roles',
     script: ({ tenantId }: { tenantId: number | string }) => `/tenants/${tenantId}/script`,
+    tenant: ({ tenantId }: { tenantId: number }) => `/tenants/${tenantId}`,
     tenants: () => '/tenants',
     trackEvent: ({ tenantId, trackEventId, cloneFrom }: { tenantId: number; trackEventId: number | undefined; cloneFrom?: number }) => {
       const basePath = `/tenants/${tenantId}/track-events/${trackEventId}`;

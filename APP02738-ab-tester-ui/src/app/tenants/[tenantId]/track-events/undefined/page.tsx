@@ -65,7 +65,7 @@ const Page = async (props: PageProps) => {
       tenant={tenant}
       breadcrumb={[
         { name: 'Tenants', path: constants.pages.tenants() },
-        { name: tenant.name },
+        { name: tenant.name, path: constants.pages.tenant({ tenantId }) },
         { name: 'Track events', path: constants.pages.trackEvents({ tenantId }) },
         { name: 'New track event' },
       ]}

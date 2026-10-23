@@ -152,11 +152,7 @@ export function ClientPage({ initialTenants }: Props) {
         ) : (
           <div className="grid grid-cols-3 gap-6">
             {tenants.map((tenant) => (
-              <a
-                key={tenant.id}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 relative group"
-                href={constants.pages.campaigns({ tenantId: tenant.id })}
-              >
+              <a key={tenant.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 relative group" href={constants.pages.tenant({ tenantId: tenant.id })}>
                 <div className="absolute top-4 right-4 flex gap-2">
                   {user.permissions.includes(getStringPermission({ action: 'update', feature: 'tenant' })) && (
                     <button
