@@ -26,7 +26,14 @@ export function ClientPage({ initialTenants }: Props) {
       {
         title: translation.tenants.createTenantTitle,
       },
+      // biome-ignore assist/source/useSortedKeys: preserve form field order
       {
+        name: {
+          label: translation.tenants.name,
+          required: true,
+          type: 'text',
+          value: initialData.name,
+        },
         description: {
           label: translation.tenants.description,
           type: 'textarea',
@@ -37,12 +44,6 @@ export function ClientPage({ initialTenants }: Props) {
           required: true,
           type: 'text',
           value: initialData.domain,
-        },
-        name: {
-          label: translation.tenants.name,
-          required: true,
-          type: 'text',
-          value: initialData.name,
         },
       },
     );
@@ -90,7 +91,14 @@ export function ClientPage({ initialTenants }: Props) {
       {
         title: translation.tenants.editTenantTitle,
       },
+      // biome-ignore assist/source/useSortedKeys: preserve form field order
       {
+        name: {
+          label: translation.tenants.name,
+          required: true,
+          type: 'text',
+          value: tenant.name,
+        },
         description: {
           label: translation.tenants.description,
           type: 'textarea',
@@ -101,12 +109,6 @@ export function ClientPage({ initialTenants }: Props) {
           required: true,
           type: 'text',
           value: tenant.domain,
-        },
-        name: {
-          label: translation.tenants.name,
-          required: true,
-          type: 'text',
-          value: tenant.name,
         },
       },
     );

@@ -4,6 +4,7 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeOrderTrackEventBy, TypeTrackEventForMenu } from '@ab-tester/constants/types/trackEvents';
 import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
@@ -183,109 +184,99 @@ export function ClientPage({ tenantId }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th
-                    onClick={() => dispatch({ payload: 'id', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+        <DataTable
+          rows={trackEvents}
+          getRowKey={(trackEvent) => trackEvent.id}
+          rowClassName="hover:bg-slate-50 transition-colors"
+          columns={[
+            {
+              label: (
+                <>
+                  {translation.trackEvents.tableId}
+                  <SortIcon column="id" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'id', type: 'SET_SORT' }),
+              renderCell: (trackEvent) => trackEvent.id,
+            },
+            {
+              label: (
+                <>
+                  {translation.trackEvents.tableName}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'name', type: 'SET_SORT' }),
+              renderCell: (trackEvent) => trackEvent.name,
+            },
+            {
+              label: (
+                <>
+                  {translation.trackEvents.tableStatus}
+                  <SortIcon column="status" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'status', type: 'SET_SORT' }),
+              renderCell: (trackEvent) => (
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(trackEvent.status)}`}>
+                  {translation.common[trackEvent.status]}
+                </span>
+              ),
+            },
+            {
+              label: (
+                <>
+                  {translation.trackEvents.updatedAt}
+                  <SortIcon column="updatedAt" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'updatedAt', type: 'SET_SORT' }),
+              renderCell: (trackEvent) =>
+                trackEvent.updatedAt.toLocaleString('es-CL', {
+                  day: '2-digit',
+                  hour: '2-digit',
+                  hour12: false,
+                  minute: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }),
+            },
+            {
+              label: translation.trackEvents.clone,
+              renderCell: (trackEvent) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                  <a
+                    href={config.pages.trackEvent({ cloneFrom: trackEvent.id, tenantId, trackEventId: undefined })}
+                    className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
                   >
-                    {translation.trackEvents.tableId}
-                    <SortIcon column="id" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'name', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+                    <Copy size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.trackEvents.modify,
+              renderCell: (trackEvent) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                  <a
+                    href={config.pages.trackEvent({ tenantId, trackEventId: trackEvent.id })}
+                    className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
                   >
-                    {translation.trackEvents.tableName}
-                    <SortIcon column="name" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'status', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.trackEvents.tableStatus}
-                    <SortIcon column="status" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'updatedAt', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.trackEvents.updatedAt}
-                    <SortIcon column="updatedAt" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.trackEvents.clone}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.trackEvents.modify}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.trackEvents.delete}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {trackEvents.length > 0 ? (
-                  trackEvents.map((trackEvent) => (
-                    <tr key={trackEvent.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-left">{trackEvent.id}</td>
-                      <td className="px-6 py-4 text-left">{trackEvent.name}</td>
-                      <td className="px-6 py-4 text-left">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(trackEvent.status)}`}>
-                          {translation.common[trackEvent.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {trackEvent.updatedAt.toLocaleString('es-CL', {
-                          day: '2-digit',
-                          hour: '2-digit',
-                          hour12: false,
-                          minute: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
-                          <a
-                            href={config.pages.trackEvent({ cloneFrom: trackEvent.id, tenantId, trackEventId: undefined })}
-                            className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
-                          >
-                            <Copy size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
-                          <a
-                            href={config.pages.trackEvent({ tenantId, trackEventId: trackEvent.id })}
-                            className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
-                          >
-                            <Pencil size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'track-event', tenantId })) && (
-                          <button
-                            type="button"
-                            onClick={() => deleteTrackEvent({ trackEvent })}
-                            className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
-                      {translation.trackEvents.noData}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <Pencil size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.trackEvents.delete,
+              renderCell: (trackEvent) =>
+                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'track-event', tenantId })) && (
+                  <button type="button" onClick={() => deleteTrackEvent({ trackEvent })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
+                    <Trash2 size={20} />
+                  </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.trackEvents.noData}
+        />
 
         {/* Paginación */}
         <div className="mt-6 flex items-center justify-center bg-white rounded-lg shadow p-4">

@@ -153,10 +153,7 @@ describe('track event custom code editor', () => {
   });
 
   it('normalizes an undefined editor change and disables saving', () => {
-    renderWithUser(
-      <CustomRequirementEditor requirement={requirement} setCampaign={() => {}} />,
-      currentUser,
-    );
+    renderWithUser(<CustomRequirementEditor requirement={requirement} setCampaign={() => {}} />, currentUser);
     fireEvent.click(screen.getByRole('button'));
     fireEvent.click(screen.getByRole('button', { name: 'Clear JavaScript editor' }));
 

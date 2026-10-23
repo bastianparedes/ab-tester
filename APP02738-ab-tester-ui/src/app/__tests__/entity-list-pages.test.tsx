@@ -261,9 +261,7 @@ describe('execution group list client page', () => {
       }),
     );
     fireEvent.click(screen.getByRole('columnheader', { name: /Status/ }));
-    await waitFor(() =>
-      expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status' }) })),
-    );
+    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status' }) })));
   });
 
   it('covers execution-group sort toggles, filters, pagination and create access', async () => {
@@ -654,7 +652,11 @@ describe('lifecycle hook list client page', () => {
 
     const activeFilter = screen.getByRole('checkbox', { name: 'Active' });
     fireEvent.click(activeFilter);
-    fireEvent.click(activeFilter);
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive'] }) })));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Active' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ statusList: ['inactive', 'active'] }) })));
     fireEvent.change(container.querySelector('select') as HTMLSelectElement, { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
     await waitFor(() =>
@@ -725,5 +727,4 @@ describe('lifecycle hook list client page', () => {
     const row = (await screen.findByText('Unknown status hook')).closest('tr') as HTMLElement;
     expect(row.querySelector('.bg-gray-100')).not.toBeNull();
   });
-
 });

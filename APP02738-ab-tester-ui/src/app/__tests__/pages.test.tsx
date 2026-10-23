@@ -352,16 +352,12 @@ describe('server route pages', () => {
 
   it('redirects when lifecycle hook creation cannot load the tenant or clone', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
-    await expect(
-      LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
-    ).rejects.toBeTruthy();
+    await expect(LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) })).rejects.toBeTruthy();
 
     vi.restoreAllMocks();
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue(successfulResponse(tenant));
     vi.spyOn(apiCaller.lifecycleHooks, 'get').mockResolvedValue({ ok: false });
-    await expect(
-      LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({ cloneFrom: '6' }) }),
-    ).rejects.toBeTruthy();
+    await expect(LifecycleHookCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({ cloneFrom: '6' }) })).rejects.toBeTruthy();
   });
 
   it('creates an execution group with its default campaign rules', async () => {
@@ -446,9 +442,7 @@ describe('server route pages', () => {
 
   it('redirects track-event creation when its tenant cannot be loaded', async () => {
     vi.spyOn(apiCaller.tenants, 'get').mockResolvedValue({ ok: false });
-    await expect(
-      TrackEventCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) }),
-    ).rejects.toBeTruthy();
+    await expect(TrackEventCreatePage({ params: Promise.resolve({ tenantId: '12' }), searchParams: Promise.resolve({}) })).rejects.toBeTruthy();
   });
 
   it.each(['tenant', 'audience', 'track events'] as const)('redirects audience detail when %s data fails', async (failedResource) => {

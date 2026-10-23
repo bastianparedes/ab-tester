@@ -4,6 +4,7 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeLifecycleHookForMenu, TypeOrderLifecycleHookBy } from '@ab-tester/constants/types/lifecycleHooks';
 import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
@@ -177,120 +178,116 @@ export function ClientPage({ tenantId }: PageProps) {
           )}
         </div>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-lg">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th
-                    onClick={() => dispatch({ payload: 'id', type: 'SET_SORT' })}
-                    className="cursor-pointer select-none px-6 py-4 text-left text-sm font-semibold transition-colors hover:bg-slate-700"
+        <DataTable
+          rows={lifecycleHooks}
+          getRowKey={(lifecycleHook) => lifecycleHook.id}
+          rowClassName="transition-colors hover:bg-slate-50"
+          columns={[
+            {
+              label: (
+                <>
+                  {translation.lifecycleHooks.tableId}
+                  <SortIcon column="id" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'id', type: 'SET_SORT' }),
+              renderCell: (lifecycleHook) => lifecycleHook.id,
+            },
+            {
+              label: (
+                <>
+                  {translation.lifecycleHooks.tableName}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'name', type: 'SET_SORT' }),
+              renderCell: (lifecycleHook) => lifecycleHook.name,
+            },
+            {
+              label: (
+                <>
+                  {translation.lifecycleHooks.tableStatus}
+                  <SortIcon column="status" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'status', type: 'SET_SORT' }),
+              renderCell: (lifecycleHook) => (
+                <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(lifecycleHook.status)}`}>
+                  {translation.common[lifecycleHook.status]}
+                </span>
+              ),
+            },
+            {
+              label: (
+                <>
+                  {translation.lifecycleHooks.tableTrigger}
+                  <SortIcon column="option" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'option', type: 'SET_SORT' }),
+              renderCell: (lifecycleHook) => translation.lifecycleHooks.triggerOptions[lifecycleHook.option],
+            },
+            {
+              label: (
+                <>
+                  {translation.lifecycleHooks.updatedAt}
+                  <SortIcon column="updatedAt" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'updatedAt', type: 'SET_SORT' }),
+              renderCell: (lifecycleHook) =>
+                lifecycleHook.updatedAt.toLocaleString('es-CL', {
+                  day: '2-digit',
+                  hour: '2-digit',
+                  hour12: false,
+                  minute: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }),
+            },
+            {
+              label: translation.lifecycleHooks.clone,
+              renderCell: (lifecycleHook) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                  <a
+                    href={config.pages.lifecycleHook({ cloneFrom: lifecycleHook.id, lifecycleHookId: undefined, tenantId })}
+                    className="flex h-fit w-fit rounded-lg p-2 text-violet-500 transition-colors hover:bg-violet-200"
+                    aria-label={`${translation.lifecycleHooks.clone} ${lifecycleHook.name}`}
                   >
-                    {translation.lifecycleHooks.tableId}
-                    <SortIcon column="id" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'name', type: 'SET_SORT' })}
-                    className="cursor-pointer select-none px-6 py-4 text-left text-sm font-semibold transition-colors hover:bg-slate-700"
+                    <Copy size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.lifecycleHooks.modify,
+              renderCell: (lifecycleHook) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                  <a
+                    href={config.pages.lifecycleHook({ lifecycleHookId: lifecycleHook.id, tenantId })}
+                    className="flex h-fit w-fit rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-200"
+                    aria-label={`${translation.lifecycleHooks.modify} ${lifecycleHook.name}`}
                   >
-                    {translation.lifecycleHooks.tableName}
-                    <SortIcon column="name" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'status', type: 'SET_SORT' })}
-                    className="cursor-pointer select-none px-6 py-4 text-left text-sm font-semibold transition-colors hover:bg-slate-700"
+                    <Pencil size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.lifecycleHooks.delete,
+              renderCell: (lifecycleHook) =>
+                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'tenant', tenantId })) && (
+                  <button
+                    type="button"
+                    onClick={() => deleteLifecycleHook(lifecycleHook)}
+                    className="flex rounded-lg p-2 text-red-500 transition-colors hover:bg-red-200"
+                    aria-label={`${translation.lifecycleHooks.delete} ${lifecycleHook.name}`}
                   >
-                    {translation.lifecycleHooks.tableStatus}
-                    <SortIcon column="status" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'option', type: 'SET_SORT' })}
-                    className="cursor-pointer select-none px-6 py-4 text-left text-sm font-semibold transition-colors hover:bg-slate-700"
-                  >
-                    {translation.lifecycleHooks.tableTrigger}
-                    <SortIcon column="option" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'updatedAt', type: 'SET_SORT' })}
-                    className="cursor-pointer select-none px-6 py-4 text-left text-sm font-semibold transition-colors hover:bg-slate-700"
-                  >
-                    {translation.lifecycleHooks.updatedAt}
-                    <SortIcon column="updatedAt" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.lifecycleHooks.clone}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.lifecycleHooks.modify}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.lifecycleHooks.delete}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {lifecycleHooks.length > 0 ? (
-                  lifecycleHooks.map((lifecycleHook) => (
-                    <tr key={lifecycleHook.id} className="transition-colors hover:bg-slate-50">
-                      <td className="px-6 py-4 text-left">{lifecycleHook.id}</td>
-                      <td className="px-6 py-4 text-left">{lifecycleHook.name}</td>
-                      <td className="px-6 py-4 text-left">
-                        <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(lifecycleHook.status)}`}>
-                          {translation.common[lifecycleHook.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-left">{translation.lifecycleHooks.triggerOptions[lifecycleHook.option]}</td>
-                      <td className="px-6 py-4 text-left">
-                        {lifecycleHook.updatedAt.toLocaleString('es-CL', {
-                          day: '2-digit',
-                          hour: '2-digit',
-                          hour12: false,
-                          minute: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
-                          <a
-                            href={config.pages.lifecycleHook({ cloneFrom: lifecycleHook.id, lifecycleHookId: undefined, tenantId })}
-                            className="flex h-fit w-fit rounded-lg p-2 text-violet-500 transition-colors hover:bg-violet-200"
-                            aria-label={`${translation.lifecycleHooks.clone} ${lifecycleHook.name}`}
-                          >
-                            <Copy size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
-                          <a
-                            href={config.pages.lifecycleHook({ lifecycleHookId: lifecycleHook.id, tenantId })}
-                            className="flex h-fit w-fit rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-200"
-                            aria-label={`${translation.lifecycleHooks.modify} ${lifecycleHook.name}`}
-                          >
-                            <Pencil size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'tenant', tenantId })) && (
-                          <button
-                            type="button"
-                            onClick={() => deleteLifecycleHook(lifecycleHook)}
-                            className="flex rounded-lg p-2 text-red-500 transition-colors hover:bg-red-200"
-                            aria-label={`${translation.lifecycleHooks.delete} ${lifecycleHook.name}`}
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
-                      {translation.lifecycleHooks.noData}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <Trash2 size={20} />
+                  </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.lifecycleHooks.noData}
+        />
 
         <div className="mt-6 flex items-center justify-center rounded-lg bg-white p-4 shadow">
           <Pagination totalPages={totalPages} page={state.currentPage} onChange={(newPage) => dispatch({ payload: newPage, type: 'SET_CURRENT_PAGE' })} />

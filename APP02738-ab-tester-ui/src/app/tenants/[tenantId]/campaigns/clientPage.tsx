@@ -5,6 +5,7 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeExecutionGroup } from '@ab-tester/constants/types/executionGroup';
 import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
@@ -184,126 +185,120 @@ export function ClientPage({ tenantId }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th
-                    onClick={() => dispatch({ payload: 'id', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+        <DataTable
+          rows={campaigns}
+          getRowKey={(campaign) => campaign.id}
+          rowClassName="hover:bg-slate-50 transition-colors"
+          columns={[
+            {
+              label: (
+                <>
+                  {translation.campaigns.tableId}
+                  <SortIcon column="id" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'id', type: 'SET_SORT' }),
+              renderCell: (campaign) => campaign.id,
+            },
+            {
+              label: (
+                <>
+                  {translation.campaigns.tableName}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'name', type: 'SET_SORT' }),
+              renderCell: (campaign) => campaign.name,
+            },
+            {
+              label: (
+                <>
+                  {translation.campaigns.tableStatus}
+                  <SortIcon column="status" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'status', type: 'SET_SORT' }),
+              renderCell: (campaign) => (
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(campaign.status)}`}>{translation.common[campaign.status]}</span>
+              ),
+            },
+            {
+              label: (
+                <>
+                  {translation.campaigns.updatedAt}
+                  <SortIcon column="updatedAt" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'updatedAt', type: 'SET_SORT' }),
+              renderCell: (campaign) =>
+                campaign.updatedAt.toLocaleString('es-CL', {
+                  day: '2-digit',
+                  hour: '2-digit',
+                  hour12: false,
+                  minute: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }),
+            },
+            {
+              label: translation.campaigns.tableExecutionGroup,
+              renderCell: (campaign) => (
+                <span>
+                  {campaign.executionGroup ? (
+                    <a
+                      href={
+                        user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId }))
+                          ? config.pages.executionGroup({
+                              executionGroupId: campaign.executionGroup.id,
+                              tenantId,
+                            })
+                          : ''
+                      }
+                    >
+                      (ID: {campaign.executionGroup.id}): {campaign.executionGroup.name}
+                    </a>
+                  ) : (
+                    '---'
+                  )}
+                </span>
+              ),
+            },
+            {
+              label: translation.campaigns.clone,
+              renderCell: (campaign) =>
+                user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId })) && (
+                  <a
+                    href={config.pages.campaign({ campaignId: undefined, cloneFrom: campaign.id, tenantId })}
+                    className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
                   >
-                    {translation.campaigns.tableId}
-                    <SortIcon column="id" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'name', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+                    <Copy size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.campaigns.modify,
+              renderCell: (campaign) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId })) && (
+                  <a
+                    href={config.pages.campaign({ campaignId: campaign.id, tenantId })}
+                    className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
                   >
-                    {translation.campaigns.tableName}
-                    <SortIcon column="name" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'status', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.campaigns.tableStatus}
-                    <SortIcon column="status" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'updatedAt', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.campaigns.updatedAt}
-                    <SortIcon column="updatedAt" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.campaigns.tableExecutionGroup}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.campaigns.clone}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.campaigns.modify}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.campaigns.delete}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {campaigns.length > 0 ? (
-                  campaigns.map((campaign) => (
-                    <tr key={campaign.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-left">{campaign.id}</td>
-                      <td className="px-6 py-4 text-left">{campaign.name}</td>
-                      <td className="px-6 py-4 text-left">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(campaign.status)}`}>
-                          {translation.common[campaign.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {campaign.updatedAt.toLocaleString('es-CL', {
-                          day: '2-digit',
-                          hour: '2-digit',
-                          hour12: false,
-                          minute: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        <span>
-                          {campaign.executionGroup ? (
-                            <a
-                              href={
-                                user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId }))
-                                  ? config.pages.executionGroup({
-                                      executionGroupId: campaign.executionGroup.id,
-                                      tenantId,
-                                    })
-                                  : ''
-                              }
-                            >
-                              (ID: {campaign.executionGroup.id}): {campaign.executionGroup.name}
-                            </a>
-                          ) : (
-                            '---'
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId })) && (
-                          <a
-                            href={config.pages.campaign({ campaignId: undefined, cloneFrom: campaign.id, tenantId })}
-                            className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
-                          >
-                            <Copy size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId })) && (
-                          <a
-                            href={config.pages.campaign({ campaignId: campaign.id, tenantId })}
-                            className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
-                          >
-                            <Pencil size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'campaign', tenantId })) && (
-                          <button type="button" onClick={() => deleteCampaign({ campaign })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
-                            <Trash2 size={20} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
-                      {translation.campaigns.noData}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <Pencil size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.campaigns.delete,
+              renderCell: (campaign) =>
+                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'campaign', tenantId })) && (
+                  <button type="button" onClick={() => deleteCampaign({ campaign })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
+                    <Trash2 size={20} />
+                  </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.campaigns.noData}
+        />
 
         {/* Pagination */}
         <div className="mt-6 flex items-center justify-center bg-white rounded-lg shadow p-4">

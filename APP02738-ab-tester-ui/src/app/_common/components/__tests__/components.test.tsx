@@ -6,6 +6,7 @@ import { DynamicForm } from '@/app/_common/contexts/Dialog/Component/DynamicForm
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
 import { Button } from '../button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../card';
+import { DataTable } from '../DataTable';
 import { Dialog } from '../dialog';
 import { FormSection } from '../FormSection';
 import { Input } from '../input';
@@ -55,8 +56,12 @@ describe('Button', () => {
   });
 
   it('falls back to default styles for unknown runtime variants and sizes', () => {
-    // @ts-expect-error The fallback handles values that can arrive from untyped callers.
-    render(<Button size="unknown" variant="unknown">Fallback</Button>);
+    render(
+      // @ts-expect-error The fallback handles values that can arrive from untyped callers.
+      <Button size="unknown" variant="unknown">
+        Fallback
+      </Button>,
+    );
 
     const button = screen.getByRole('button', { name: 'Fallback' });
     expect(button.className).toContain('bg-blue-600');
@@ -67,9 +72,7 @@ describe('Button', () => {
 describe('Dialog', () => {
   it('renders optional title, description, content, and footer and closes from the overlay', () => {
     const onClose = vi.fn();
-    render(
-      <Dialog content={<p>Dialog content</p>} description="A description" footer={<button type="button">Save</button>} onClose={onClose} title="Dialog title" />,
-    );
+    render(<Dialog content={<p>Dialog content</p>} description="A description" footer={<button type="button">Save</button>} onClose={onClose} title="Dialog title" />);
 
     expect(screen.getByText('Dialog title')).toBeTruthy();
     expect(screen.getByText('A description')).toBeTruthy();
@@ -136,6 +139,49 @@ describe('Pagination', () => {
     rerender(<Pagination onChange={onChange} page={-1} totalPages={3} />);
     fireEvent.click(screen.getAllByRole('button')[0]);
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('DataTable', () => {
+  it('renders typed rows through column renderers and preserves row keys and classes', () => {
+    const onSort = vi.fn();
+    render(
+      <DataTable
+        columns={[
+          { label: 'Name', onSort, renderCell: (row: { id: number; name: string }) => row.name },
+          { label: 'ID', renderCell: (row: { id: number; name: string }) => row.id },
+        ]}
+        emptyMessage="No records"
+        getRowKey={(row) => row.id}
+        rowClassName="table-row"
+        rows={[
+          { id: 1, name: 'Ada' },
+          { id: 2, name: 'Grace' },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('cell', { name: 'Ada' })).toBeTruthy();
+    expect(screen.getByRole('cell', { name: '2' })).toBeTruthy();
+    expect(screen.getAllByRole('row')[1].className).toBe('table-row');
+    fireEvent.click(screen.getByRole('columnheader', { name: 'Name' }));
+    expect(onSort).toHaveBeenCalledOnce();
+  });
+
+  it('renders an empty-state row spanning all columns', () => {
+    render(
+      <DataTable
+        columns={[
+          { label: 'Name', renderCell: (row: { name: string }) => row.name },
+          { label: 'ID', renderCell: (row: { name: string }) => row.name },
+        ]}
+        emptyMessage="No records"
+        getRowKey={(row) => row.name}
+        rows={[]}
+      />,
+    );
+
+    expect(screen.getByText('No records').closest('td')?.getAttribute('colspan')).toBe('2');
   });
 });
 

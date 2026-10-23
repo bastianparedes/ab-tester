@@ -27,18 +27,19 @@ export function ClientPage({ initialUsers, roles }: Props) {
       {
         title: translation.users.newUser,
       },
+      // biome-ignore assist/source/useSortedKeys: preserve form field order
       {
+        name: {
+          label: translation.users.name,
+          required: true,
+          type: 'text',
+          value: '',
+        },
         email: {
           forbiddenValues: users.map((user) => user.email),
           label: translation.users.email,
           required: true,
           type: 'email',
-          value: '',
-        },
-        name: {
-          label: translation.users.name,
-          required: true,
-          type: 'text',
           value: '',
         },
         password: {
@@ -66,16 +67,13 @@ export function ClientPage({ initialUsers, roles }: Props) {
       {
         title: `${translation.users.editUser} "${user.name}"`,
       },
-      // biome-ignore assist/source/useSortedKeys: <This changes the order>
+      // biome-ignore assist/source/useSortedKeys: preserve form field order
       {
-        roleIds: {
-          label: translation.users.roles,
-          options: roles.map((role) => ({
-            label: `(ID: ${role.id}) -> ${role.name}`,
-            value: String(role.id),
-          })),
-          type: 'multiselect',
-          value: user.roles.map((role) => String(role.id)),
+        name: {
+          label: translation.users.name,
+          required: true,
+          type: 'text',
+          value: user.name,
         },
         email: {
           forbiddenValues: users.filter((userInArray) => userInArray.email !== user.email).map((userInArray) => userInArray.email),
@@ -84,11 +82,14 @@ export function ClientPage({ initialUsers, roles }: Props) {
           type: 'email',
           value: user.email,
         },
-        name: {
-          label: translation.users.name,
-          required: true,
-          type: 'text',
-          value: user.name,
+        roleIds: {
+          label: translation.users.roles,
+          options: roles.map((role) => ({
+            label: `(ID: ${role.id}) -> ${role.name}`,
+            value: String(role.id),
+          })),
+          type: 'multiselect',
+          value: user.roles.map((role) => String(role.id)),
         },
       },
     );

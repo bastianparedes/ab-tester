@@ -4,6 +4,7 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeExecutionGroupForMenu, TypeOrderExecutionGroupsBy } from '@ab-tester/constants/types/executionGroup';
 import { ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
@@ -182,100 +183,95 @@ export function ClientPage({ tenantId }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th
-                    onClick={() => dispatch({ payload: 'id', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+        <DataTable
+          rows={executionGroups}
+          getRowKey={(executionGroup) => executionGroup.id}
+          rowClassName="hover:bg-slate-50 transition-colors"
+          columns={[
+            {
+              label: (
+                <>
+                  {translation.executionGroups.tableId}
+                  <SortIcon column="id" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'id', type: 'SET_SORT' }),
+              renderCell: (executionGroup) => executionGroup.id,
+            },
+            {
+              label: (
+                <>
+                  {translation.executionGroups.tableName}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'name', type: 'SET_SORT' }),
+              renderCell: (executionGroup) => executionGroup.name,
+            },
+            {
+              label: (
+                <>
+                  {translation.executionGroups.tableStatus}
+                  <SortIcon column="status" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'status', type: 'SET_SORT' }),
+              renderCell: (executionGroup) => (
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(executionGroup.status)}`}>
+                  {translation.common[executionGroup.status]}
+                </span>
+              ),
+            },
+            {
+              label: translation.executionGroups.tableQuantityCampaigns,
+              renderCell: (executionGroup) => executionGroup.campaignsCount,
+            },
+            {
+              label: (
+                <>
+                  {translation.executionGroups.updatedAt}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'updatedAt', type: 'SET_SORT' }),
+              renderCell: (executionGroup) =>
+                executionGroup.updatedAt.toLocaleString('es-CL', {
+                  day: '2-digit',
+                  hour: '2-digit',
+                  hour12: false,
+                  minute: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }),
+            },
+            {
+              label: translation.executionGroups.modify,
+              renderCell: (executionGroup) =>
+                user.permissions.includes(getStringPermission({ action: 'update', feature: 'execution-group', tenantId })) && (
+                  <a
+                    href={config.pages.executionGroup({ executionGroupId: executionGroup.id, tenantId })}
+                    className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
                   >
-                    {translation.executionGroups.tableId}
-                    <SortIcon column="id" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'name', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+                    <Pencil size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.executionGroups.delete,
+              renderCell: (executionGroup) =>
+                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'execution-group', tenantId })) && (
+                  <button
+                    type="button"
+                    onClick={() => deleteExecutionGroup({ executionGroup })}
+                    className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors"
                   >
-                    {translation.executionGroups.tableName}
-                    <SortIcon column="name" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'status', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.executionGroups.tableStatus}
-                    <SortIcon column="status" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.executionGroups.tableQuantityCampaigns}</th>
-                  <th
-                    onClick={() => dispatch({ payload: 'updatedAt', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.executionGroups.updatedAt}
-                    <SortIcon column="name" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.executionGroups.modify}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.executionGroups.delete}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {executionGroups.length > 0 ? (
-                  executionGroups.map((executionGroup) => (
-                    <tr key={executionGroup.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-left">{executionGroup.id}</td>
-                      <td className="px-6 py-4 text-left">{executionGroup.name}</td>
-                      <td className="px-6 py-4 text-left">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(executionGroup.status)}`}>
-                          {translation.common[executionGroup.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-left">{executionGroup.campaignsCount}</td>
-                      <td className="px-6 py-4 text-left">
-                        {executionGroup.updatedAt.toLocaleString('es-CL', {
-                          day: '2-digit',
-                          hour: '2-digit',
-                          hour12: false,
-                          minute: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'update', feature: 'execution-group', tenantId })) && (
-                          <a
-                            href={config.pages.executionGroup({ executionGroupId: executionGroup.id, tenantId })}
-                            className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
-                          >
-                            <Pencil size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'execution-group', tenantId })) && (
-                          <button
-                            type="button"
-                            onClick={() => deleteExecutionGroup({ executionGroup })}
-                            className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                      {translation.executionGroups.noData}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <Trash2 size={20} />
+                  </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.executionGroups.noData}
+        />
 
         {/* Pagination */}
         <div className="mt-6 flex items-center justify-center bg-white rounded-lg shadow p-4">

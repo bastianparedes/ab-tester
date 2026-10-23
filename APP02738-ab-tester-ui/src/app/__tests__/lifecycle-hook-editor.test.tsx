@@ -95,12 +95,15 @@ describe('lifecycle hook editor', () => {
   });
 
   it('redirects to the hook list after a successful update', async () => {
-    const update = vi.spyOn(apiCaller.lifecycleHooks, 'update').mockResolvedValue(new Response('{}', { status: 200 }));
+    const response = new Response('{}', { status: 200 });
+    const responseOk = vi.spyOn(response, 'ok', 'get').mockReturnValue(true);
+    const update = vi.spyOn(apiCaller.lifecycleHooks, 'update').mockResolvedValue(response);
     vi.stubGlobal('location', { href: '' });
     renderHookEditor({ id: 7, javascript: validJavaScript, name: 'Hook', status: 'active', tenantId: 12, trigger: 'campaignStart' });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(update).toHaveBeenCalledOnce());
+    expect(responseOk).toHaveBeenCalled();
     await waitFor(() => expect(location.href).toBe('/tenants/12/lifecycle-hooks'));
   });
 

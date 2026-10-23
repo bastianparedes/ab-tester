@@ -4,6 +4,7 @@ import type { TypeAudienceForMenu, TypeOrderAudiencesBy } from '@ab-tester/const
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import { ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
@@ -155,82 +156,73 @@ export function ClientPage({ tenantId }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th
-                    onClick={() => dispatch({ payload: 'id', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
+        <DataTable
+          rows={audiences}
+          getRowKey={(audience) => audience.id}
+          rowClassName="hover:bg-slate-50 transition-colors"
+          columns={[
+            {
+              label: (
+                <>
+                  {translation.audiences.tableId}
+                  <SortIcon column="id" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'id', type: 'SET_SORT' }),
+              renderCell: (audience) => audience.id,
+            },
+            {
+              label: (
+                <>
+                  {translation.audiences.tableName}
+                  <SortIcon column="name" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'name', type: 'SET_SORT' }),
+              renderCell: (audience) => audience.name,
+            },
+            {
+              label: (
+                <>
+                  {translation.audiences.updatedAt}
+                  <SortIcon column="updatedAt" />
+                </>
+              ),
+              onSort: () => dispatch({ payload: 'updatedAt', type: 'SET_SORT' }),
+              renderCell: (audience) =>
+                audience.updatedAt.toLocaleString('es-CL', {
+                  day: '2-digit',
+                  hour: '2-digit',
+                  hour12: false,
+                  minute: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }),
+            },
+            {
+              label: translation.audiences.modify,
+              renderCell: (audience) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId })) && (
+                  <a
+                    href={config.pages.audience({ audienceId: audience.id, tenantId })}
+                    className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
                   >
-                    {translation.audiences.tableId}
-                    <SortIcon column="id" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'name', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.audiences.tableName}
-                    <SortIcon column="name" />
-                  </th>
-                  <th
-                    onClick={() => dispatch({ payload: 'updatedAt', type: 'SET_SORT' })}
-                    className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 transition-colors select-none"
-                  >
-                    {translation.audiences.updatedAt}
-                    <SortIcon column="updatedAt" />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.audiences.modify}</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">{translation.audiences.delete}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {audiences.length > 0 ? (
-                  audiences.map((audience) => (
-                    <tr key={audience.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-left">{audience.id}</td>
-                      <td className="px-6 py-4 text-left">{audience.name}</td>
-                      <td className="px-6 py-4 text-left">
-                        {audience.updatedAt.toLocaleString('es-CL', {
-                          day: '2-digit',
-                          hour: '2-digit',
-                          hour12: false,
-                          minute: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId })) && (
-                          <a
-                            href={config.pages.audience({ audienceId: audience.id, tenantId })}
-                            className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
-                          >
-                            <Pencil size={20} />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'audience', tenantId })) && (
-                          <button type="button" onClick={() => deleteAudience({ audience })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
-                            <Trash2 size={20} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
-                      {translation.audiences.noData}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <Pencil size={20} />
+                  </a>
+                ),
+            },
+            {
+              label: translation.audiences.delete,
+              renderCell: (audience) =>
+                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'audience', tenantId })) && (
+                  <button type="button" onClick={() => deleteAudience({ audience })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
+                    <Trash2 size={20} />
+                  </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.audiences.noData}
+        />
 
         {/* Paginación */}
         <div className="mt-6 flex items-center justify-center bg-white rounded-lg shadow p-4">

@@ -79,18 +79,19 @@ export function ClientPage({ initialRoles, tenants }: Props) {
       {
         title: translation.roles.newRole,
       },
+      // biome-ignore assist/source/useSortedKeys: preserve form field order
       {
-        description: {
-          label: translation.roles.description,
-          required: true,
-          type: 'textarea',
-          value: '',
-        },
         name: {
           forbiddenValues: [...roles.map((role) => role.name)],
           label: translation.roles.name,
           required: true,
           type: 'text',
+          value: '',
+        },
+        description: {
+          label: translation.roles.description,
+          required: true,
+          type: 'textarea',
           value: '',
         },
       },

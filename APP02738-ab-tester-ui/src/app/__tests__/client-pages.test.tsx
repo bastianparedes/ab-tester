@@ -33,6 +33,13 @@ const renderWithUser = (children: React.ReactNode, permissions: string[]) => {
   );
 };
 
+const getDialogTextInput = (label: string) => {
+  const labelElement = screen.getByText(label, { selector: 'span' });
+  const input = labelElement.parentElement?.querySelector('input[type="text"]');
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Expected a text input for "${label}"`);
+  return input;
+};
+
 const apiResponse = <T,>(data: T) => ({ json: async () => data, ok: true, text: async () => '' }) as unknown as Awaited<ReturnType<typeof apiCaller.audiences.getMany>>;
 
 describe('audience list client page', () => {
@@ -369,9 +376,8 @@ describe('tenant list client page', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: '+ New Tenant' }));
 
-    const inputs = container.querySelectorAll('input[type="text"]');
-    fireEvent.change(inputs[0], { target: { value: 'new.example.test' } });
-    fireEvent.change(inputs[1], { target: { value: 'New workspace' } });
+    fireEvent.change(getDialogTextInput('Name'), { target: { value: 'New workspace' } });
+    fireEvent.change(getDialogTextInput('Domain'), { target: { value: 'new.example.test' } });
     fireEvent.change(container.querySelector('textarea') as HTMLTextAreaElement, { target: { value: 'Created in test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
 
@@ -389,9 +395,8 @@ describe('tenant list client page', () => {
     );
     fireEvent.click(screen.getByTitle('Edit tenant'));
 
-    const inputs = container.querySelectorAll('input[type="text"]');
-    fireEvent.change(inputs[0], { target: { value: 'updated.example.test' } });
-    fireEvent.change(inputs[1], { target: { value: 'Acme updated' } });
+    fireEvent.change(getDialogTextInput('Name'), { target: { value: 'Acme updated' } });
+    fireEvent.change(getDialogTextInput('Domain'), { target: { value: 'updated.example.test' } });
     fireEvent.change(container.querySelector('textarea') as HTMLTextAreaElement, { target: { value: 'Updated workspace' } });
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
 
