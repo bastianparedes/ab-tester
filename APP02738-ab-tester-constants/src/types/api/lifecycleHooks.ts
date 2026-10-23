@@ -5,6 +5,13 @@ import type { TypeTenant } from '../tenant';
 type TypeLifecycleHookValues = Pick<TypeLifecycleHook, 'status' | 'name' | 'option' | 'javascript'>;
 
 export type TypeApiLifecycleHooks = {
+  copy: {
+    request: {
+      pathParams: { tenantId: TypeTenant['id']; lifecycleHookId: TypeLifecycleHook['id'] };
+      body: { targetTenantId: TypeTenant['id'] };
+    };
+    response: Record<string, never>;
+  };
   get: {
     request: {
       pathParams: { tenantId: TypeTenant['id']; lifecycleHookId: TypeLifecycleHook['id'] };

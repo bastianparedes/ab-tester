@@ -1,14 +1,30 @@
 import type { TypeApiLifecycleHooks } from '@ab-tester/constants/types/api/lifecycleHooks';
 import type { TypeLifecycleHook } from '@ab-tester/constants/types/lifecycleHooks';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ZodResponse } from '../../interceptors/zod-response.interceptor';
+import { getStringPermission } from '../../libs/auth/permissions';
 import { DbService } from '../../services/db.service';
 import { ScriptService } from '../../services/script.service';
 import { type Request } from '../../types/request';
-import { getLifecycleHooksQuerySchema, lifecycleHookSchema } from './request.schema';
+import { copyLifecycleHookSchema, getLifecycleHooksQuerySchema, lifecycleHookSchema } from './request.schema';
 import { lifecycleHookResponseSchemas } from './response.schema';
 
 type LifecycleHookValues = Pick<TypeLifecycleHook, 'status' | 'name' | 'option' | 'javascript'>;
@@ -19,6 +35,31 @@ export class LifecycleHookController {
     private readonly dbService: DbService,
     private readonly scriptService: ScriptService,
   ) {}
+
+  @ZodResponse(lifecycleHookResponseSchemas.copy)
+  @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))
+  @Post(':lifecycleHookId/copy')
+  async copy(
+    @Param('tenantId', ParseIntPipe) tenantId: number,
+    @Param('lifecycleHookId', ParseIntPipe) lifecycleHookId: number,
+    @Body({ schema: copyLifecycleHookSchema }) body: AssertEqual<z.infer<typeof copyLifecycleHookSchema>, TypeApiLifecycleHooks['copy']['request']['body']>,
+    @Req() req: Request,
+  ): Promise<TypeApiLifecycleHooks['copy']['response']> {
+    const user = req.user;
+    if (!user) throw new UnauthorizedException();
+    const createPermission = getStringPermission({ action: 'create', feature: 'tenant', tenantId: body.targetTenantId });
+    if (!user.roles.some((role) => role.permissions.includes(createPermission))) throw new ForbiddenException('Insufficient permissions');
+
+    const copiedLifecycleHook = await this.dbService.lifecycleHooks.copy({
+      lifecycleHookId,
+      targetTenantId: body.targetTenantId,
+      tenantId,
+      userId: user.id,
+    });
+    if (!copiedLifecycleHook) throw new NotFoundException();
+    await this.scriptService.clear({ tenantId: body.targetTenantId });
+    return {};
+  }
 
   @ZodResponse(lifecycleHookResponseSchemas.getMany)
   @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))

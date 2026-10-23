@@ -4,6 +4,13 @@ import type { TypeExecutionGroup } from '../executionGroup';
 import type { TypeTenant } from '../tenant';
 
 export type TypeApiCampaigns = {
+  copy: {
+    request: {
+      pathParams: { tenantId: TypeTenant['id']; campaignId: TypeCampaign['id'] };
+      body: { targetTenantId: TypeTenant['id'] };
+    };
+    response: Record<string, never>;
+  };
   get: {
     request: {
       pathParams: { tenantId: TypeTenant['id']; campaignId: TypeCampaign['id'] };

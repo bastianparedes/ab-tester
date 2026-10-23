@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { TypeAudienceForMenu } from '@ab-tester/constants/types/audience';
 import type { TypeCampaignForMenu } from '@ab-tester/constants/types/campaign';
 import type { TypeExecutionGroup, TypeExecutionGroupForMenu } from '@ab-tester/constants/types/executionGroup';
 import type { TypeLifecycleHookForMenu } from '@ab-tester/constants/types/lifecycleHooks';
@@ -8,10 +9,12 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DynamicDialog } from '@/app/_common/contexts/Dialog/Component';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { ToastProvider } from '@/app/_common/contexts/ToastEmitter';
 import { TranslationProvider } from '@/app/_common/contexts/Translation';
 import { UserProvider } from '@/app/_common/contexts/User';
 import { getStringPermission } from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
+import { ClientPage as AudienceList } from '../tenants/[tenantId]/audiences/clientPage';
 import { ClientPage as CampaignList } from '../tenants/[tenantId]/campaigns/clientPage';
 import { ClientPage as ExecutionGroupList } from '../tenants/[tenantId]/execution-groups/clientPage';
 import { ClientPage as LifecycleHookList } from '../tenants/[tenantId]/lifecycle-hooks/clientPage';
@@ -26,15 +29,84 @@ afterEach(() => {
 
 const renderWithProviders = (children: React.ReactNode, permissions: string[] = []) =>
   render(
-    <TranslationProvider language="english">
-      <UserProvider user={{ data: null, isLogedIn: false, permissions }}>{children}</UserProvider>
-    </TranslationProvider>,
+    <ToastProvider>
+      <TranslationProvider language="english">
+        <UserProvider user={{ data: null, isLogedIn: false, permissions }}>{children}</UserProvider>
+      </TranslationProvider>
+    </ToastProvider>,
   );
 
 const successfulResponse = (data: unknown) => new Response(JSON.stringify(data), { status: 200 });
 const createdAt = new Date('2026-01-01T00:00:00.000Z');
 const updatedAt = new Date('2026-01-02T00:00:00.000Z');
 const tenantId = 12;
+
+describe('audience list client page', () => {
+  const audience: TypeAudienceForMenu = { createdAt, id: 9, name: 'Returning customers', updatedAt };
+
+  it('copies referenced track events before creating the audience in the selected tenant', async () => {
+    const sourceReadPermission = getStringPermission({ action: 'read', feature: 'audience', tenantId });
+    const sourceTrackEventReadPermission = getStringPermission({ action: 'read', feature: 'track-event', tenantId });
+    const targetAudiencePermission = getStringPermission({ action: 'create', feature: 'audience', tenantId: 13 });
+    const targetTrackEventPermission = getStringPermission({ action: 'create', feature: 'track-event', tenantId: 13 });
+    vi.spyOn(apiCaller.audiences, 'getMany').mockImplementation(async () => successfulResponse({ audiences: [audience], count: 1 }));
+    const getAudience = vi.spyOn(apiCaller.audiences, 'get').mockResolvedValue(
+      successfulResponse({
+        ...audience,
+        requirements: {
+          data: {
+            children: [
+              { data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 22 }, type: 'any' },
+              {
+                data: {
+                  children: [{ data: { eventCount: 2, quantityOperator: 'moreThan', timeAmount: 7, timeUnit: 'days', trackEventId: 22 }, type: 'any' }],
+                  operator: 'or',
+                },
+                type: 'node',
+              },
+            ],
+            operator: 'and',
+          },
+          type: 'node',
+        },
+        tenantId,
+      }),
+    );
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(
+      successfulResponse([
+        { description: '', domain: 'target.test', id: 13, name: 'Target tenant' },
+        { description: '', domain: 'no-events.test', id: 14, name: 'No track-event access' },
+      ]),
+    );
+    const copyAudience = vi.spyOn(apiCaller.audiences, 'copy').mockResolvedValue(successfulResponse({}));
+
+    renderWithProviders(
+      <>
+        <AudienceList tenantId={tenantId} />
+        <DynamicDialog />
+      </>,
+      [sourceReadPermission, sourceTrackEventReadPermission, targetAudiencePermission, targetTrackEventPermission],
+    );
+
+    const row = (await screen.findByText('Returning customers')).closest('tr') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Copy to tenant Returning customers' }));
+    await waitFor(() => expect(getAudience).toHaveBeenCalledWith({ pathParams: { audienceId: audience.id, tenantId } }));
+
+    const tenantSelect = (await screen.findAllByRole('combobox')).find((select) =>
+      Array.from((select as HTMLSelectElement).options).some((option) => option.textContent === 'Target tenant'),
+    ) as HTMLSelectElement;
+    expect(within(tenantSelect).queryByRole('option', { name: 'No track-event access' })).toBeNull();
+    fireEvent.change(tenantSelect, { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+
+    await waitFor(() =>
+      expect(copyAudience).toHaveBeenCalledWith({
+        body: { targetTenantId: 13 },
+        pathParams: { audienceId: audience.id, tenantId },
+      }),
+    );
+  });
+});
 
 describe('campaign list client page', () => {
   const campaign: TypeCampaignForMenu & { executionGroup: TypeExecutionGroup | null } = {
@@ -60,6 +132,82 @@ describe('campaign list client page', () => {
       expect(getMany).toHaveBeenLastCalledWith({
         pathParams: { tenantId },
         queryParams: { orderBy: 'updatedAt', orderDirection: 'desc', page: 0, quantity: 25, statusList: ['inactive'], textSearch: '' },
+      }),
+    );
+  });
+
+  it('copies a campaign and its audience dependencies to a tenant with the required permissions', async () => {
+    vi.spyOn(apiCaller.campaigns, 'getMany').mockImplementation(async () => successfulResponse({ campaigns: [campaign], count: 1 }));
+    const getCampaign = vi.spyOn(apiCaller.campaigns, 'get').mockResolvedValue(
+      successfulResponse({
+        ...campaign,
+        requirements: {
+          data: { children: [{ data: { id: 30 }, type: 'audience' }], operator: 'and' },
+          type: 'node',
+        },
+        triggers: [],
+        variations: [],
+      }),
+    );
+    vi.spyOn(apiCaller.audiences, 'get').mockResolvedValue(
+      successfulResponse({
+        createdAt,
+        id: 30,
+        name: 'Returning customers',
+        requirements: {
+          data: {
+            children: [{ data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 50 }, type: 'any' }],
+            operator: 'and',
+          },
+          type: 'node',
+        },
+        tenantId,
+        updatedAt,
+      }),
+    );
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(
+      successfulResponse([
+        { description: '', domain: 'target.test', id: 13, name: 'Target tenant' },
+        { description: '', domain: 'audience-only.test', id: 14, name: 'No event access' },
+      ]),
+    );
+    const copyCampaign = vi.spyOn(apiCaller.campaigns, 'copy').mockResolvedValue(successfulResponse({}));
+
+    renderWithProviders(
+      <>
+        <CampaignList tenantId={tenantId} />
+        <DynamicDialog />
+      </>,
+      [
+        getStringPermission({ action: 'read', feature: 'campaign', tenantId }),
+        getStringPermission({ action: 'read', feature: 'audience', tenantId }),
+        getStringPermission({ action: 'read', feature: 'track-event', tenantId }),
+        getStringPermission({ action: 'create', feature: 'campaign', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'audience', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'track-event', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'campaign', tenantId: 14 }),
+        getStringPermission({ action: 'create', feature: 'audience', tenantId: 14 }),
+      ],
+    );
+
+    const row = (await screen.findByText('Spring campaign')).closest('tr') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Copy to tenant Spring campaign' }));
+    await waitFor(() =>
+      expect(getCampaign).toHaveBeenCalledWith({
+        pathParams: { campaignId: campaign.id, tenantId },
+      }),
+    );
+
+    const tenantSelect = (await screen.findAllByRole('combobox')).find((select) =>
+      Array.from((select as HTMLSelectElement).options).some((option) => option.textContent === 'Target tenant'),
+    ) as HTMLSelectElement;
+    expect(within(tenantSelect).queryByRole('option', { name: 'No event access' })).toBeNull();
+    fireEvent.change(tenantSelect, { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    await waitFor(() =>
+      expect(copyCampaign).toHaveBeenCalledWith({
+        body: { targetTenantId: 13 },
+        pathParams: { campaignId: campaign.id, tenantId },
       }),
     );
   });
@@ -264,6 +412,94 @@ describe('execution group list client page', () => {
     await waitFor(() => expect(getMany).toHaveBeenLastCalledWith(expect.objectContaining({ queryParams: expect.objectContaining({ orderBy: 'status' }) })));
   });
 
+  it('copies an execution group with its campaigns and dependencies to a permitted tenant', async () => {
+    vi.spyOn(apiCaller.executionGroups, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, executionGroups: [executionGroup] }));
+    const getGroup = vi.spyOn(apiCaller.executionGroups, 'get').mockResolvedValue(
+      successfulResponse({
+        campaigns: [{ id: 31 }],
+        executionGroup: { ...executionGroup, onlyCampaignsPreviouslyExecuted: false, onlyOneCampaignPerPageLoad: true, waitForEveryCampaignToBeEvaluated: true },
+      }),
+    );
+    const getCampaign = vi.spyOn(apiCaller.campaigns, 'get').mockResolvedValue(
+      successfulResponse({
+        createdAt,
+        executionGroup: null,
+        executionGroupId: 8,
+        id: 31,
+        name: 'Spring campaign',
+        requirements: {
+          data: { children: [{ data: { id: 40 }, type: 'audience' }], operator: 'and' },
+          type: 'node',
+        },
+        status: 'active',
+        tenantId,
+        triggers: [],
+        updatedAt,
+        variations: [],
+      }),
+    );
+    vi.spyOn(apiCaller.audiences, 'get').mockResolvedValue(
+      successfulResponse({
+        createdAt,
+        id: 40,
+        name: 'Returning customers',
+        requirements: {
+          data: {
+            children: [{ data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 50 }, type: 'any' }],
+            operator: 'and',
+          },
+          type: 'node',
+        },
+        tenantId,
+        updatedAt,
+      }),
+    );
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(
+      successfulResponse([
+        { description: '', domain: 'target.test', id: 13, name: 'Target tenant' },
+        { description: '', domain: 'no-events.test', id: 14, name: 'No track-event access' },
+      ]),
+    );
+    const copyGroup = vi.spyOn(apiCaller.executionGroups, 'copy').mockResolvedValue(successfulResponse({}));
+    renderWithProviders(
+      <>
+        <ExecutionGroupList tenantId={tenantId} />
+        <DynamicDialog />
+      </>,
+      [
+        getStringPermission({ action: 'read', feature: 'execution-group', tenantId }),
+        getStringPermission({ action: 'read', feature: 'campaign', tenantId }),
+        getStringPermission({ action: 'read', feature: 'audience', tenantId }),
+        getStringPermission({ action: 'read', feature: 'track-event', tenantId }),
+        getStringPermission({ action: 'create', feature: 'execution-group', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'campaign', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'audience', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'track-event', tenantId: 13 }),
+        getStringPermission({ action: 'create', feature: 'execution-group', tenantId: 14 }),
+        getStringPermission({ action: 'create', feature: 'campaign', tenantId: 14 }),
+        getStringPermission({ action: 'create', feature: 'audience', tenantId: 14 }),
+      ],
+    );
+
+    const row = (await screen.findByText('Primary group')).closest('tr') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Copy to tenant Primary group' }));
+    await waitFor(() => expect(getGroup).toHaveBeenCalledWith({ pathParams: { executionGroupId: executionGroup.id, tenantId } }));
+    expect(getCampaign).toHaveBeenCalledWith({ pathParams: { campaignId: 31, tenantId } });
+    const tenantSelect = (await screen.findAllByRole('combobox')).find((select) =>
+      Array.from((select as HTMLSelectElement).options).some((option) => option.textContent === 'Target tenant'),
+    ) as HTMLSelectElement;
+    expect(within(tenantSelect).queryByRole('option', { name: 'No track-event access' })).toBeNull();
+    fireEvent.change(tenantSelect, { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+
+    await waitFor(() =>
+      expect(copyGroup).toHaveBeenCalledWith({
+        body: { targetTenantId: 13 },
+        pathParams: { executionGroupId: executionGroup.id, tenantId },
+      }),
+    );
+  });
+
   it('covers execution-group sort toggles, filters, pagination and create access', async () => {
     const getMany = vi.spyOn(apiCaller.executionGroups, 'getMany').mockImplementation(async () => successfulResponse({ count: 100, executionGroups: [executionGroup] }));
     const { container } = renderWithProviders(<ExecutionGroupList tenantId={tenantId} />, [getStringPermission({ action: 'create', feature: 'execution-group', tenantId })]);
@@ -459,6 +695,45 @@ describe('track event list client page', () => {
     expect(reload).toHaveBeenCalledOnce();
   });
 
+  it('copies a track event to a tenant selected from those with create access', async () => {
+    const sourceReadPermission = getStringPermission({ action: 'read', feature: 'track-event', tenantId });
+    const targetCreatePermission = getStringPermission({ action: 'create', feature: 'track-event', tenantId: 13 });
+    vi.spyOn(apiCaller.trackEvents, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, trackEvents: [trackEvent] }));
+    const getAllTenants = vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(
+      successfulResponse([
+        { description: '', domain: 'source.test', id: tenantId, name: 'Source tenant' },
+        { description: '', domain: 'target.test', id: 13, name: 'Target tenant' },
+        { description: '', domain: 'blocked.test', id: 14, name: 'No access tenant' },
+      ]),
+    );
+    const copyEvent = vi.spyOn(apiCaller.trackEvents, 'copy').mockResolvedValue(successfulResponse({}));
+
+    renderWithProviders(
+      <>
+        <TrackEventList tenantId={tenantId} />
+        <DynamicDialog />
+      </>,
+      [sourceReadPermission, targetCreatePermission],
+    );
+
+    const row = (await screen.findByText('Checkout')).closest('tr') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Copy to tenant Checkout' }));
+    await waitFor(() => expect(getAllTenants).toHaveBeenCalledOnce());
+
+    const targetTenantOption = await screen.findByRole('option', { name: 'Target tenant' });
+    const tenantSelect = targetTenantOption.closest('select') as HTMLSelectElement;
+    expect(within(tenantSelect).queryByRole('option', { name: 'No access tenant' })).toBeNull();
+    fireEvent.change(tenantSelect, { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+
+    await waitFor(() =>
+      expect(copyEvent).toHaveBeenCalledWith({
+        body: { targetTenantId: 13 },
+        pathParams: { tenantId, trackEventId: trackEvent.id },
+      }),
+    );
+  });
+
   it('sorts track events both ways and deletes a selected row after confirmation', async () => {
     const reload = vi.fn();
     vi.stubGlobal('location', { reload });
@@ -491,7 +766,7 @@ describe('track event list client page', () => {
     );
 
     const row = screen.getByText('Checkout').closest('tr') as HTMLElement;
-    fireEvent.click(within(row).getByRole('button'));
+    fireEvent.click(within(row).getByRole('button', { name: 'Delete Checkout' }));
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
     await waitFor(() => expect(deleteEvent).toHaveBeenCalledWith({ pathParams: { tenantId, trackEventId: 11 } }));
     expect(reload).toHaveBeenCalledOnce();
@@ -670,6 +945,46 @@ describe('lifecycle hook list client page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(useDialogStore.getState().isOpen).toBe(false));
     expect(deleteHook).not.toHaveBeenCalled();
+  });
+
+  it('copies a lifecycle hook to a tenant with create access', async () => {
+    const readTenant = getStringPermission({ action: 'read', feature: 'tenant', tenantId });
+    vi.spyOn(apiCaller.lifecycleHooks, 'getMany').mockImplementation(async () => successfulResponse({ count: 1, lifecycleHooks: [lifecycleHook] }));
+    vi.spyOn(apiCaller.tenants, 'getAll').mockResolvedValue(
+      successfulResponse([
+        { description: '', domain: 'source.test', id: tenantId, name: 'Source tenant' },
+        { description: '', domain: 'target.test', id: 13, name: 'Target tenant' },
+        { description: '', domain: 'blocked.test', id: 14, name: 'No access tenant' },
+      ]),
+    );
+    const copyHook = vi.spyOn(apiCaller.lifecycleHooks, 'copy').mockResolvedValue(successfulResponse({}));
+
+    renderWithProviders(
+      <>
+        <LifecycleHookList tenantId={tenantId} />
+        <DynamicDialog />
+      </>,
+      [readTenant, getStringPermission({ action: 'create', feature: 'tenant', tenantId: 13 })],
+    );
+
+    const row = (await screen.findByText('Initialize script')).closest('tr') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Copy to tenant Initialize script' }));
+    await screen.findByText('Copy lifecycle hook to another tenant');
+
+    const tenantSelect = (await screen.findAllByRole('combobox')).find((select) =>
+      Array.from((select as HTMLSelectElement).options).some((option) => option.textContent === 'Target tenant'),
+    ) as HTMLSelectElement;
+    expect(within(tenantSelect).getByRole('option', { name: 'Target tenant' })).toBeTruthy();
+    expect(within(tenantSelect).queryByRole('option', { name: 'No access tenant' })).toBeNull();
+    fireEvent.change(tenantSelect, { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+
+    await waitFor(() =>
+      expect(copyHook).toHaveBeenCalledWith({
+        body: { targetTenantId: 13 },
+        pathParams: { lifecycleHookId: lifecycleHook.id, tenantId },
+      }),
+    );
   });
 
   it('deletes a lifecycle hook after confirmation and reloads the page', async () => {

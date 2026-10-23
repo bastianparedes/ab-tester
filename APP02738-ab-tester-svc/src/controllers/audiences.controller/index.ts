@@ -1,13 +1,46 @@
-import { TypeApiAudiences } from '@ab-tester/constants/types/api/audiences';
+import type { TypeApiAudiences } from '@ab-tester/constants/types/api/audiences';
+import type { TypeNodeRequirement } from '@ab-tester/constants/types/audience';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ZodResponse } from '../../interceptors/zod-response.interceptor';
+import { getStringPermission } from '../../libs/auth/permissions';
 import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
-import { audienceSchema, getAudiencesQuerySchema } from './request.schema';
+import { audienceSchema, copyAudienceSchema, getAudiencesQuerySchema } from './request.schema';
 import { audienceResponseSchemas } from './response.schema';
+
+const getTrackEventIds = (requirements: TypeNodeRequirement): number[] => {
+  const trackEventIds = new Set<number>();
+  const visit = (node: TypeNodeRequirement) => {
+    for (const requirement of node.data.children) {
+      if (requirement.type === 'node') {
+        visit(requirement);
+      } else {
+        trackEventIds.add(requirement.data.trackEventId);
+      }
+    }
+  };
+
+  visit(requirements);
+  return [...trackEventIds];
+};
 
 @Controller('tenants/:tenantId/audiences')
 export class AudiencesController {
@@ -53,6 +86,44 @@ export class AudiencesController {
     if (!user) throw new UnauthorizedException();
 
     await this.dbService.audiences.create({ tenantId, userId: user.id, values: body });
+    return {};
+  }
+
+  @ZodResponse(audienceResponseSchemas.copy)
+  @UseGuards(AuthGuard({ action: 'read', feature: 'audience' }))
+  @Post(':audienceId/copy')
+  async copy(
+    @Param('tenantId', ParseIntPipe) tenantId: number,
+    @Param('audienceId', ParseIntPipe) audienceId: number,
+    @Body({ schema: copyAudienceSchema }) body: AssertEqual<z.infer<typeof copyAudienceSchema>, TypeApiAudiences['copy']['request']['body']>,
+    @Req() req: Request,
+  ): Promise<TypeApiAudiences['copy']['response']> {
+    const user = req.user;
+    if (!user) throw new UnauthorizedException();
+
+    const audience = await this.dbService.audiences.get({ audienceId, tenantId });
+    if (!audience) throw new NotFoundException();
+
+    const trackEventIds = getTrackEventIds(audience.requirements);
+    const requiredPermissions = [
+      getStringPermission({ action: 'create', feature: 'audience', tenantId: body.targetTenantId }),
+      ...(trackEventIds.length > 0
+        ? [
+            getStringPermission({ action: 'read', feature: 'track-event', tenantId }),
+            getStringPermission({ action: 'create', feature: 'track-event', tenantId: body.targetTenantId }),
+          ]
+        : []),
+    ];
+    if (!requiredPermissions.every((permission) => user.roles.some((role) => role.permissions.includes(permission)))) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    await this.dbService.audiences.copy({
+      audienceId,
+      sourceTenantId: tenantId,
+      targetTenantId: body.targetTenantId,
+      userId: user.id,
+    });
     return {};
   }
 

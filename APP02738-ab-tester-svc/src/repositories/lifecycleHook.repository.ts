@@ -11,6 +11,34 @@ type LifecycleHookValues = Pick<TypeLifecycleHook, 'status' | 'name' | 'option' 
 
 @Injectable()
 export class LifecycleHookRepository {
+  copy = async ({
+    tenantId,
+    lifecycleHookId,
+    targetTenantId,
+    userId,
+  }: {
+    tenantId: TypeTenant['id'];
+    lifecycleHookId: TypeLifecycleHook['id'];
+    targetTenantId: TypeTenant['id'];
+    userId: TypeUser['id'];
+  }) => {
+    const lifecycleHook = await this.get({ lifecycleHookId, tenantId });
+    if (!lifecycleHook) return undefined;
+
+    const [copiedLifecycleHook] = await db
+      .insert(schema.lifecycleHooks)
+      .values({
+        createdBy: userId,
+        javascript: lifecycleHook.javascript,
+        name: lifecycleHook.name,
+        option: lifecycleHook.option,
+        status: lifecycleHook.status,
+        tenantId: targetTenantId,
+      })
+      .returning();
+    return copiedLifecycleHook;
+  };
+
   create = async ({ tenantId, values, userId }: { tenantId: TypeTenant['id']; values: LifecycleHookValues; userId: TypeUser['id'] }) => {
     const [result] = await db
       .insert(schema.lifecycleHooks)

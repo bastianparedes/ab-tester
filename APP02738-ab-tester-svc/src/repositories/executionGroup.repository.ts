@@ -3,13 +3,67 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeExecutionGroup, TypeExecutionGroupUpdatable } from '@ab-tester/constants/types/executionGroup';
 import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { TypeUser } from '@ab-tester/constants/types/user';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
+import { copyCampaignInTransaction } from './copyCampaignInTransaction';
 import db from './postgres/client';
 import * as schema from './postgres/schema';
 
 @Injectable()
 export class ExecutionGroupRepository {
+  copy = async ({
+    executionGroupId,
+    sourceTenantId,
+    targetTenantId,
+    userId,
+  }: {
+    executionGroupId: TypeExecutionGroup['id'];
+    sourceTenantId: TypeTenant['id'];
+    targetTenantId: TypeTenant['id'];
+    userId: TypeUser['id'];
+  }) =>
+    db.transaction(async (tx) => {
+      const executionGroup = await tx.query.executionGroups.findFirst({
+        where: and(eq(schema.executionGroups.tenantId, sourceTenantId), eq(schema.executionGroups.id, executionGroupId)),
+      });
+      if (!executionGroup) throw new NotFoundException();
+
+      const campaigns = await tx.query.campaigns.findMany({
+        orderBy: asc(schema.campaigns.id),
+        where: and(eq(schema.campaigns.tenantId, sourceTenantId), eq(schema.campaigns.executionGroupId, executionGroupId)),
+      });
+      const [copiedExecutionGroup] = await tx
+        .insert(schema.executionGroups)
+        .values({
+          createdBy: userId,
+          name: executionGroup.name,
+          onlyCampaignsPreviouslyExecuted: executionGroup.onlyCampaignsPreviouslyExecuted,
+          onlyOneCampaignPerPageLoad: executionGroup.onlyOneCampaignPerPageLoad,
+          status: executionGroup.status,
+          tenantId: targetTenantId,
+          updatedBy: userId,
+          waitForEveryCampaignToBeEvaluated: executionGroup.waitForEveryCampaignToBeEvaluated,
+        })
+        .returning();
+
+      const remappedAudienceIds = new Map<number, number>();
+      const remappedTrackEventIds = new Map<number, number>();
+      for (const campaign of campaigns) {
+        await copyCampaignInTransaction({
+          campaign,
+          executionGroupId: copiedExecutionGroup.id,
+          remappedAudienceIds,
+          remappedTrackEventIds,
+          sourceTenantId,
+          targetTenantId,
+          tx,
+          userId,
+        });
+      }
+
+      return copiedExecutionGroup;
+    });
+
   create = async ({
     tenantId,
     values,

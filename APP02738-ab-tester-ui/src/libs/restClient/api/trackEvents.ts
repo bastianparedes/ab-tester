@@ -1,7 +1,16 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
+import type { TypeTenant } from '@ab-tester/constants/types/tenant';
+import type { TypeTrackEvent } from '@ab-tester/constants/types/trackEvents';
 import { fetchers } from '../fetcher';
 
 export const trackEvents = {
+  copy: async (data: TypeApiTrackEvents['copy']['request']) => {
+    const response = await fetchers.post<TypeApiTrackEvents['copy']['response']>({
+      body: data.body,
+      url: `/tenants/${data.pathParams.tenantId}/track-events/${data.pathParams.trackEventId}/copy`,
+    });
+    return response;
+  },
   create: async (data: TypeApiTrackEvents['create']['request']) => {
     const response = await fetchers.post<TypeApiTrackEvents['create']['response']>({
       body: data.body,

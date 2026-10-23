@@ -4,6 +4,13 @@ import type { TypeExecutionGroup, TypeExecutionGroupForMenu, TypeOrderExecutionG
 import type { TypeTenant } from '../tenant';
 
 export type TypeApiExecutionGroups = {
+  copy: {
+    request: {
+      pathParams: { tenantId: TypeTenant['id']; executionGroupId: TypeExecutionGroup['id'] };
+      body: { targetTenantId: TypeTenant['id'] };
+    };
+    response: Record<string, never>;
+  };
   get: {
     request: {
       pathParams: { tenantId: TypeTenant['id']; executionGroupId: TypeExecutionGroup['id'] };

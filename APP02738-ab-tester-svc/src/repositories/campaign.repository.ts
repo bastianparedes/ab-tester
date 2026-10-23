@@ -2,13 +2,34 @@ import type { TypeCampaign, TypeCampaignUpdatable, TypeOrderCampaignsBy } from '
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { TypeUser } from '@ab-tester/constants/types/user';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
+import { copyCampaignInTransaction } from './copyCampaignInTransaction';
 import db from './postgres/client';
 import * as schema from './postgres/schema';
 
 @Injectable()
 export class CampaignRepository {
+  copy = async ({
+    campaignId,
+    sourceTenantId,
+    targetTenantId,
+    userId,
+  }: {
+    campaignId: TypeCampaign['id'];
+    sourceTenantId: TypeTenant['id'];
+    targetTenantId: TypeTenant['id'];
+    userId: TypeUser['id'];
+  }) =>
+    db.transaction(async (tx) => {
+      const campaign = await tx.query.campaigns.findFirst({
+        where: and(eq(schema.campaigns.tenantId, sourceTenantId), eq(schema.campaigns.id, campaignId)),
+      });
+      if (!campaign) throw new NotFoundException();
+
+      return copyCampaignInTransaction({ campaign, sourceTenantId, targetTenantId, tx, userId });
+    });
+
   create = async ({ tenantId, values, userId }: { tenantId: Exclude<TypeCampaign['tenantId'], undefined>; values: TypeCampaignUpdatable; userId: TypeUser['id'] }) => {
     const result = await db
       .insert(schema.campaigns)

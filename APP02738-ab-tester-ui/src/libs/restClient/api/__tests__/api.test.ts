@@ -29,10 +29,23 @@ const audienceId = 'audience-1';
 const executionGroupId = 'group-1';
 const lifecycleHookId = 'hook-1';
 const trackEventId = 'event-1';
+const targetTenantId = 'tenant-2';
 const roleId = 'role-1';
 const userId = 'user-1';
 
 const apiCases: ApiCase[] = [
+  {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/audiences/audience-1/copy' },
+    invoke: () =>
+      audiences.copy(
+        requestData<Parameters<typeof audiences.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { audienceId, tenantId },
+        }),
+      ),
+    method: 'post',
+    name: 'audiences.copy',
+  },
   {
     expected: { body, url: '/tenants/tenant-1/audiences' },
     invoke: () => audiences.create(requestData<Parameters<typeof audiences.create>[0]>({ body, pathParams: { tenantId } })),
@@ -76,6 +89,30 @@ const apiCases: ApiCase[] = [
     name: 'campaigns.create',
   },
   {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/campaigns/campaign-1/copy' },
+    invoke: () =>
+      campaigns.copy(
+        requestData<Parameters<typeof campaigns.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { campaignId, tenantId },
+        }),
+      ),
+    method: 'post',
+    name: 'campaigns.copy',
+  },
+  {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/campaigns/campaign-1/copy' },
+    invoke: () =>
+      campaigns.copy(
+        requestData<Parameters<typeof campaigns.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { campaignId, tenantId },
+        }),
+      ),
+    method: 'post',
+    name: 'campaigns.copy',
+  },
+  {
     expected: { url: '/tenants/tenant-1/campaigns/campaign-1' },
     invoke: () => campaigns.delete(requestData<Parameters<typeof campaigns.delete>[0]>({ pathParams: { campaignId, tenantId } })),
     method: 'delete',
@@ -112,6 +149,18 @@ const apiCases: ApiCase[] = [
     name: 'executionGroups.create',
   },
   {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/execution-groups/group-1/copy' },
+    invoke: () =>
+      executionGroups.copy(
+        requestData<Parameters<typeof executionGroups.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { executionGroupId, tenantId },
+        }),
+      ),
+    method: 'post',
+    name: 'executionGroups.copy',
+  },
+  {
     expected: { url: '/tenants/tenant-1/execution-groups/group-1' },
     invoke: () => executionGroups.delete(requestData<Parameters<typeof executionGroups.delete>[0]>({ pathParams: { executionGroupId, tenantId } })),
     method: 'delete',
@@ -140,6 +189,18 @@ const apiCases: ApiCase[] = [
     invoke: () => lifecycleHooks.create(requestData<Parameters<typeof lifecycleHooks.create>[0]>({ body, pathParams: { tenantId } })),
     method: 'post',
     name: 'lifecycleHooks.create',
+  },
+  {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/lifecycle-hooks/hook-1/copy' },
+    invoke: () =>
+      lifecycleHooks.copy(
+        requestData<Parameters<typeof lifecycleHooks.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { lifecycleHookId, tenantId },
+        }),
+      ),
+    method: 'post',
+    name: 'lifecycleHooks.copy',
   },
   {
     expected: { url: '/tenants/tenant-1/lifecycle-hooks/hook-1' },
@@ -227,6 +288,18 @@ const apiCases: ApiCase[] = [
     invoke: () => tenants.update(requestData<Parameters<typeof tenants.update>[0]>({ body, pathParams: { tenantId } })),
     method: 'put',
     name: 'tenants.update',
+  },
+  {
+    expected: { body: { targetTenantId }, url: '/tenants/tenant-1/track-events/event-1/copy' },
+    invoke: () =>
+      trackEvents.copy(
+        requestData<Parameters<typeof trackEvents.copy>[0]>({
+          body: { targetTenantId },
+          pathParams: { tenantId, trackEventId },
+        }),
+      ),
+    method: 'post',
+    name: 'trackEvents.copy',
   },
   {
     expected: { body, url: '/tenants/tenant-1/track-events' },

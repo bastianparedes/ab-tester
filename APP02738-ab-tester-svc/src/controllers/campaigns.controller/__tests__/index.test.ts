@@ -1,7 +1,7 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { CampaignsController } from '../index';
-import { getCampaignsQuerySchema } from '../request.schema';
+import { copyCampaignSchema, getCampaignsQuerySchema } from '../request.schema';
 
 const body = {
   name: 'Spring campaign',
@@ -19,6 +19,8 @@ describe('CampaignsController', () => {
     expect(getCampaignsQuerySchema.parse({ ...query, textSearch: undefined }).textSearch).toBe('');
     expect(getCampaignsQuerySchema.parse({ ...query, statusList: 'active' }).statusList).toEqual(['active']);
     expect(getCampaignsQuerySchema.parse({ ...query, statusList: ['active'] }).statusList).toEqual(['active']);
+    expect(copyCampaignSchema.parse({ extra: true, targetTenantId: 12 })).toEqual({ targetTenantId: 12 });
+    expect(copyCampaignSchema.safeParse({ targetTenantId: '12' }).success).toBe(false);
   });
 
   it('returns campaign lists and a selected campaign', async () => {
@@ -53,6 +55,73 @@ describe('CampaignsController', () => {
     const controller = new CampaignsController({ campaigns: { get: async () => null } } as never);
 
     await expect(controller.get(3, 99)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('copies a campaign and requires permissions for its audience and track-event dependencies', async () => {
+    const campaign = {
+      requirements: {
+        data: {
+          children: [{ data: { id: 6 }, type: 'audience' }],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+    };
+    const audience = {
+      requirements: {
+        data: {
+          children: [{ data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 9 }, type: 'any' }],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+    };
+    const calls: unknown[] = [];
+    const controller = new CampaignsController({
+      audiences: {
+        get: async (input: unknown) => {
+          calls.push(input);
+          return audience;
+        },
+      },
+      campaigns: {
+        copy: async (input: unknown) => calls.push(input),
+        get: async (input: unknown) => {
+          calls.push(input);
+          return campaign;
+        },
+      },
+    } as never);
+    const request = {
+      user: {
+        id: 8,
+        roles: [
+          {
+            permissions: [
+              'tenant.12.feature.campaign.action.create',
+              'tenant.3.feature.audience.action.read',
+              'tenant.12.feature.audience.action.create',
+              'tenant.3.feature.track-event.action.read',
+              'tenant.12.feature.track-event.action.create',
+            ],
+          },
+        ],
+      },
+    };
+
+    await expect(controller.copy(3, 5, { targetTenantId: 12 }, request as never)).resolves.toEqual({});
+    expect(calls).toEqual([
+      { campaignId: 5, tenantId: 3 },
+      { audienceId: 6, tenantId: 3 },
+      { campaignId: 5, sourceTenantId: 3, targetTenantId: 12, userId: 8 },
+    ]);
+
+    const insufficientPermissionsController = new CampaignsController({
+      audiences: { get: async () => audience },
+      campaigns: { get: async () => campaign },
+    } as never);
+    const insufficientPermissionsRequest = { user: { id: 8, roles: [{ permissions: ['tenant.12.feature.campaign.action.create'] }] } };
+    await expect(insufficientPermissionsController.copy(3, 5, { targetTenantId: 12 }, insufficientPermissionsRequest as never)).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('requires an authenticated user to create or update campaigns', async () => {

@@ -7,6 +7,7 @@ import {
 } from '../../response-validation/schemas';
 
 export const executionGroupResponseSchemas = {
+  copy: emptyResponseSchema,
   create: emptyResponseSchema,
   get: z.object({ campaigns: z.array(campaignForExecutionGroupResponseSchema), executionGroup: executionGroupResponseSchema }),
   getMany: z.object({ count: z.number().int(), executionGroups: z.array(executionGroupForMenuResponseSchema) }),

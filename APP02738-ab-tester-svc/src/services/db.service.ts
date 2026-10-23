@@ -100,6 +100,11 @@ export class DbService {
     this.tenants = this.tenantRepository;
     this.campaigns = {
       ...this.campaignRepository,
+      copy: async (args) => {
+        const result = await this.campaignRepository.copy(args);
+        await this.scriptService.clear({ tenantId: args.targetTenantId });
+        return result;
+      },
       create: async (args) => {
         const result = await this.campaignRepository.create(args);
         await this.scriptService.clear({ tenantId: args.tenantId });
@@ -118,6 +123,11 @@ export class DbService {
     };
     this.executionGroup = {
       ...this.executionGroupRepository,
+      copy: async (args) => {
+        const result = await this.executionGroupRepository.copy(args);
+        await this.scriptService.clear({ tenantId: args.targetTenantId });
+        return result;
+      },
       create: async (args) => {
         const result = await this.executionGroupRepository.create(args);
         await this.scriptService.clear({ tenantId: args.tenantId });

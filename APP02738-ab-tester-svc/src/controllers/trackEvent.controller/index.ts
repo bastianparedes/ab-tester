@@ -1,12 +1,29 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
+import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Query, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ZodResponse } from '../../interceptors/zod-response.interceptor';
+import { getStringPermission } from '../../libs/auth/permissions';
 import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
-import { getTrackEventQuerySchema, trackEventSchema } from './request.schema';
+import { copyTrackEventSchema, getTrackEventQuerySchema, trackEventSchema } from './request.schema';
 import { trackEventResponseSchemas } from './response.schema';
 
 /* ---------- CONTROLLER ---------- */
@@ -66,6 +83,44 @@ export class TrackEventController {
       tenantId,
       userId: user.id,
       values: body,
+    });
+
+    return {};
+  }
+
+  @ZodResponse(trackEventResponseSchemas.copy)
+  @UseGuards(AuthGuard({ action: 'read', feature: 'track-event' }))
+  @Post(':trackEventId/copy')
+  async copy(
+    @Param('tenantId', ParseIntPipe) tenantId: number,
+    @Param('trackEventId', ParseIntPipe) trackEventId: number,
+    @Body({ schema: copyTrackEventSchema }) body: AssertEqual<z.infer<typeof copyTrackEventSchema>, TypeApiTrackEvents['copy']['request']['body']>,
+    @Req() req: Request,
+  ): Promise<TypeApiTrackEvents['copy']['response']> {
+    const user = req.user;
+    if (!user) throw new UnauthorizedException();
+
+    const targetCreatePermission = getStringPermission({
+      action: 'create',
+      feature: 'track-event',
+      tenantId: body.targetTenantId,
+    });
+    if (!user.roles.some((role) => role.permissions.includes(targetCreatePermission))) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    const trackEvent = await this.dbService.trackEvents.get({ tenantId, trackEventId });
+    if (!trackEvent) throw new NotFoundException();
+
+    await this.dbService.trackEvents.create({
+      tenantId: body.targetTenantId,
+      userId: user.id,
+      values: {
+        javascript: trackEvent.javascript,
+        multipleTimes: trackEvent.multipleTimes,
+        name: trackEvent.name,
+        status: trackEvent.status,
+      },
     });
 
     return {};

@@ -31,3 +31,9 @@ export const executionGroupSchema = z
     waitForEveryCampaignToBeEvaluated: z.boolean(),
   })
   .strip();
+
+export const copyExecutionGroupSchema = z
+  .object({
+    targetTenantId: z.number().int(),
+  })
+  .strip();

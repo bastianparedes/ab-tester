@@ -2,11 +2,12 @@
 
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeLifecycleHookForMenu, TypeOrderLifecycleHookBy } from '@ab-tester/constants/types/lifecycleHooks';
-import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
 import config, { getStringPermission } from '@/config/constants';
@@ -37,6 +38,8 @@ type PageProps = {
 export function ClientPage({ tenantId }: PageProps) {
   const user = useUser();
   const { translation } = useTranslationContext();
+  const emit = useToast().emit;
+  const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
   const [lifecycleHooks, setLifecycleHooks] = useState<TypeLifecycleHookForMenu[]>([]);
   const [state, dispatch] = useReducer(
     (state: UiState, action: UiAction): UiState => {
@@ -159,6 +162,45 @@ export function ClientPage({ tenantId }: PageProps) {
     location.reload();
   };
 
+  const copyLifecycleHookToTenant = async (lifecycleHook: TypeLifecycleHookForMenu) => {
+    const tenantsResponse = await apiCaller.tenants.getAll();
+    if (!tenantsResponse.ok) {
+      emit({ severity: 'error', text: translation.lifecycleHooks.copyTenantsError });
+      return;
+    }
+    const targetTenants = (await tenantsResponse.json()).filter(
+      (targetTenant) => targetTenant.id !== tenantId && user.permissions.includes(getStringPermission({ action: 'create', feature: 'tenant', tenantId: targetTenant.id })),
+    );
+    if (targetTenants.length === 0) {
+      emit({ severity: 'warning', text: translation.lifecycleHooks.noCopyTenants });
+      return;
+    }
+
+    const formData = await getDataFromForm(
+      { title: translation.lifecycleHooks.copyTenantTitle },
+      {
+        targetTenantId: {
+          label: translation.lifecycleHooks.copyTenantLabel,
+          options: targetTenants.map((targetTenant) => ({ label: targetTenant.name, value: String(targetTenant.id) })),
+          required: true,
+          type: 'select',
+          value: '',
+        },
+      },
+    );
+    if (!formData) return;
+
+    const response = await apiCaller.lifecycleHooks.copy({
+      body: { targetTenantId: Number(formData.targetTenantId) },
+      pathParams: { lifecycleHookId: lifecycleHook.id, tenantId },
+    });
+    if (!response.ok) {
+      emit({ severity: 'error', text: translation.lifecycleHooks.copyError });
+      return;
+    }
+    emit({ severity: 'success', text: translation.lifecycleHooks.copySuccess });
+  };
+
   return (
     <div className="flex">
       <div className="flex-1 p-8">
@@ -256,6 +298,20 @@ export function ClientPage({ tenantId }: PageProps) {
                   >
                     <Copy size={20} />
                   </a>
+                ),
+            },
+            {
+              label: translation.lifecycleHooks.copyToTenant,
+              renderCell: (lifecycleHook) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                  <button
+                    type="button"
+                    onClick={() => copyLifecycleHookToTenant(lifecycleHook)}
+                    className="flex h-fit w-fit rounded-lg p-2 text-indigo-500 transition-colors hover:bg-indigo-100"
+                    aria-label={`${translation.lifecycleHooks.copyToTenant} ${lifecycleHook.name}`}
+                  >
+                    <ArrowRight size={20} />
+                  </button>
                 ),
             },
             {

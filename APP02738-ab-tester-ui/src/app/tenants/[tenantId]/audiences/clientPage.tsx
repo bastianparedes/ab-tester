@@ -1,16 +1,30 @@
 'use client';
 
-import type { TypeAudienceForMenu, TypeOrderAudiencesBy } from '@ab-tester/constants/types/audience';
+import type { TypeAudienceForMenu, TypeNodeRequirement, TypeOrderAudiencesBy } from '@ab-tester/constants/types/audience';
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
-import { ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
 import config, { getStringPermission } from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
+
+const getTrackEventIds = (requirements: TypeNodeRequirement): number[] => {
+  const trackEventIds = new Set<number>();
+  const visit = (node: TypeNodeRequirement) => {
+    for (const requirement of node.data.children) {
+      if (requirement.type === 'node') visit(requirement);
+      else trackEventIds.add(requirement.data.trackEventId);
+    }
+  };
+
+  visit(requirements);
+  return [...trackEventIds];
+};
 
 type UiState = {
   sortConfig: { key: TypeOrderAudiencesBy; direction: TypeDirection };
@@ -33,6 +47,8 @@ type PageProps = {
 export function ClientPage({ tenantId }: PageProps) {
   const user = useUser();
   const { translation } = useTranslationContext();
+  const emit = useToast().emit;
+  const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
 
   const [audiences, setAudiences] = useState<TypeAudienceForMenu[]>([]);
   const [state, dispatch] = useReducer(
@@ -136,6 +152,63 @@ export function ClientPage({ tenantId }: PageProps) {
     location.reload();
   };
 
+  const copyAudienceToTenant = async ({ audience }: { audience: TypeAudienceForMenu }) => {
+    const audienceResponse = await apiCaller.audiences.get({ pathParams: { audienceId: audience.id, tenantId } });
+    if (!audienceResponse.ok) {
+      emit({ severity: 'error', text: translation.audiences.copyAudienceError });
+      return;
+    }
+    const sourceAudience = await audienceResponse.json();
+    const hasTrackEvents = getTrackEventIds(sourceAudience.requirements).length > 0;
+    const canReadSourceTrackEvents = user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId }));
+    if (hasTrackEvents && !canReadSourceTrackEvents) {
+      emit({ severity: 'error', text: translation.audiences.copyTrackEventsPermissionError });
+      return;
+    }
+
+    const tenantsResponse = await apiCaller.tenants.getAll();
+    if (!tenantsResponse.ok) {
+      emit({ severity: 'error', text: translation.audiences.copyTenantsError });
+      return;
+    }
+
+    const targetTenants = (await tenantsResponse.json()).filter(
+      (tenant) =>
+        tenant.id !== tenantId &&
+        user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId: tenant.id })) &&
+        (!hasTrackEvents || user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: tenant.id }))),
+    );
+    if (targetTenants.length === 0) {
+      emit({ severity: 'warning', text: translation.audiences.noCopyTenants });
+      return;
+    }
+
+    const formData = await getDataFromForm(
+      { title: translation.audiences.copyTenantTitle },
+      {
+        targetTenantId: {
+          label: translation.audiences.copyTenantLabel,
+          options: targetTenants.map((tenant) => ({ label: tenant.name, value: String(tenant.id) })),
+          required: true,
+          type: 'select',
+          value: '',
+        },
+      },
+    );
+    if (!formData) return;
+
+    const response = await apiCaller.audiences.copy({
+      body: { targetTenantId: Number(formData.targetTenantId) },
+      pathParams: { audienceId: audience.id, tenantId },
+    });
+    if (!response.ok) {
+      emit({ severity: 'error', text: translation.audiences.copyError });
+      return;
+    }
+
+    emit({ severity: 'success', text: translation.audiences.copySuccess });
+  };
+
   return (
     <div className="flex">
       {/* Main Content */}
@@ -209,6 +282,20 @@ export function ClientPage({ tenantId }: PageProps) {
                   >
                     <Pencil size={20} />
                   </a>
+                ),
+            },
+            {
+              label: translation.audiences.copyToTenant,
+              renderCell: (audience) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId })) && (
+                  <button
+                    type="button"
+                    aria-label={`${translation.audiences.copyToTenant} ${audience.name}`}
+                    onClick={() => copyAudienceToTenant({ audience })}
+                    className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
                 ),
             },
             {

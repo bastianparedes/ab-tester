@@ -2,6 +2,13 @@ import type { TypeApiLifecycleHooks } from '@ab-tester/constants/types/api/lifec
 import { fetchers } from '../fetcher';
 
 export const lifecycleHooks = {
+  copy: async (data: TypeApiLifecycleHooks['copy']['request']) => {
+    const response = await fetchers.post<TypeApiLifecycleHooks['copy']['response']>({
+      body: data.body,
+      url: `/tenants/${data.pathParams.tenantId}/lifecycle-hooks/${data.pathParams.lifecycleHookId}/copy`,
+    });
+    return response;
+  },
   create: async (data: TypeApiLifecycleHooks['create']['request']) => {
     const response = await fetchers.post<TypeApiLifecycleHooks['create']['response']>({
       body: data.body,

@@ -1,18 +1,36 @@
 'use client';
 
-import type { TypeCampaignForMenu, TypeOrderCampaignsBy } from '@ab-tester/constants/types/campaign';
+import type { TypeNodeRequirement as TypeAudienceNodeRequirement } from '@ab-tester/constants/types/audience';
+import type { TypeCampaignForMenu, TypeNodeRequirement, TypeOrderCampaignsBy } from '@ab-tester/constants/types/campaign';
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeExecutionGroup } from '@ab-tester/constants/types/executionGroup';
-import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
 import config, { getStringPermission } from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
+
+const getAudienceIds = (requirements: TypeNodeRequirement): number[] => {
+  const audienceIds = new Set<number>();
+  const visit = (node: TypeNodeRequirement) => {
+    for (const requirement of node.data.children) {
+      if (requirement.type === 'node') visit(requirement);
+      else if (requirement.type === 'audience') audienceIds.add(requirement.data.id);
+    }
+  };
+
+  visit(requirements);
+  return [...audienceIds];
+};
+
+const hasTrackEventRequirements = (requirements: TypeAudienceNodeRequirement): boolean =>
+  requirements.data.children.some((requirement) => (requirement.type === 'node' ? hasTrackEventRequirements(requirement) : true));
 
 type UiState = {
   sortConfig: { key: TypeOrderCampaignsBy; direction: TypeDirection };
@@ -37,6 +55,8 @@ type PageProps = {
 export function ClientPage({ tenantId }: PageProps) {
   const user = useUser();
   const { translation } = useTranslationContext();
+  const emit = useToast().emit;
+  const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
 
   const [campaigns, setCampaigns] = useState<(TypeCampaignForMenu & { executionGroup: TypeExecutionGroup | null })[]>([]);
   const [state, dispatch] = useReducer(
@@ -164,6 +184,75 @@ export function ClientPage({ tenantId }: PageProps) {
     location.reload();
   };
 
+  const copyCampaignToTenant = async ({ campaign }: { campaign: TypeCampaignForMenu }) => {
+    const campaignResponse = await apiCaller.campaigns.get({ pathParams: { campaignId: campaign.id, tenantId } });
+    if (!campaignResponse.ok) {
+      emit({ severity: 'error', text: translation.campaigns.copyCampaignError });
+      return;
+    }
+    const sourceCampaign = await campaignResponse.json();
+    const audienceIds = getAudienceIds(sourceCampaign.requirements);
+    if (audienceIds.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId }))) {
+      emit({ severity: 'error', text: translation.campaigns.copyAudiencesPermissionError });
+      return;
+    }
+    const sourceAudiences = await Promise.all(audienceIds.map((audienceId) => apiCaller.audiences.get({ pathParams: { audienceId, tenantId } })));
+    const successfulAudienceResponses = sourceAudiences.filter((response) => response.ok);
+    if (successfulAudienceResponses.length !== sourceAudiences.length) {
+      emit({ severity: 'error', text: translation.campaigns.copyAudiencesError });
+      return;
+    }
+    const audiences = await Promise.all(successfulAudienceResponses.map((response) => response.json()));
+    const requiresTrackEvents = audiences.some((audience) => hasTrackEventRequirements(audience.requirements));
+    if (requiresTrackEvents && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId }))) {
+      emit({ severity: 'error', text: translation.campaigns.copyTrackEventsPermissionError });
+      return;
+    }
+
+    const tenantsResponse = await apiCaller.tenants.getAll();
+    if (!tenantsResponse.ok) {
+      emit({ severity: 'error', text: translation.campaigns.copyTenantsError });
+      return;
+    }
+
+    const targetTenants = (await tenantsResponse.json()).filter(
+      (targetTenant) =>
+        targetTenant.id !== tenantId &&
+        user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id })) &&
+        (audienceIds.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id }))) &&
+        (!requiresTrackEvents || user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id }))),
+    );
+    if (targetTenants.length === 0) {
+      emit({ severity: 'warning', text: translation.campaigns.noCopyTenants });
+      return;
+    }
+
+    const formData = await getDataFromForm(
+      { title: translation.campaigns.copyTenantTitle },
+      {
+        targetTenantId: {
+          label: translation.campaigns.copyTenantLabel,
+          options: targetTenants.map((targetTenant) => ({ label: targetTenant.name, value: String(targetTenant.id) })),
+          required: true,
+          type: 'select',
+          value: '',
+        },
+      },
+    );
+    if (!formData) return;
+
+    const response = await apiCaller.campaigns.copy({
+      body: { targetTenantId: Number(formData.targetTenantId) },
+      pathParams: { campaignId: campaign.id, tenantId },
+    });
+    if (!response.ok) {
+      emit({ severity: 'error', text: translation.campaigns.copyError });
+      return;
+    }
+
+    emit({ severity: 'success', text: translation.campaigns.copySuccess });
+  };
+
   return (
     <div className="flex">
       {/* Main Content */}
@@ -273,6 +362,20 @@ export function ClientPage({ tenantId }: PageProps) {
                   >
                     <Copy size={20} />
                   </a>
+                ),
+            },
+            {
+              label: translation.campaigns.copyToTenant,
+              renderCell: (campaign) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId })) && (
+                  <button
+                    type="button"
+                    aria-label={`${translation.campaigns.copyToTenant} ${campaign.name}`}
+                    onClick={() => copyCampaignToTenant({ campaign })}
+                    className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
                 ),
             },
             {

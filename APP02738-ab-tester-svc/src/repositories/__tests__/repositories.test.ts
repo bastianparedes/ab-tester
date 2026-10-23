@@ -84,6 +84,71 @@ describe('repositories', () => {
     await expect(repository.remove({ audienceId: 2, tenantId: 3 })).rejects.toThrow(ConflictException);
   });
 
+  it('copies an audience and remaps each referenced track event exactly once', async () => {
+    const repository = new AudienceRepository();
+    const requirements = {
+      data: {
+        children: [
+          {
+            data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 7, value: 'paid' },
+            type: 'string',
+          },
+          {
+            data: {
+              children: [
+                { data: { comparator: 'moreThan', eventCount: 2, quantityOperator: 'atLeast', timeAmount: 7, timeUnit: 'days', trackEventId: 7, value: 3 }, type: 'number' },
+              ],
+              operator: 'or',
+            },
+            type: 'node',
+          },
+        ],
+        operator: 'and',
+      },
+      type: 'node',
+    };
+    const audience = { id: 5, name: 'Returning customers', requirements };
+    const copiedAudience = { ...audience, id: 15 };
+    const trackEvent = { id: 7, javascript: 'async () => { return {}; }', multipleTimes: true, name: 'Purchase', status: 'active' };
+    db.query.audiences.findFirst.mockResolvedValueOnce(audience);
+    db.select.mockReturnValueOnce(createQuery([trackEvent]));
+    db.insert.mockReturnValueOnce(createQuery([{ id: 70 }])).mockReturnValueOnce(createQuery([copiedAudience]));
+
+    await expect(repository.copy({ audienceId: 5, sourceTenantId: 3, targetTenantId: 12, userId: 8 })).resolves.toBe(copiedAudience);
+    expect(db.insert).toHaveBeenCalledTimes(2);
+    const audienceInsert = db.insert.mock.results[1].value as { values: ReturnType<typeof vi.fn> };
+    expect(audienceInsert.values).toHaveBeenCalledWith({
+      createdBy: 8,
+      name: 'Returning customers',
+      requirements: {
+        data: {
+          children: [
+            {
+              data: { comparator: 'equal', eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 70, value: 'paid' },
+              type: 'string',
+            },
+            {
+              data: {
+                children: [
+                  {
+                    data: { comparator: 'moreThan', eventCount: 2, quantityOperator: 'atLeast', timeAmount: 7, timeUnit: 'days', trackEventId: 70, value: 3 },
+                    type: 'number',
+                  },
+                ],
+                operator: 'or',
+              },
+              type: 'node',
+            },
+          ],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+      tenantId: 12,
+      updatedBy: 8,
+    });
+  });
+
   it('creates, updates, queries, and filters campaigns', async () => {
     const repository = new CampaignRepository();
     const campaign = { id: 2, name: 'Spring campaign', triggers: [{}], variations: [{ traffic: 100 }] };
@@ -115,6 +180,157 @@ describe('repositories', () => {
       { ...campaign, triggers: [], variations: [{ traffic: 100 }] },
     ]);
     await expect(repository.getAllCampaignsForScript({ tenantId: 3 })).resolves.toEqual([]);
+  });
+
+  it('copies a campaign with unique audiences and their remapped track events', async () => {
+    const repository = new CampaignRepository();
+    const campaign = {
+      executionGroupId: 4,
+      name: 'Spring campaign',
+      requirements: {
+        data: {
+          children: [
+            { data: { id: 6 }, type: 'audience' },
+            { data: { id: 7 }, type: 'audience' },
+            {
+              data: { children: [{ data: { id: 6 }, type: 'audience' }], operator: 'or' },
+              type: 'node',
+            },
+          ],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+      status: 'active',
+      triggers: [],
+      variations: [],
+    };
+    const audience = {
+      name: 'Returning customers',
+      requirements: {
+        data: {
+          children: [{ data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 9 }, type: 'any' }],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+    };
+    db.query.campaigns.findFirst.mockResolvedValueOnce(campaign);
+    db.query.audiences.findFirst.mockResolvedValueOnce(audience).mockResolvedValueOnce(audience);
+    db.select.mockReturnValueOnce(createQuery([{ id: 9, javascript: 'async () => { return {}; }', multipleTimes: false, name: 'Purchase', status: 'active' }]));
+    db.insert
+      .mockReturnValueOnce(createQuery([{ id: 90 }]))
+      .mockReturnValueOnce(createQuery([{ id: 60 }]))
+      .mockReturnValueOnce(createQuery([{ id: 61 }]))
+      .mockReturnValueOnce(createQuery([{ id: 50 }]));
+
+    await expect(repository.copy({ campaignId: 5, sourceTenantId: 3, targetTenantId: 12, userId: 8 })).resolves.toEqual({ id: 50 });
+    expect(db.query.audiences.findFirst).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledOnce();
+    expect(db.insert).toHaveBeenCalledTimes(4);
+    const campaignInsert = db.insert.mock.results[3].value as { values: ReturnType<typeof vi.fn> };
+    expect(campaignInsert.values).toHaveBeenCalledWith({
+      createdBy: 8,
+      executionGroupId: null,
+      name: 'Spring campaign',
+      requirements: {
+        data: {
+          children: [
+            { data: { id: 60 }, type: 'audience' },
+            { data: { id: 61 }, type: 'audience' },
+            {
+              data: { children: [{ data: { id: 60 }, type: 'audience' }], operator: 'or' },
+              type: 'node',
+            },
+          ],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+      status: 'active',
+      tenantId: 12,
+      triggers: [],
+      updatedBy: 8,
+      variations: [],
+    });
+  });
+
+  it('copies an execution group and shares copied audiences and track events across its campaigns', async () => {
+    const repository = new ExecutionGroupRepository();
+    const executionGroup = {
+      name: 'Homepage',
+      onlyCampaignsPreviouslyExecuted: false,
+      onlyOneCampaignPerPageLoad: true,
+      status: 'active',
+      waitForEveryCampaignToBeEvaluated: true,
+    };
+    const campaign = {
+      name: 'Spring campaign',
+      requirements: {
+        data: { children: [{ data: { id: 6 }, type: 'audience' }], operator: 'and' },
+        type: 'node',
+      },
+      status: 'active',
+      triggers: [],
+      variations: [],
+    };
+    db.query.executionGroups.findFirst.mockResolvedValueOnce(executionGroup);
+    db.query.campaigns.findMany.mockResolvedValueOnce([
+      { ...campaign, id: 5 },
+      { ...campaign, id: 7 },
+    ]);
+    db.query.audiences.findFirst.mockResolvedValueOnce({
+      name: 'Returning customers',
+      requirements: {
+        data: {
+          children: [{ data: { eventCount: 1, quantityOperator: 'atLeast', timeAmount: 30, timeUnit: 'days', trackEventId: 9 }, type: 'any' }],
+          operator: 'and',
+        },
+        type: 'node',
+      },
+    });
+    db.select.mockReturnValueOnce(createQuery([{ id: 9, javascript: 'async () => { return {}; }', multipleTimes: false, name: 'Purchase', status: 'active' }]));
+    const copiedExecutionGroup = { id: 20 };
+    db.insert
+      .mockReturnValueOnce(createQuery([copiedExecutionGroup]))
+      .mockReturnValueOnce(createQuery([{ id: 90 }]))
+      .mockReturnValueOnce(createQuery([{ id: 60 }]))
+      .mockReturnValueOnce(createQuery([{ id: 50 }]))
+      .mockReturnValueOnce(createQuery([{ id: 51 }]));
+
+    await expect(repository.copy({ executionGroupId: 4, sourceTenantId: 3, targetTenantId: 12, userId: 8 })).resolves.toBe(copiedExecutionGroup);
+    expect(db.query.campaigns.findMany).toHaveBeenCalledOnce();
+    expect(db.query.audiences.findFirst).toHaveBeenCalledOnce();
+    expect(db.select).toHaveBeenCalledOnce();
+    expect(db.insert).toHaveBeenCalledTimes(5);
+    const copiedCampaignValues = [3, 4].map((index) => {
+      const query = db.insert.mock.results[index].value as { values: ReturnType<typeof vi.fn> };
+      return query.values.mock.calls[0][0];
+    });
+    expect(copiedCampaignValues).toEqual([
+      {
+        createdBy: 8,
+        executionGroupId: 20,
+        name: 'Spring campaign',
+        requirements: { data: { children: [{ data: { id: 60 }, type: 'audience' }], operator: 'and' }, type: 'node' },
+        status: 'active',
+        tenantId: 12,
+        triggers: [],
+        updatedBy: 8,
+        variations: [],
+      },
+      {
+        createdBy: 8,
+        executionGroupId: 20,
+        name: 'Spring campaign',
+        requirements: { data: { children: [{ data: { id: 60 }, type: 'audience' }], operator: 'and' }, type: 'node' },
+        status: 'active',
+        tenantId: 12,
+        triggers: [],
+        updatedBy: 8,
+        variations: [],
+      },
+    ]);
   });
 
   it('manages execution group transactions and filters script campaigns', async () => {
@@ -189,6 +405,25 @@ describe('repositories', () => {
       } as never),
     ).resolves.toEqual({ count: 1, lifecycleHooks: [hook] });
     await expect(repository.getAllLifecycleHooksForScript({ tenantId: 3 })).resolves.toEqual([hook]);
+  });
+
+  it('copies lifecycle-hook values to the target tenant', async () => {
+    const repository = new LifecycleHookRepository();
+    const lifecycleHook = { id: 7, javascript: 'async () => true', name: 'After campaign', option: 'campaignEnd', status: 'active', tenantId: 3 };
+    const copiedLifecycleHook = { ...lifecycleHook, id: 17, tenantId: 12 };
+    db.query.lifecycleHooks.findFirst.mockResolvedValueOnce(lifecycleHook);
+    db.insert.mockReturnValueOnce(createQuery([copiedLifecycleHook]));
+
+    await expect(repository.copy({ lifecycleHookId: 7, targetTenantId: 12, tenantId: 3, userId: 8 })).resolves.toBe(copiedLifecycleHook);
+    const insert = db.insert.mock.results[0].value as { values: ReturnType<typeof vi.fn> };
+    expect(insert.values).toHaveBeenCalledWith({
+      createdBy: 8,
+      javascript: lifecycleHook.javascript,
+      name: lifecycleHook.name,
+      option: lifecycleHook.option,
+      status: lifecycleHook.status,
+      tenantId: 12,
+    });
   });
 
   it('maps role permissions and updates permission associations', async () => {

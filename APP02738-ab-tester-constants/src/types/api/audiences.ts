@@ -3,6 +3,13 @@ import type { TypeDirection } from '../constants';
 import type { TypeTenant } from '../tenant';
 
 export type TypeApiAudiences = {
+  copy: {
+    request: {
+      pathParams: { tenantId: TypeTenant['id']; audienceId: TypeAudience['id'] };
+      body: { targetTenantId: TypeTenant['id'] };
+    };
+    response: Record<string, never>;
+  };
   get: {
     request: {
       pathParams: { tenantId: TypeTenant['id']; audienceId: TypeAudience['id'] };

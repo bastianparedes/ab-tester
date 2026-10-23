@@ -2,6 +2,13 @@ import type { TypeApiCampaigns } from '@ab-tester/constants/types/api/campaigns'
 import { fetchers } from '../fetcher';
 
 export const campaigns = {
+  copy: async (data: TypeApiCampaigns['copy']['request']) => {
+    const response = await fetchers.post<TypeApiCampaigns['copy']['response']>({
+      body: data.body,
+      url: `/tenants/${data.pathParams.tenantId}/campaigns/${data.pathParams.campaignId}/copy`,
+    });
+    return response;
+  },
   create: async (data: TypeApiCampaigns['create']['request']) => {
     const response = await fetchers.post<TypeApiCampaigns['create']['response']>({
       body: data.body,

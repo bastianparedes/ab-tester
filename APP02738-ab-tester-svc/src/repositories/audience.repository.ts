@@ -2,13 +2,35 @@ import type { TypeAudience, TypeAudienceUpdatable, TypeOrderAudiencesBy } from '
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { TypeUser } from '@ab-tester/constants/types/user';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { copyAudienceInTransaction } from './copyAudienceInTransaction';
 import db from './postgres/client';
 import * as schema from './postgres/schema';
 
 @Injectable()
 export class AudienceRepository {
+  copy = async ({
+    audienceId,
+    sourceTenantId,
+    targetTenantId,
+    userId,
+  }: {
+    audienceId: TypeAudience['id'];
+    sourceTenantId: TypeTenant['id'];
+    targetTenantId: TypeTenant['id'];
+    userId: TypeUser['id'];
+  }) => {
+    return db.transaction(async (tx) => {
+      const audience = await tx.query.audiences.findFirst({
+        where: and(eq(schema.audiences.tenantId, sourceTenantId), eq(schema.audiences.id, audienceId)),
+      });
+      if (!audience) throw new NotFoundException();
+
+      return copyAudienceInTransaction({ audience, sourceTenantId, targetTenantId, tx, userId });
+    });
+  };
+
   create = async ({ tenantId, values, userId }: { tenantId: TypeAudience['tenantId']; values: TypeAudienceUpdatable; userId: TypeUser['id'] }) => {
     const result = await db
       .insert(schema.audiences)

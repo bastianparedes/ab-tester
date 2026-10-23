@@ -33,3 +33,9 @@ export const campaignSchema = z
     variations: variationSchema,
   })
   .strip();
+
+export const copyCampaignSchema = z
+  .object({
+    targetTenantId: z.number().int(),
+  })
+  .strip();

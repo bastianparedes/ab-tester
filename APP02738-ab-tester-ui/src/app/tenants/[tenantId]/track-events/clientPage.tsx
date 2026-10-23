@@ -2,11 +2,12 @@
 
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeOrderTrackEventBy, TypeTrackEventForMenu } from '@ab-tester/constants/types/trackEvents';
-import { ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
 import config, { getStringPermission } from '@/config/constants';
@@ -36,6 +37,8 @@ type PageProps = {
 export function ClientPage({ tenantId }: PageProps) {
   const user = useUser();
   const { translation } = useTranslationContext();
+  const { emit } = useToast();
+  const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
 
   const [trackEvents, setTrackEvents] = useState<TypeTrackEventForMenu[]>([]);
   const [state, dispatch] = useReducer(
@@ -163,6 +166,47 @@ export function ClientPage({ tenantId }: PageProps) {
     location.reload();
   };
 
+  const copyTrackEventToTenant = async ({ trackEvent }: { trackEvent: TypeTrackEventForMenu }) => {
+    const tenantsResponse = await apiCaller.tenants.getAll();
+    if (!tenantsResponse.ok) {
+      emit({ severity: 'error', text: translation.trackEvents.copyTenantsError });
+      return;
+    }
+
+    const targetTenants = (await tenantsResponse.json()).filter(
+      (tenant) => tenant.id !== tenantId && user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: tenant.id })),
+    );
+    if (targetTenants.length === 0) {
+      emit({ severity: 'warning', text: translation.trackEvents.noCopyTenants });
+      return;
+    }
+
+    const formData = await getDataFromForm(
+      { title: translation.trackEvents.copyTenantTitle },
+      {
+        targetTenantId: {
+          label: translation.trackEvents.copyTenantLabel,
+          options: targetTenants.map((tenant) => ({ label: tenant.name, value: String(tenant.id) })),
+          required: true,
+          type: 'select',
+          value: '',
+        },
+      },
+    );
+    if (!formData) return;
+
+    const response = await apiCaller.trackEvents.copy({
+      body: { targetTenantId: Number(formData.targetTenantId) },
+      pathParams: { tenantId, trackEventId: trackEvent.id },
+    });
+    if (!response.ok) {
+      emit({ severity: 'error', text: translation.trackEvents.copyError });
+      return;
+    }
+
+    emit({ severity: 'success', text: translation.trackEvents.copySuccess });
+  };
+
   return (
     <div className="flex">
       {/* Main Content */}
@@ -254,6 +298,20 @@ export function ClientPage({ tenantId }: PageProps) {
                 ),
             },
             {
+              label: translation.trackEvents.copyToTenant,
+              renderCell: (trackEvent) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                  <button
+                    type="button"
+                    aria-label={`${translation.trackEvents.copyToTenant} ${trackEvent.name}`}
+                    onClick={() => copyTrackEventToTenant({ trackEvent })}
+                    className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                ),
+            },
+            {
               label: translation.trackEvents.modify,
               renderCell: (trackEvent) =>
                 user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
@@ -269,7 +327,12 @@ export function ClientPage({ tenantId }: PageProps) {
               label: translation.trackEvents.delete,
               renderCell: (trackEvent) =>
                 user.permissions.includes(getStringPermission({ action: 'delete', feature: 'track-event', tenantId })) && (
-                  <button type="button" onClick={() => deleteTrackEvent({ trackEvent })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
+                  <button
+                    type="button"
+                    aria-label={`${translation.trackEvents.delete} ${trackEvent.name}`}
+                    onClick={() => deleteTrackEvent({ trackEvent })}
+                    className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors"
+                  >
                     <Trash2 size={20} />
                   </button>
                 ),

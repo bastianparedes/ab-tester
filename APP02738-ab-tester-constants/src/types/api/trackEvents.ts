@@ -3,6 +3,13 @@ import type { TypeTenant } from '../tenant';
 import type { TypeOrderTrackEventBy, TypeTrackEvent, TypeTrackEventForAudience, TypeTrackEventForMenu, TypeTrackEventUpdatable } from '../trackEvents';
 
 export type TypeApiTrackEvents = {
+  copy: {
+    request: {
+      pathParams: { tenantId: TypeTenant['id']; trackEventId: TypeTrackEvent['id'] };
+      body: { targetTenantId: TypeTenant['id'] };
+    };
+    response: Record<string, never>;
+  };
   get: {
     request: {
       pathParams: { tenantId: TypeTrackEvent['tenantId']; trackEventId: TypeTrackEvent['id'] };

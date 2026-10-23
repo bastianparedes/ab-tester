@@ -2,6 +2,13 @@ import type { TypeApiExecutionGroups } from '@ab-tester/constants/types/api/exec
 import { fetchers } from '../fetcher';
 
 export const executionGroups = {
+  copy: async (data: TypeApiExecutionGroups['copy']['request']) => {
+    const response = await fetchers.post<TypeApiExecutionGroups['copy']['response']>({
+      body: data.body,
+      url: `/tenants/${data.pathParams.tenantId}/execution-groups/${data.pathParams.executionGroupId}/copy`,
+    });
+    return response;
+  },
   create: async (data: TypeApiExecutionGroups['create']['request']) => {
     const response = await fetchers.post<TypeApiExecutionGroups['create']['response']>({
       body: data.body,

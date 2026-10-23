@@ -2,6 +2,13 @@ import type { TypeApiAudiences } from '@ab-tester/constants/types/api/audiences'
 import { fetchers } from '../fetcher';
 
 export const audiences = {
+  copy: async (data: TypeApiAudiences['copy']['request']) => {
+    const response = await fetchers.post<TypeApiAudiences['copy']['response']>({
+      body: data.body,
+      url: `/tenants/${data.pathParams.tenantId}/audiences/${data.pathParams.audienceId}/copy`,
+    });
+    return response;
+  },
   create: async (data: TypeApiAudiences['create']['request']) => {
     const response = await fetchers.post<TypeApiAudiences['create']['response']>({
       body: data.body,

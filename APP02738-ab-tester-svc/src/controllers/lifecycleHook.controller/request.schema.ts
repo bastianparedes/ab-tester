@@ -13,6 +13,12 @@ export const lifecycleHookSchema = z
   })
   .strip();
 
+export const copyLifecycleHookSchema = z
+  .object({
+    targetTenantId: z.number().int(),
+  })
+  .strip();
+
 export const getLifecycleHooksQuerySchema = z
   .object({
     orderBy: z.enum(['id', 'name', 'option', 'status', 'updatedAt']).meta({ example: 'updatedAt' }),

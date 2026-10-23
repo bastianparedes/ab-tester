@@ -27,3 +27,9 @@ export const audienceSchema = z
     requirements: NodeRequirementSchema,
   })
   .strip();
+
+export const copyAudienceSchema = z
+  .object({
+    targetTenantId: z.number().int(),
+  })
+  .strip();

@@ -1,6 +1,7 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { LifecycleHookController } from '../index';
+import { copyLifecycleHookSchema } from '../request.schema';
 
 describe('LifecycleHookController', () => {
   it('returns lifecycle-hook lists and a selected hook', async () => {
@@ -36,6 +37,32 @@ describe('LifecycleHookController', () => {
     const controller = new LifecycleHookController({ lifecycleHooks: { get: async () => null } } as never, {} as never);
 
     await expect(controller.get(3, 99)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('copies a lifecycle hook to a tenant where the user can create it', async () => {
+    const calls: unknown[] = [];
+    const controller = new LifecycleHookController(
+      {
+        lifecycleHooks: {
+          copy: async (input: unknown) => calls.push(input),
+        },
+      } as never,
+      { clear: async (input: unknown) => calls.push(input) } as never,
+    );
+    const request = {
+      user: {
+        id: 7,
+        roles: [{ permissions: ['tenant.13.feature.tenant.action.create'] }],
+      },
+    };
+
+    expect(copyLifecycleHookSchema.parse({ extra: true, targetTenantId: 13 })).toEqual({ targetTenantId: 13 });
+    expect(copyLifecycleHookSchema.safeParse({ targetTenantId: '13' }).success).toBe(false);
+    await expect(controller.copy(3, 8, { targetTenantId: 13 }, request as never)).resolves.toEqual({});
+    expect(calls).toEqual([{ lifecycleHookId: 8, targetTenantId: 13, tenantId: 3, userId: 7 }, { tenantId: 13 }]);
+
+    await expect(controller.copy(3, 8, { targetTenantId: 13 }, { user: { id: 7, roles: [{ permissions: [] }] } } as never)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(controller.copy(3, 8, { targetTenantId: 13 }, {} as never)).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('requires a user to create lifecycle hooks', async () => {

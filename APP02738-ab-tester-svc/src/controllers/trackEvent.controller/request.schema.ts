@@ -32,3 +32,9 @@ export const trackEventSchema = z
     status: z.enum(commonConstants.arrayStatusArray),
   })
   .strip();
+
+export const copyTrackEventSchema = z
+  .object({
+    targetTenantId: z.number().int(),
+  })
+  .strip();

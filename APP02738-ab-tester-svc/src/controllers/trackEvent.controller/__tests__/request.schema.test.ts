@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getTrackEventQuerySchema, trackEventSchema } from '../request.schema';
+import { copyTrackEventSchema, getTrackEventQuerySchema, trackEventSchema } from '../request.schema';
 
 describe('track event schemas', () => {
   it('normalizes status filters', () => {
@@ -21,5 +21,10 @@ describe('track event schemas', () => {
       status: 'active',
     });
     expect(trackEventSchema.safeParse({ ...event, javascript: 'const = 1;' }).success).toBe(false);
+  });
+
+  it('validates the target tenant when copying an event', () => {
+    expect(copyTrackEventSchema.parse({ extra: true, targetTenantId: 12 })).toEqual({ targetTenantId: 12 });
+    expect(copyTrackEventSchema.safeParse({ targetTenantId: '12' }).success).toBe(false);
   });
 });

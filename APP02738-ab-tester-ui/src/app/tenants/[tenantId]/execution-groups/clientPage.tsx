@@ -1,17 +1,35 @@
 'use client';
 
+import type { TypeNodeRequirement as TypeAudienceNodeRequirement } from '@ab-tester/constants/types/audience';
+import type { TypeCampaign, TypeNodeRequirement as TypeCampaignNodeRequirement } from '@ab-tester/constants/types/campaign';
 import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import type { TypeExecutionGroupForMenu, TypeOrderExecutionGroupsBy } from '@ab-tester/constants/types/executionGroup';
-import { ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
+import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
 import config, { getStringPermission } from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
+
+const getAudienceIds = (campaigns: TypeCampaign[]): number[] => {
+  const audienceIds = new Set<number>();
+  const visit = (node: TypeCampaignNodeRequirement) => {
+    for (const requirement of node.data.children) {
+      if (requirement.type === 'node') visit(requirement);
+      else if (requirement.type === 'audience') audienceIds.add(requirement.data.id);
+    }
+  };
+  for (const campaign of campaigns) visit(campaign.requirements);
+  return [...audienceIds];
+};
+
+const hasTrackEventRequirements = (requirements: TypeAudienceNodeRequirement): boolean =>
+  requirements.data.children.some((requirement) => (requirement.type === 'node' ? hasTrackEventRequirements(requirement) : true));
 
 type UiState = {
   sortConfig: { key: TypeOrderExecutionGroupsBy; direction: TypeDirection };
@@ -36,6 +54,8 @@ type PageProps = {
 export function ClientPage({ tenantId }: PageProps) {
   const user = useUser();
   const { translation } = useTranslationContext();
+  const emit = useToast().emit;
+  const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
 
   const [executionGroups, setExecutionGroups] = useState<(TypeExecutionGroupForMenu & { campaignsCount: number })[]>([]);
   const [state, dispatch] = useReducer(
@@ -151,6 +171,84 @@ export function ClientPage({ tenantId }: PageProps) {
   };
 
   const confirm = useDialogStore((state) => state.confirm);
+  const copyExecutionGroupToTenant = async ({ executionGroup }: { executionGroup: TypeExecutionGroupForMenu }) => {
+    const executionGroupResponse = await apiCaller.executionGroups.get({ pathParams: { executionGroupId: executionGroup.id, tenantId } });
+    if (!executionGroupResponse.ok) {
+      emit({ severity: 'error', text: translation.executionGroups.copyGroupError });
+      return;
+    }
+    const sourceExecutionGroup = await executionGroupResponse.json();
+    const campaignResponses = await Promise.all(sourceExecutionGroup.campaigns.map(({ id }) => apiCaller.campaigns.get({ pathParams: { campaignId: id, tenantId } })));
+    const successfulCampaignResponses = campaignResponses.filter((response) => response.ok);
+    if (successfulCampaignResponses.length !== campaignResponses.length) {
+      emit({ severity: 'error', text: translation.executionGroups.copyCampaignsError });
+      return;
+    }
+    const campaigns = await Promise.all(successfulCampaignResponses.map((response) => response.json()));
+    if (campaigns.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId }))) {
+      emit({ severity: 'error', text: translation.executionGroups.copyCampaignsPermissionError });
+      return;
+    }
+
+    const audienceIds = getAudienceIds(campaigns);
+    if (audienceIds.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId }))) {
+      emit({ severity: 'error', text: translation.executionGroups.copyAudiencesPermissionError });
+      return;
+    }
+    const audienceResponses = await Promise.all(audienceIds.map((audienceId) => apiCaller.audiences.get({ pathParams: { audienceId, tenantId } })));
+    const successfulAudienceResponses = audienceResponses.filter((response) => response.ok);
+    if (successfulAudienceResponses.length !== audienceResponses.length) {
+      emit({ severity: 'error', text: translation.executionGroups.copyAudiencesError });
+      return;
+    }
+    const audiences = await Promise.all(successfulAudienceResponses.map((response) => response.json()));
+    const requiresTrackEvents = audiences.some((audience) => hasTrackEventRequirements(audience.requirements));
+    if (requiresTrackEvents && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId }))) {
+      emit({ severity: 'error', text: translation.executionGroups.copyTrackEventsPermissionError });
+      return;
+    }
+
+    const tenantsResponse = await apiCaller.tenants.getAll();
+    if (!tenantsResponse.ok) {
+      emit({ severity: 'error', text: translation.executionGroups.copyTenantsError });
+      return;
+    }
+    const targetTenants = (await tenantsResponse.json()).filter(
+      (targetTenant) =>
+        targetTenant.id !== tenantId &&
+        user.permissions.includes(getStringPermission({ action: 'create', feature: 'execution-group', tenantId: targetTenant.id })) &&
+        (campaigns.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id }))) &&
+        (audienceIds.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id }))) &&
+        (!requiresTrackEvents || user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id }))),
+    );
+    if (targetTenants.length === 0) {
+      emit({ severity: 'warning', text: translation.executionGroups.noCopyTenants });
+      return;
+    }
+    const formData = await getDataFromForm(
+      { title: translation.executionGroups.copyTenantTitle },
+      {
+        targetTenantId: {
+          label: translation.executionGroups.copyTenantLabel,
+          options: targetTenants.map((targetTenant) => ({ label: targetTenant.name, value: String(targetTenant.id) })),
+          required: true,
+          type: 'select',
+          value: '',
+        },
+      },
+    );
+    if (!formData) return;
+
+    const response = await apiCaller.executionGroups.copy({
+      body: { targetTenantId: Number(formData.targetTenantId) },
+      pathParams: { executionGroupId: executionGroup.id, tenantId },
+    });
+    if (!response.ok) {
+      emit({ severity: 'error', text: translation.executionGroups.copyError });
+      return;
+    }
+    emit({ severity: 'success', text: translation.executionGroups.copySuccess });
+  };
 
   const deleteExecutionGroup = async ({ executionGroup }: { executionGroup: TypeExecutionGroupForMenu }) => {
     const result = await confirm({
@@ -243,6 +341,20 @@ export function ClientPage({ tenantId }: PageProps) {
                   month: '2-digit',
                   year: 'numeric',
                 }),
+            },
+            {
+              label: translation.executionGroups.copyToTenant,
+              renderCell: (executionGroup) =>
+                user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId })) && (
+                  <button
+                    type="button"
+                    aria-label={`${translation.executionGroups.copyToTenant} ${executionGroup.name}`}
+                    onClick={() => copyExecutionGroupToTenant({ executionGroup })}
+                    className="p-2 flex text-indigo-500 hover:bg-indigo-100 rounded-lg transition-colors"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                ),
             },
             {
               label: translation.executionGroups.modify,
