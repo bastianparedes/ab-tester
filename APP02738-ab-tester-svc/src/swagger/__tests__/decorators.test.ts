@@ -56,7 +56,7 @@ describe('ApiZodBody', () => {
   });
 
   it('derives primitive, array, object, and named property examples', () => {
-    expect(deriveExampleFromZodSchema(z.object({ status: z.string(), enabled: z.boolean(), count: z.number(), value: z.null() }))).toEqual({
+    expect(deriveExampleFromZodSchema(z.object({ count: z.number(), enabled: z.boolean(), status: z.string(), value: z.null() }))).toEqual({
       count: 0,
       enabled: false,
       status: 'active',
@@ -107,10 +107,10 @@ describe('ApiZodBody', () => {
       {
         description: undefined,
         example: ['string'],
+        explode: true,
         name: 'labels',
         required: false,
         schema: { items: { type: 'string' }, type: 'array' },
-        explode: true,
         style: 'form',
       },
       {
@@ -132,10 +132,10 @@ describe('ApiZodBody', () => {
       {
         description: undefined,
         example: undefined,
+        explode: true,
         name: 'undocumented',
         required: false,
         schema: { type: 'array' },
-        explode: true,
         style: 'form',
       },
     ]);
@@ -149,17 +149,17 @@ describe('ApiZodBody', () => {
         arrayWithoutItems: { type: 'array' },
         badReference: { $ref: '#/properties/absent' },
         constValue: { const: 'fixed' },
+        integer: { type: 'integer' },
         invalidReference: { $ref: false },
+        mystery: { type: 'unknown' },
         nullReference: { $ref: '#/properties/nullValue' },
         nullValue: null,
-        objectWithoutProperties: { type: 'object' },
         objectWithoutExamples: { properties: {}, type: 'object' },
+        objectWithoutProperties: { type: 'object' },
         repeatedA: repeatedSchema,
         repeatedB: repeatedSchema,
         rootReference: { $ref: '#' },
         status: { type: 'unknown' },
-        integer: { type: 'integer' },
-        mystery: { type: 'unknown' },
         tupleWithoutItems: { items: [], type: 'array' },
         undefinedConst: { const: undefined, type: 'string' },
       },
@@ -168,11 +168,11 @@ describe('ApiZodBody', () => {
 
     const examples = deriveExampleFromZodSchema(z.string());
     expect(examples).toEqual({
-      arrayWithoutItems: [],
       anyOf: 'string',
+      arrayWithoutItems: [],
       constValue: 'fixed',
-      invalidReference: 1,
       integer: 0,
+      invalidReference: 1,
       repeatedA: '2024-01-01T00:00:00.000Z',
       status: 'active',
       tupleWithoutItems: [],

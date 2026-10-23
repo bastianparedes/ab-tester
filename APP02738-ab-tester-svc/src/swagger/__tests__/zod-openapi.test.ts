@@ -84,32 +84,10 @@ describe('Zod response schema generation', () => {
       info: { title: 'Test API', version: '1.0' },
       openapi: '3.0.0',
       paths: {
-        '/ignored': null,
         '/example': {
           get: {
             operationId: 'ExampleController_get',
             responses: { '200': { description: 'Returns an example.' } },
-          },
-        },
-        '/recursive': {
-          get: {
-            operationId: 'RecursiveController_get',
-            responses: { '200': { description: 'Recursive response.' } },
-          },
-        },
-        '/no-example': {
-          get: {
-            operationId: 'NoExampleController_get',
-            responses: {
-              '201': { description: 'Created', content: { 'text/plain': null, 'application/json': {} } },
-              '204': { description: 'Also created' },
-            },
-          },
-        },
-        '/root-ref': {
-          get: {
-            operationId: 'RootRefController_get',
-            responses: { '200': { description: 'Root reference' } },
           },
         },
         '/external-ref': {
@@ -118,8 +96,30 @@ describe('Zod response schema generation', () => {
             responses: { '200': { description: 'External reference' } },
           },
         },
+        '/ignored': null,
+        '/no-example': {
+          get: {
+            operationId: 'NoExampleController_get',
+            responses: {
+              '201': { content: { 'application/json': {}, 'text/plain': null }, description: 'Created' },
+              '204': { description: 'Also created' },
+            },
+          },
+        },
+        '/recursive': {
+          get: {
+            operationId: 'RecursiveController_get',
+            responses: { '200': { description: 'Recursive response.' } },
+          },
+        },
+        '/root-ref': {
+          get: {
+            operationId: 'RootRefController_get',
+            responses: { '200': { description: 'Root reference' } },
+          },
+        },
       },
-    } as OpenAPIObject;
+    } as unknown as OpenAPIObject;
 
     appendZodResponseSchemas(document);
 
@@ -129,21 +129,16 @@ describe('Zod response schema generation', () => {
       $ref: '#/components/schemas/NoExampleController_get_Response',
     });
     expect(response?.content?.['application/json']?.example).toBeUndefined();
-    expect(document.components?.schemas?.RootRefController_get_Response?.$ref).toBe(
-      '#/components/schemas/RootRefController_get_Response',
-    );
-    expect(document.components?.schemas?.ExternalRefController_get_Response?.$ref).toBe('#/components/schemas/Existing');
+    expect(document.components?.schemas?.RootRefController_get_Response).toMatchObject({
+      $ref: '#/components/schemas/RootRefController_get_Response',
+    });
+    expect(document.components?.schemas?.ExternalRefController_get_Response).toMatchObject({ $ref: '#/components/schemas/Existing' });
   });
 
   it('reports missing operations and invalid success responses', async () => {
-    const assertFailure = async (
-      responses: Record<string, unknown> | undefined,
-      expectedMessage: string,
-      operationId?: string,
-      omitPaths = false,
-    ) => {
+    const assertFailure = async (responses: Record<string, unknown> | undefined, expectedMessage: string, operationId?: string, omitPaths = false) => {
       vi.resetModules();
-      const { appendZodResponseSchemas: append, registerZodResponseSchema: register } = await import('../zod-openapi');
+      const { appendZodResponseSchemas: append, registerZodResponseSchema: register } = await vi.importActual<typeof import('../zod-openapi')>('../zod-openapi');
       register('FailureController', 'get', z.object({ id: z.number() }));
 
       const document = {
@@ -178,14 +173,10 @@ describe('Zod response schema generation', () => {
       'FailureController_get',
     );
     await assertFailure({ '200': undefined }, 'Swagger success response 200 for FailureController_get is missing', 'FailureController_get');
-    await assertFailure(
-      { '200': { $ref: '#/components/responses/Success' } },
-      'Swagger response 200 for FailureController_get must be expanded',
-      'FailureController_get',
-    );
+    await assertFailure({ '200': { $ref: '#/components/responses/Success' } }, 'Swagger response 200 for FailureController_get must be expanded', 'FailureController_get');
 
     vi.resetModules();
-    const { appendZodResponseSchemas: append, registerZodResponseSchema: register } = await import('../zod-openapi');
+    const { appendZodResponseSchemas: append, registerZodResponseSchema: register } = await vi.importActual<typeof import('../zod-openapi')>('../zod-openapi');
     register('FailureController', 'get', z.object({ id: z.number() }));
     let operationIdReads = 0;
     const document = {

@@ -120,7 +120,6 @@ describe('appendCurlExamples', () => {
       info: { title: 'Test API', version: '1.0' },
       openapi: '3.0.0',
       paths: {
-        '/ignored': null,
         '/fallback': {
           post: {
             requestBody: {
@@ -134,8 +133,9 @@ describe('appendCurlExamples', () => {
             responses: { '200': { description: 'OK' } },
           },
         },
+        '/ignored': null,
       },
-    } as OpenAPIObject;
+    } as unknown as OpenAPIObject;
 
     appendCurlExamples(document);
 
