@@ -129,10 +129,12 @@ export function Sidebar({ children, tenant }: Props) {
                 <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isAdministrationExpanded ? '' : '-rotate-90'}`} />
               </button>
               <div id="administration-navigation" hidden={!isAdministrationExpanded}>
-                <a href={constants.pages.tenants()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
-                  <Building2 className="w-5 h-5" />
-                  <span className="text-sm font-medium">{translation.common.tenants}</span>
-                </a>
+                {user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant' })) && (
+                  <a href={constants.pages.tenants()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-sm font-medium">{translation.common.tenants}</span>
+                  </a>
+                )}
                 {user.permissions.includes(getStringPermission({ action: 'read', feature: 'role' })) && (
                   <a href={constants.pages.roles()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
                     <Shield className="w-5 h-5" />

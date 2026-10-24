@@ -26,8 +26,6 @@ import { DbService } from '../../services/db.service';
 import { type Request } from '../../types/request';
 import { campaignSchema, copyCampaignSchema, getCampaignsQuerySchema } from './request.schema';
 import { campaignResponseSchemas } from './response.schema';
-import { executionGroupSchema } from '../executionGroup.controller/request.schema';
-import { TypeApiExecutionGroups } from '@ab-tester/constants/types/api/executionGroups';
 
 const getAudienceIds = (requirements: TypeCampaignNodeRequirement): number[] => {
   const audienceIds = new Set<number>();

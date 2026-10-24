@@ -1,6 +1,4 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
-import type { TypeTenant } from '@ab-tester/constants/types/tenant';
-import type { TypeTrackEvent } from '@ab-tester/constants/types/trackEvents';
 import { fetchers } from '../fetcher';
 
 export const trackEvents = {

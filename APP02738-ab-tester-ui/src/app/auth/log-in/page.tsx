@@ -36,7 +36,7 @@ export default function Page() {
       },
     });
     if (apiResponse.ok) {
-      location.href = constants.pages.tenants();
+      location.href = constants.pages.dashboard();
       return;
     }
 

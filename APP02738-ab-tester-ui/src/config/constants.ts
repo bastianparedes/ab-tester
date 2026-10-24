@@ -26,6 +26,7 @@ const constants = {
       return basePath + queryParams;
     },
     campaigns: ({ tenantId }: { tenantId: number | string }) => `/tenants/${tenantId}/campaigns`,
+    dashboard: () => '/dashboard',
     executionGroup: ({ tenantId, executionGroupId }: { tenantId: number; executionGroupId: number | undefined }) =>
       `/tenants/${tenantId}/execution-groups/${executionGroupId}`,
     executionGroups: ({ tenantId }: { tenantId: number }) => `/tenants/${tenantId}/execution-groups`,

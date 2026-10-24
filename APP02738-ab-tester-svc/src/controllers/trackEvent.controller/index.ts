@@ -1,5 +1,4 @@
 import type { TypeApiTrackEvents } from '@ab-tester/constants/types/api/trackEvents';
-import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { type AssertEqual } from '@ab-tester/constants/types/utils';
 import {
   Body,
