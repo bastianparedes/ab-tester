@@ -4,6 +4,7 @@ import { Navigation } from '@/app/_common/components/navigation';
 import constants from '@/config/constants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
+import { scriptsUrls } from '@/libs/restClient/api/scripts/urls';
 
 type Props = {
   params: Promise<{
@@ -24,7 +25,7 @@ export default async function Page({ params: promiseParams }: Props) {
       tenant={tenant}
       breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name, path: constants.pages.tenant({ tenantId }) }, { name: 'Playground' }]}
     >
-      <script type="module" src={`${env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE}/public/tenants/${tenantId}/script`}></script>
+      <script type="module" src={`${env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE}${scriptsUrls.get({ pathParams: { tenantId } })}`}></script>
       <div className="bg-gray-100">
         {/* Header */}
         <header id="header" className="bg-white shadow-sm">

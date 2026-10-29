@@ -56,7 +56,7 @@ const constructRequest = (method: 'GET' | 'POST' | 'PUT' | 'DELETE') => {
       if (originalResponse.status === 401) {
         console.warn('Access token expired, refreshing...');
 
-        const refreshTokenUrl = new URL(`${baseUrl}/public/auth/session/refresh`);
+        const refreshTokenUrl = new URL(`${baseUrl}/auth/session/refresh`);
         const refreshResponse = await fetch(refreshTokenUrl.toString(), {
           credentials: 'include',
         });

@@ -12,28 +12,28 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AccountController } from '../controllers/account.controller';
-import { accountSchema, changePasswordSchema } from '../controllers/account.controller/request.schema';
-import { AudiencesController } from '../controllers/audiences.controller';
-import { audienceSchema, getAudiencesQuerySchema } from '../controllers/audiences.controller/request.schema';
-import { CampaignsController } from '../controllers/campaigns.controller';
-import { campaignSchema, getCampaignsQuerySchema } from '../controllers/campaigns.controller/request.schema';
-import { ExecutionGroupsController } from '../controllers/executionGroup.controller';
-import { executionGroupSchema, getExecutionGroupsQuerySchema } from '../controllers/executionGroup.controller/request.schema';
-import { HealthController } from '../controllers/health.controller';
-import { LifecycleHookController } from '../controllers/lifecycleHook.controller';
-import { getLifecycleHooksQuerySchema, lifecycleHookSchema } from '../controllers/lifecycleHook.controller/request.schema';
-import { RolesController } from '../controllers/roles.controller';
-import { roleSchema } from '../controllers/roles.controller/request.schema';
-import { TenantsController } from '../controllers/tenants.controller';
-import { tenantSchema } from '../controllers/tenants.controller/request.schema';
-import { TrackEventController } from '../controllers/trackEvent.controller';
-import { getTrackEventQuerySchema, trackEventSchema } from '../controllers/trackEvent.controller/request.schema';
-import { UsersController } from '../controllers/users.controller';
-import { newUserSchema, oldUserSchema } from '../controllers/users.controller/request.schema';
-import { AuthController } from '../modules/public/controllers/auth.controller';
-import { logInSchema } from '../modules/public/controllers/auth.controller/request.schema';
-import { ScriptController } from '../modules/public/controllers/script.controller';
+import { AudiencesController } from '../modules/ab-test/controllers/audiences.controller';
+import { audienceSchema, getAudiencesQuerySchema } from '../modules/ab-test/controllers/audiences.controller/request.schema';
+import { CampaignsController } from '../modules/ab-test/controllers/campaigns.controller';
+import { campaignSchema, getCampaignsQuerySchema } from '../modules/ab-test/controllers/campaigns.controller/request.schema';
+import { ExecutionGroupsController } from '../modules/ab-test/controllers/executionGroup.controller';
+import { executionGroupSchema, getExecutionGroupsQuerySchema } from '../modules/ab-test/controllers/executionGroup.controller/request.schema';
+import { HealthController } from '../modules/ab-test/controllers/health.controller';
+import { LifecycleHookController } from '../modules/ab-test/controllers/lifecycleHook.controller';
+import { getLifecycleHooksQuerySchema, lifecycleHookSchema } from '../modules/ab-test/controllers/lifecycleHook.controller/request.schema';
+import { ScriptController } from '../modules/ab-test/controllers/script.controller';
+import { TrackEventController } from '../modules/ab-test/controllers/trackEvent.controller';
+import { getTrackEventQuerySchema, trackEventSchema } from '../modules/ab-test/controllers/trackEvent.controller/request.schema';
+import { AccountController } from '../modules/admin/controllers/account.controller';
+import { accountSchema, changePasswordSchema } from '../modules/admin/controllers/account.controller/request.schema';
+import { RolesController } from '../modules/admin/controllers/roles.controller';
+import { roleSchema } from '../modules/admin/controllers/roles.controller/request.schema';
+import { TenantsController } from '../modules/admin/controllers/tenants.controller';
+import { tenantSchema } from '../modules/admin/controllers/tenants.controller/request.schema';
+import { UsersController } from '../modules/admin/controllers/users.controller';
+import { newUserSchema, oldUserSchema } from '../modules/admin/controllers/users.controller/request.schema';
+import { AuthController } from '../modules/auth/controllers/auth.controller';
+import { logInSchema } from '../modules/auth/controllers/auth.controller/request.schema';
 import { ApiZodBody, ApiZodQuery } from './decorators';
 
 function bindDocumentation<T extends Type<object>>(controller: T, tag: string, operations: Partial<Record<Extract<keyof InstanceType<T>, string>, MethodDecorator[]>>): void {

@@ -16,7 +16,7 @@ export function ClientPage({ url, script }: Props) {
   const { translation } = useTranslationContext();
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [isScriptExpanded, setIsScriptExpanded] = useState(false);
+  const [isScriptExpanded, setIsScriptExpanded] = useState(true);
   const [isScriptFormatted, setIsScriptFormatted] = useState(true);
   const [formattedScript, setFormattedScript] = useState({ code: '', source: '' });
 

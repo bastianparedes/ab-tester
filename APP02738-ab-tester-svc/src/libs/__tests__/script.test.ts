@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { getScriptLocation } from '../../modules/ab-test/libs/script';
 import { env } from '../env';
-import { getScriptLocation } from '../script';
 
 describe('getScriptLocation', () => {
   const originalNodeEnv = env.NODE_ENV;

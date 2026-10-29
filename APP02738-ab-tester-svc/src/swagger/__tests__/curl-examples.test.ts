@@ -43,7 +43,7 @@ describe('appendCurlExamples', () => {
       info: { title: 'Test API', version: '1.0' },
       openapi: '3.0.0',
       paths: {
-        '/public/auth/session/refresh': {
+        '/auth/session/refresh': {
           get: {
             responses: { '200': { description: 'OK' } },
             security: [{ cookie: [] }],
@@ -55,7 +55,7 @@ describe('appendCurlExamples', () => {
     appendCurlExamples(document);
     appendCurlExamples(document);
 
-    const description = document.paths['/public/auth/session/refresh']?.get?.description;
+    const description = document.paths['/auth/session/refresh']?.get?.description;
     expect(description).toContain("--cookie 'refreshToken=YOUR_TOKEN'");
     expect(description?.match(/#### cURL example/g)).toHaveLength(1);
   });

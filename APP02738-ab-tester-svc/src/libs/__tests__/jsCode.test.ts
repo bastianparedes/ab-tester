@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { jsCodeIsSingleAsyncArrowFunction } from '../jsCode';
+import { jsCodeIsSingleAsyncArrowFunction } from '../../modules/ab-test/libs/jsCode';
 
 describe('jsCodeIsSingleAsyncArrowFunction', () => {
   it.each([

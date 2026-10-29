@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { audienceSchema } from '../../controllers/audiences.controller/request.schema';
+import { audienceSchema } from '../../modules/ab-test/controllers/audiences.controller/request.schema';
 import { ApiZodBody, ApiZodQuery, deriveExampleFromZodSchema, zodQueryParameters } from '../decorators';
 
 vi.mock('zod', async (importOriginal) => {

@@ -3,6 +3,7 @@ import { Navigation } from '@/app/_common/components/navigation';
 import constants from '@/config/constants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
+import { scriptsUrls } from '@/libs/restClient/api/scripts/urls';
 import { ClientPage } from './clientPage';
 
 type Props = {
@@ -28,7 +29,7 @@ export default async function Page({ params: promiseParams }: Props) {
       tenant={tenant}
       breadcrumb={[{ name: 'Tenants', path: constants.pages.tenants() }, { name: tenant.name, path: constants.pages.tenant({ tenantId }) }, { name: 'Campaigns' }]}
     >
-      <ClientPage url={`${env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE}/public/tenants/${tenantId}/script`} script={script} />
+      <ClientPage url={`${env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE}${scriptsUrls.get({ pathParams: { tenantId } })}`} script={script} />
     </Navigation>
   );
 }

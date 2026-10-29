@@ -5,7 +5,7 @@ export default defineConfig({
   build: {
     emptyOutDir: false,
     lib: {
-      entry: path.resolve(process.cwd(), 'src/script/index.ts'),
+      entry: path.resolve(process.cwd(), 'src/modules/ab-test/controllers/script.controller/script/index.ts'),
       fileName: () => 'script.js',
       formats: ['iife'],
       name: 'AbTesterScript',

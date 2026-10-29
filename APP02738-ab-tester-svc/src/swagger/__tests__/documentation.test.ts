@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AccountController } from '../../controllers/account.controller';
-import { getCampaignsQuerySchema } from '../../controllers/campaigns.controller/request.schema';
+import { getCampaignsQuerySchema } from '../../modules/ab-test/controllers/campaigns.controller/request.schema';
+import { AccountController } from '../../modules/admin/controllers/account.controller';
 import { zodQueryParameters } from '../decorators';
 import { applySwaggerDocumentation } from '../documentation';
 
