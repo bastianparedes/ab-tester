@@ -12,7 +12,7 @@ import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import config, { getStringPermission } from '@/config/constants';
+import config from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
 
@@ -192,7 +192,7 @@ export function ClientPage({ tenantId }: PageProps) {
     }
     const sourceCampaign = await campaignResponse.json();
     const audienceIds = getAudienceIds(sourceCampaign.requirements);
-    if (audienceIds.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId }))) {
+    if (audienceIds.length > 0 && !user.hasPermission({ action: 'read', feature: 'audience', tenantId })) {
       emit({ severity: 'error', text: translation.campaigns.copyAudiencesPermissionError });
       return;
     }
@@ -204,7 +204,7 @@ export function ClientPage({ tenantId }: PageProps) {
     }
     const audiences = await Promise.all(successfulAudienceResponses.map((response) => response.json()));
     const requiresTrackEvents = audiences.some((audience) => hasTrackEventRequirements(audience.requirements));
-    if (requiresTrackEvents && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId }))) {
+    if (requiresTrackEvents && !user.hasPermission({ action: 'read', feature: 'track-event', tenantId })) {
       emit({ severity: 'error', text: translation.campaigns.copyTrackEventsPermissionError });
       return;
     }
@@ -218,9 +218,9 @@ export function ClientPage({ tenantId }: PageProps) {
     const targetTenants = (await tenantsResponse.json()).filter(
       (targetTenant) =>
         targetTenant.id !== tenantId &&
-        user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id })) &&
-        (audienceIds.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id }))) &&
-        (!requiresTrackEvents || user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id }))),
+        user.hasPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id }) &&
+        (audienceIds.length === 0 || user.hasPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id })) &&
+        (!requiresTrackEvents || user.hasPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id })),
     );
     if (targetTenants.length === 0) {
       emit({ severity: 'warning', text: translation.campaigns.noCopyTenants });
@@ -263,7 +263,7 @@ export function ClientPage({ tenantId }: PageProps) {
             <p className="text-slate-600">{translation.campaigns.headerSubTitle}</p>
           </div>
 
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId })) && (
+          {user.hasPermission({ action: 'create', feature: 'campaign', tenantId }) && (
             <a
               href={config.pages.campaign({ campaignId: undefined, tenantId })}
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-blue-600 text-white hover:bg-blue-700 h-9 px-4 py-2"
@@ -336,7 +336,7 @@ export function ClientPage({ tenantId }: PageProps) {
                   {campaign.executionGroup ? (
                     <a
                       href={
-                        user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId }))
+                        user.hasPermission({ action: 'read', feature: 'execution-group', tenantId })
                           ? config.pages.executionGroup({
                               executionGroupId: campaign.executionGroup.id,
                               tenantId,
@@ -355,7 +355,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.campaigns.clone,
               renderCell: (campaign) =>
-                user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId })) && (
+                user.hasPermission({ action: 'create', feature: 'campaign', tenantId }) && (
                   <a
                     href={config.pages.campaign({ campaignId: undefined, cloneFrom: campaign.id, tenantId })}
                     className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
@@ -367,7 +367,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.campaigns.copyToTenant,
               renderCell: (campaign) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'campaign', tenantId }) && (
                   <button
                     type="button"
                     aria-label={`${translation.campaigns.copyToTenant} ${campaign.name}`}
@@ -381,7 +381,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.campaigns.modify,
               renderCell: (campaign) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'campaign', tenantId }) && (
                   <a
                     href={config.pages.campaign({ campaignId: campaign.id, tenantId })}
                     className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
@@ -393,7 +393,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.campaigns.delete,
               renderCell: (campaign) =>
-                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'campaign', tenantId })) && (
+                user.hasPermission({ action: 'delete', feature: 'campaign', tenantId }) && (
                   <button type="button" onClick={() => deleteCampaign({ campaign })} className="p-2 flex text-red-500 hover:bg-red-200 rounded-lg transition-colors">
                     <Trash2 size={20} />
                   </button>

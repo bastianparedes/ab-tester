@@ -10,7 +10,7 @@ import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import config, { getStringPermission } from '@/config/constants';
+import config from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
 
@@ -174,7 +174,7 @@ export function ClientPage({ tenantId }: PageProps) {
     }
 
     const targetTenants = (await tenantsResponse.json()).filter(
-      (tenant) => tenant.id !== tenantId && user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: tenant.id })),
+      (tenant) => tenant.id !== tenantId && user.hasPermission({ action: 'create', feature: 'track-event', tenantId: tenant.id }),
     );
     if (targetTenants.length === 0) {
       emit({ severity: 'warning', text: translation.trackEvents.noCopyTenants });
@@ -217,7 +217,7 @@ export function ClientPage({ tenantId }: PageProps) {
             <p className="text-slate-600">{translation.trackEvents.headerSubTitle}</p>
           </div>
 
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId })) && (
+          {user.hasPermission({ action: 'create', feature: 'track-event', tenantId }) && (
             <a
               href={config.pages.trackEvent({ tenantId, trackEventId: undefined })}
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-blue-600 text-white hover:bg-blue-700 h-9 px-4 py-2"
@@ -288,7 +288,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.trackEvents.clone,
               renderCell: (trackEvent) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'track-event', tenantId }) && (
                   <a
                     href={config.pages.trackEvent({ cloneFrom: trackEvent.id, tenantId, trackEventId: undefined })}
                     className="w-fit h-fit p-2 flex text-violet-500 hover:bg-violet-200 rounded-lg transition-colors"
@@ -300,7 +300,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.trackEvents.copyToTenant,
               renderCell: (trackEvent) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'track-event', tenantId }) && (
                   <button
                     type="button"
                     aria-label={`${translation.trackEvents.copyToTenant} ${trackEvent.name}`}
@@ -314,7 +314,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.trackEvents.modify,
               renderCell: (trackEvent) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'track-event', tenantId }) && (
                   <a
                     href={config.pages.trackEvent({ tenantId, trackEventId: trackEvent.id })}
                     className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
@@ -326,7 +326,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.trackEvents.delete,
               renderCell: (trackEvent) =>
-                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'track-event', tenantId })) && (
+                user.hasPermission({ action: 'delete', feature: 'track-event', tenantId }) && (
                   <button
                     type="button"
                     aria-label={`${translation.trackEvents.delete} ${trackEvent.name}`}

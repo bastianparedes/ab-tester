@@ -12,7 +12,7 @@ import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import config, { getStringPermission } from '@/config/constants';
+import config from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
 
@@ -185,13 +185,13 @@ export function ClientPage({ tenantId }: PageProps) {
       return;
     }
     const campaigns = await Promise.all(successfulCampaignResponses.map((response) => response.json()));
-    if (campaigns.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId }))) {
+    if (campaigns.length > 0 && !user.hasPermission({ action: 'read', feature: 'campaign', tenantId })) {
       emit({ severity: 'error', text: translation.executionGroups.copyCampaignsPermissionError });
       return;
     }
 
     const audienceIds = getAudienceIds(campaigns);
-    if (audienceIds.length > 0 && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId }))) {
+    if (audienceIds.length > 0 && !user.hasPermission({ action: 'read', feature: 'audience', tenantId })) {
       emit({ severity: 'error', text: translation.executionGroups.copyAudiencesPermissionError });
       return;
     }
@@ -203,7 +203,7 @@ export function ClientPage({ tenantId }: PageProps) {
     }
     const audiences = await Promise.all(successfulAudienceResponses.map((response) => response.json()));
     const requiresTrackEvents = audiences.some((audience) => hasTrackEventRequirements(audience.requirements));
-    if (requiresTrackEvents && !user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId }))) {
+    if (requiresTrackEvents && !user.hasPermission({ action: 'read', feature: 'track-event', tenantId })) {
       emit({ severity: 'error', text: translation.executionGroups.copyTrackEventsPermissionError });
       return;
     }
@@ -216,10 +216,10 @@ export function ClientPage({ tenantId }: PageProps) {
     const targetTenants = (await tenantsResponse.json()).filter(
       (targetTenant) =>
         targetTenant.id !== tenantId &&
-        user.permissions.includes(getStringPermission({ action: 'create', feature: 'execution-group', tenantId: targetTenant.id })) &&
-        (campaigns.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id }))) &&
-        (audienceIds.length === 0 || user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id }))) &&
-        (!requiresTrackEvents || user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id }))),
+        user.hasPermission({ action: 'create', feature: 'execution-group', tenantId: targetTenant.id }) &&
+        (campaigns.length === 0 || user.hasPermission({ action: 'create', feature: 'campaign', tenantId: targetTenant.id })) &&
+        (audienceIds.length === 0 || user.hasPermission({ action: 'create', feature: 'audience', tenantId: targetTenant.id })) &&
+        (!requiresTrackEvents || user.hasPermission({ action: 'create', feature: 'track-event', tenantId: targetTenant.id })),
     );
     if (targetTenants.length === 0) {
       emit({ severity: 'warning', text: translation.executionGroups.noCopyTenants });
@@ -270,7 +270,7 @@ export function ClientPage({ tenantId }: PageProps) {
             <p className="text-slate-600">{translation.executionGroups.headerSubTitle}</p>
           </div>
 
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'execution-group', tenantId })) && (
+          {user.hasPermission({ action: 'create', feature: 'execution-group', tenantId }) && (
             <a
               href={config.pages.executionGroup({ executionGroupId: undefined, tenantId })}
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-blue-600 text-white hover:bg-blue-700 h-9 px-4 py-2"
@@ -345,7 +345,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.executionGroups.copyToTenant,
               renderCell: (executionGroup) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'execution-group', tenantId }) && (
                   <button
                     type="button"
                     aria-label={`${translation.executionGroups.copyToTenant} ${executionGroup.name}`}
@@ -359,7 +359,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.executionGroups.modify,
               renderCell: (executionGroup) =>
-                user.permissions.includes(getStringPermission({ action: 'update', feature: 'execution-group', tenantId })) && (
+                user.hasPermission({ action: 'update', feature: 'execution-group', tenantId }) && (
                   <a
                     href={config.pages.executionGroup({ executionGroupId: executionGroup.id, tenantId })}
                     className="w-fit h-fit p-2 flex text-blue-500 hover:bg-blue-200 rounded-lg transition-colors"
@@ -371,7 +371,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.executionGroups.delete,
               renderCell: (executionGroup) =>
-                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'execution-group', tenantId })) && (
+                user.hasPermission({ action: 'delete', feature: 'execution-group', tenantId }) && (
                   <button
                     type="button"
                     onClick={() => deleteExecutionGroup({ executionGroup })}

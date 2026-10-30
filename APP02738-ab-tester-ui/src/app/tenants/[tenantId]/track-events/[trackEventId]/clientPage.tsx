@@ -11,7 +11,7 @@ import { FormSection } from '@/app/_common/components/FormSection';
 import { Switch } from '@/app/_common/components/switch';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
@@ -191,8 +191,8 @@ const ClientPage = ({ initialTrackEvent, tenantId, trackEventId }: Props) => {
           <Button onClick={returnToTrackEvents} variant="destructive">
             Cancel
           </Button>
-          {((isNewTrackEvent && user.permissions.includes(getStringPermission({ action: 'create', feature: 'track-event', tenantId }))) ||
-            (!isNewTrackEvent && user.permissions.includes(getStringPermission({ action: 'update', feature: 'track-event', tenantId })))) && (
+          {((isNewTrackEvent && user.hasPermission({ action: 'create', feature: 'track-event', tenantId })) ||
+            (!isNewTrackEvent && user.hasPermission({ action: 'update', feature: 'track-event', tenantId }))) && (
             <Button disabled={!!userMadeChange || !javascriptIsValid} onClick={handleOnSave} variant="default">
               Save track event
             </Button>

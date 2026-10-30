@@ -10,7 +10,7 @@ import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import config, { getStringPermission } from '@/config/constants';
+import config from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { apiCaller } from '@/libs/restClient';
 
@@ -169,7 +169,7 @@ export function ClientPage({ tenantId }: PageProps) {
       return;
     }
     const targetTenants = (await tenantsResponse.json()).filter(
-      (targetTenant) => targetTenant.id !== tenantId && user.permissions.includes(getStringPermission({ action: 'create', feature: 'tenant', tenantId: targetTenant.id })),
+      (targetTenant) => targetTenant.id !== tenantId && user.hasPermission({ action: 'create', feature: 'tenant', tenantId: targetTenant.id }),
     );
     if (targetTenants.length === 0) {
       emit({ severity: 'warning', text: translation.lifecycleHooks.noCopyTenants });
@@ -209,7 +209,7 @@ export function ClientPage({ tenantId }: PageProps) {
             <h1 className="mb-2 text-4xl font-bold text-slate-900">{translation.lifecycleHooks.headerTitle}</h1>
             <p className="text-slate-600">{translation.lifecycleHooks.headerSubTitle}</p>
           </div>
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'tenant', tenantId })) && (
+          {user.hasPermission({ action: 'create', feature: 'tenant', tenantId }) && (
             <a
               href={config.pages.lifecycleHook({ lifecycleHookId: undefined, tenantId })}
               className="inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700"
@@ -290,7 +290,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.lifecycleHooks.clone,
               renderCell: (lifecycleHook) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'tenant', tenantId }) && (
                   <a
                     href={config.pages.lifecycleHook({ cloneFrom: lifecycleHook.id, lifecycleHookId: undefined, tenantId })}
                     className="flex h-fit w-fit rounded-lg p-2 text-violet-500 transition-colors hover:bg-violet-200"
@@ -303,7 +303,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.lifecycleHooks.copyToTenant,
               renderCell: (lifecycleHook) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'tenant', tenantId }) && (
                   <button
                     type="button"
                     onClick={() => copyLifecycleHookToTenant(lifecycleHook)}
@@ -317,7 +317,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.lifecycleHooks.modify,
               renderCell: (lifecycleHook) =>
-                user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId })) && (
+                user.hasPermission({ action: 'read', feature: 'tenant', tenantId }) && (
                   <a
                     href={config.pages.lifecycleHook({ lifecycleHookId: lifecycleHook.id, tenantId })}
                     className="flex h-fit w-fit rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-200"
@@ -330,7 +330,7 @@ export function ClientPage({ tenantId }: PageProps) {
             {
               label: translation.lifecycleHooks.delete,
               renderCell: (lifecycleHook) =>
-                user.permissions.includes(getStringPermission({ action: 'delete', feature: 'tenant', tenantId })) && (
+                user.hasPermission({ action: 'delete', feature: 'tenant', tenantId }) && (
                   <button
                     type="button"
                     onClick={() => deleteLifecycleHook(lifecycleHook)}

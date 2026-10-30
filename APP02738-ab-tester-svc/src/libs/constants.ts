@@ -1,5 +1,4 @@
 import { TypeAccessToken, TypeRefreshToken } from '@ab-tester/constants/types/cookies';
-import { getStringPermission } from './auth/permissions';
 
 export const cookieNames = {
   accessToken: 'accessToken' satisfies TypeAccessToken,

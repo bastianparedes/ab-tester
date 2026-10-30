@@ -10,7 +10,7 @@ import { Button } from '@/app/_common/components/button';
 import { FormSection } from '@/app/_common/components/FormSection';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
@@ -157,8 +157,8 @@ const ClientPage = ({ initialCampaign, tenantId, campaignId, audiences }: Props)
           <Button onClick={returnToCampaigns} variant="destructive">
             Cancel
           </Button>
-          {((isNewCampaign && user.permissions.includes(getStringPermission({ action: 'create', feature: 'campaign', tenantId }))) ||
-            (!isNewCampaign && user.permissions.includes(getStringPermission({ action: 'update', feature: 'campaign', tenantId })))) && (
+          {((isNewCampaign && user.hasPermission({ action: 'create', feature: 'campaign', tenantId })) ||
+            (!isNewCampaign && user.hasPermission({ action: 'update', feature: 'campaign', tenantId }))) && (
             <Button disabled={!!userMadeChange || !sumVariationTrafficsIs100} onClick={handleOnSave} variant="default">
               Save Campaign
             </Button>

@@ -7,7 +7,6 @@ import { useState } from 'react';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import { getStringPermission } from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
 
 type Props = {
@@ -122,7 +121,7 @@ export function ClientPage({ initialUsers, roles }: Props) {
         <div className="bg-white rounded-lg shadow-md">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">{translation.users.userManagement}</h1>
-            {currentUser.permissions.includes(getStringPermission({ action: 'create', feature: 'user' })) && (
+            {currentUser.hasPermission({ action: 'create', feature: 'user' }) && (
               <button
                 type="button"
                 onClick={handleAdd}
@@ -159,7 +158,7 @@ export function ClientPage({ initialUsers, roles }: Props) {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {currentUser.permissions.includes(getStringPermission({ action: 'update', feature: 'user' })) && (
+                      {currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
                         <button
                           type="button"
                           onClick={() => handleEdit({ user })}
@@ -171,7 +170,7 @@ export function ClientPage({ initialUsers, roles }: Props) {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {currentUser.permissions.includes(getStringPermission({ action: 'delete', feature: 'user' })) && (
+                      {currentUser.hasPermission({ action: 'delete', feature: 'user' }) && (
                         <button
                           type="button"
                           onClick={() => handleDelete({ user })}

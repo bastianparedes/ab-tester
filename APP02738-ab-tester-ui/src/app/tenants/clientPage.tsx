@@ -6,7 +6,7 @@ import type React from 'react';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
 
 type Props = {
@@ -19,7 +19,7 @@ export function ClientPage({ initialTenants }: Props) {
   const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
   const confirm = useDialogStore((state) => state.confirm);
 
-  const tenants = initialTenants.filter((tenant) => user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant', tenantId: tenant.id })));
+  const tenants = initialTenants.filter((tenant) => user.hasPermission({ action: 'read', feature: 'tenant', tenantId: tenant.id }));
 
   const getTenantFromDialog = async (initialData: { name: string; description: string; domain: string }) => {
     const data = await getDataFromForm(
@@ -133,7 +133,7 @@ export function ClientPage({ initialTenants }: Props) {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{translation.tenants.tenants}</h1>
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'tenant' })) && (
+          {user.hasPermission({ action: 'create', feature: 'tenant' }) && (
             <button
               type="button"
               onClick={() => createTenant()}
@@ -154,7 +154,7 @@ export function ClientPage({ initialTenants }: Props) {
             {tenants.map((tenant) => (
               <a key={tenant.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 relative group" href={constants.pages.tenant({ tenantId: tenant.id })}>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  {user.permissions.includes(getStringPermission({ action: 'update', feature: 'tenant' })) && (
+                  {user.hasPermission({ action: 'update', feature: 'tenant' }) && (
                     <button
                       type="button"
                       onClick={(e) => editTenant(tenant, e)}
@@ -164,7 +164,7 @@ export function ClientPage({ initialTenants }: Props) {
                       <Edit />
                     </button>
                   )}
-                  {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'tenant' })) && (
+                  {user.hasPermission({ action: 'delete', feature: 'tenant' }) && (
                     <button
                       type="button"
                       onClick={(e) => deleteTenant(tenant, e)}

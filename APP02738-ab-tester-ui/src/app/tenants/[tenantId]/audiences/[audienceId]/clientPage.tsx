@@ -7,7 +7,7 @@ import { Button } from '@/app/_common/components/button';
 import { FormSection } from '@/app/_common/components/FormSection';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
 import Requirements from './components/Requirements';
 
@@ -72,8 +72,8 @@ const ClientPage = ({ initialAudience, tenantId, trackEvents }: Props) => {
         <Button onClick={returnToAudiences} variant="destructive">
           Cancel
         </Button>
-        {((isNewAudience && user.permissions.includes(getStringPermission({ action: 'create', feature: 'audience', tenantId }))) ||
-          (!isNewAudience && user.permissions.includes(getStringPermission({ action: 'update', feature: 'audience', tenantId })))) && (
+        {((isNewAudience && user.hasPermission({ action: 'create', feature: 'audience', tenantId })) ||
+          (!isNewAudience && user.hasPermission({ action: 'update', feature: 'audience', tenantId }))) && (
           <Button onClick={handleOnSave} variant="default">
             Save Audience
           </Button>

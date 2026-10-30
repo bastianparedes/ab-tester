@@ -6,7 +6,7 @@ import type React from 'react';
 import { useState } from 'react';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import { ComponentLanguage } from './Language';
 
 type Props = {
@@ -49,7 +49,7 @@ export function Sidebar({ children, tenant }: Props) {
                   <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isTestingExpanded ? '' : '-rotate-90'}`} />
                 </button>
                 <div id="testing-navigation" hidden={!isTestingExpanded}>
-                  {user.permissions.includes(getStringPermission({ action: 'read', feature: 'track-event', tenantId: tenant.id })) && (
+                  {user.hasPermission({ action: 'read', feature: 'track-event', tenantId: tenant.id }) && (
                     <a
                       href={constants.pages.trackEvents({ tenantId: tenant.id })}
                       className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
@@ -59,7 +59,7 @@ export function Sidebar({ children, tenant }: Props) {
                     </a>
                   )}
 
-                  {user.permissions.includes(getStringPermission({ action: 'read', feature: 'audience', tenantId: tenant.id })) && (
+                  {user.hasPermission({ action: 'read', feature: 'audience', tenantId: tenant.id }) && (
                     <a
                       href={constants.pages.audiences({ tenantId: tenant.id })}
                       className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
@@ -69,7 +69,7 @@ export function Sidebar({ children, tenant }: Props) {
                     </a>
                   )}
 
-                  {user.permissions.includes(getStringPermission({ action: 'read', feature: 'campaign', tenantId: tenant.id })) && (
+                  {user.hasPermission({ action: 'read', feature: 'campaign', tenantId: tenant.id }) && (
                     <a
                       href={constants.pages.campaigns({ tenantId: tenant.id })}
                       className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
@@ -79,7 +79,7 @@ export function Sidebar({ children, tenant }: Props) {
                     </a>
                   )}
 
-                  {user.permissions.includes(getStringPermission({ action: 'read', feature: 'execution-group', tenantId: tenant.id })) && (
+                  {user.hasPermission({ action: 'read', feature: 'execution-group', tenantId: tenant.id }) && (
                     <a
                       href={constants.pages.executionGroups({ tenantId: tenant.id })}
                       className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
@@ -129,19 +129,19 @@ export function Sidebar({ children, tenant }: Props) {
                 <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isAdministrationExpanded ? '' : '-rotate-90'}`} />
               </button>
               <div id="administration-navigation" hidden={!isAdministrationExpanded}>
-                {user.permissions.includes(getStringPermission({ action: 'read', feature: 'tenant' })) && (
+                {user.hasPermission({ action: 'read', feature: 'tenant' }) && (
                   <a href={constants.pages.tenants()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
                     <Building2 className="w-5 h-5" />
                     <span className="text-sm font-medium">{translation.common.tenants}</span>
                   </a>
                 )}
-                {user.permissions.includes(getStringPermission({ action: 'read', feature: 'role' })) && (
+                {user.hasPermission({ action: 'read', feature: 'role' }) && (
                   <a href={constants.pages.roles()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
                     <Shield className="w-5 h-5" />
                     <span className="text-sm font-medium">{translation.common.roles}</span>
                   </a>
                 )}
-                {user.permissions.includes(getStringPermission({ action: 'read', feature: 'user' })) && (
+                {user.hasPermission({ action: 'read', feature: 'user' }) && (
                   <a href={constants.pages.users()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
                     <Users className="w-5 h-5" />
                     <span className="text-sm font-medium">{translation.common.users}</span>

@@ -4,7 +4,7 @@ import type { TypeTenant } from '@ab-tester/constants/types/tenant';
 import { Boxes, Code, Database, Eye, FlaskConical, Tags, Workflow } from 'lucide-react';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 
 type Props = {
   tenant: TypeTenant;
@@ -20,45 +20,47 @@ export function ClientPage({ tenant }: Props) {
       href: constants.pages.trackEvents({ tenantId }),
       icon: Database,
       label: translation.common.trackEvents,
-      permission: getStringPermission({ action: 'read', feature: 'track-event', tenantId }),
+      userHasPermission: user.hasPermission({ action: 'read', feature: 'track-event', tenantId }),
     },
     {
       href: constants.pages.audiences({ tenantId }),
       icon: Tags,
       label: translation.common.audiences,
-      permission: getStringPermission({ action: 'read', feature: 'audience', tenantId }),
+      userHasPermission: user.hasPermission({ action: 'read', feature: 'audience', tenantId }),
     },
     {
       href: constants.pages.campaigns({ tenantId }),
       icon: FlaskConical,
       label: translation.common.campaigns,
-      permission: getStringPermission({ action: 'read', feature: 'campaign', tenantId }),
+      userHasPermission: user.hasPermission({ action: 'read', feature: 'campaign', tenantId }),
     },
     {
       href: constants.pages.executionGroups({ tenantId }),
       icon: Boxes,
       label: translation.common.executionGroups,
-      permission: getStringPermission({ action: 'read', feature: 'execution-group', tenantId }),
+      userHasPermission: user.hasPermission({ action: 'read', feature: 'execution-group', tenantId }),
     },
     {
       href: constants.pages.lifecycleHooks({ tenantId }),
       icon: Workflow,
       label: translation.common.lifecycleHooks,
+      userHasPermission: user.hasPermission({ action: 'read', feature: 'lifecycle-hook', tenantId }),
     },
     {
       href: constants.pages.script({ tenantId }),
       icon: Code,
       label: translation.common.scriptAndUrl,
+      userHasPermission: true,
     },
     {
       href: constants.pages.playground({ tenantId }),
       icon: Eye,
       label: translation.common.playground,
+      userHasPermission: true,
     },
   ];
 
-  const visibleLinks = links.filter((link) => !link.permission || user.permissions.includes(link.permission));
-
+  const visibleLinks = links.filter((link) => link.userHasPermission);
   return (
     <main className="bg-gray-100 p-8">
       <div className="mx-auto max-w-6xl">

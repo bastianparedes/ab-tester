@@ -8,7 +8,6 @@ import { Switch } from '@/app/_common/components/switch';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import { getStringPermission } from '@/config/constants';
 import { apiCaller } from '@/libs/restClient';
 
 const globalPermissions = [
@@ -72,7 +71,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
   const user = useUser();
 
   const currentRole = roles.find((r) => r.id === selectedRoleId);
-  const canUpdatePermissions = user.permissions.includes(getStringPermission({ action: 'update', feature: 'role' }));
+  const canUpdatePermissions = user.hasPermission({ action: 'update', feature: 'role' });
 
   const addRole = async () => {
     const data = await getDataFromForm(
@@ -152,7 +151,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
 
   const setAllPermissions = async (role: TypeRole, active: boolean) => {
     const scopePermissions = (scope === 'global' ? globalPermissions : tenantPermissions).map((permission) =>
-      getStringPermission({ ...permission, tenantId: scope === 'global' ? null : scope }),
+      user.getStringPermission({ ...permission, tenantId: scope === 'global' ? null : scope }),
     );
     const permissions = active ? [...new Set([...role.permissions, ...scopePermissions])] : role.permissions.filter((permission) => !scopePermissions.includes(permission));
     await updatePermissions(role, permissions);
@@ -168,7 +167,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
         </div>
 
         <div className="p-4 space-y-2">
-          {user.permissions.includes(getStringPermission({ action: 'create', feature: 'role' })) && (
+          {user.hasPermission({ action: 'create', feature: 'role' }) && (
             <button
               type="button"
               onClick={() => addRole()}
@@ -190,7 +189,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
               </button>
 
               {/* Separate button to delete a role */}
-              {user.permissions.includes(getStringPermission({ action: 'delete', feature: 'role' })) && (
+              {user.hasPermission({ action: 'delete', feature: 'role' }) && (
                 <button
                   type="button"
                   onClick={() => deleteRole(role)}
@@ -279,7 +278,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
             <div className="space-y-3">
               {scope === 'global' &&
                 globalPermissions.map((globalPermission) => {
-                  const stringPermission = getStringPermission({ action: globalPermission.action, feature: globalPermission.feature });
+                  const stringPermission = user.getStringPermission({ action: globalPermission.action, feature: globalPermission.feature });
                   const isActive = currentRole.permissions.includes(stringPermission);
 
                   return (
@@ -300,7 +299,7 @@ export function ClientPage({ initialRoles, tenants }: Props) {
 
               {typeof scope === 'number' &&
                 tenantPermissions.map((tenantPermission) => {
-                  const stringPermission = getStringPermission({ action: tenantPermission.action, feature: tenantPermission.feature, tenantId: scope });
+                  const stringPermission = user.getStringPermission({ action: tenantPermission.action, feature: tenantPermission.feature, tenantId: scope });
                   const isActive = currentRole.permissions.includes(stringPermission);
 
                   return (

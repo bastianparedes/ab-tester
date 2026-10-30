@@ -4,7 +4,7 @@ import { Building2, Shield, Users } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 
 export const ClientPage = () => {
   const user = useUser();
@@ -18,23 +18,23 @@ export const ClientPage = () => {
       href: constants.pages.tenants(),
       icon: Building2,
       label: translation.common.tenants,
-      permission: getStringPermission({ action: 'read', feature: 'tenant' }),
+      permission: user.hasPermission({ action: 'read', feature: 'tenant' }),
     },
     {
       href: constants.pages.roles(),
       icon: Shield,
       label: translation.common.roles,
-      permission: getStringPermission({ action: 'read', feature: 'role' }),
+      permission: user.hasPermission({ action: 'read', feature: 'role' }),
     },
     {
       href: constants.pages.users(),
       icon: Users,
       label: translation.common.users,
-      permission: getStringPermission({ action: 'read', feature: 'user' }),
+      permission: user.hasPermission({ action: 'read', feature: 'user' }),
     },
   ];
 
-  const visibleLinks = links.filter((link) => !link.permission || user.permissions.includes(link.permission));
+  const visibleLinks = links.filter((link) => link.permission);
 
   return (
     <main className="bg-gray-100 p-8">

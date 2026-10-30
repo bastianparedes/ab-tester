@@ -11,7 +11,7 @@ import { FormSection } from '@/app/_common/components/FormSection';
 import { Switch } from '@/app/_common/components/switch';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
-import constants, { getStringPermission } from '@/config/constants';
+import constants from '@/config/constants';
 import commonConstants from '@/config/sharedConstants';
 import { env } from '@/libs/env';
 import { apiCaller } from '@/libs/restClient';
@@ -247,8 +247,8 @@ const ClientPage = ({ initialExecutionGroup, initialCampaigns, tenantId, executi
           <Button onClick={returnToExecutionGroups} variant="destructive">
             {translation.executionGroup.cancel}
           </Button>
-          {((isNewExecutionGroup && user.permissions.includes(getStringPermission({ action: 'create', feature: 'execution-group', tenantId }))) ||
-            (!isNewExecutionGroup && user.permissions.includes(getStringPermission({ action: 'update', feature: 'execution-group', tenantId })))) && (
+          {((isNewExecutionGroup && user.hasPermission({ action: 'create', feature: 'execution-group', tenantId })) ||
+            (!isNewExecutionGroup && user.hasPermission({ action: 'update', feature: 'execution-group', tenantId }))) && (
             <Button disabled={!!userMadeChange} onClick={handleOnSave} variant="default">
               {translation.executionGroup.save}
             </Button>
