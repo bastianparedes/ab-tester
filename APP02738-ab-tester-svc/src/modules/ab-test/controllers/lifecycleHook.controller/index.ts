@@ -37,7 +37,7 @@ export class LifecycleHookController {
   ) {}
 
   @ZodResponse(lifecycleHookResponseSchemas.copy)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'read', feature: 'lifecycle-hook' }))
   @Post(':lifecycleHookId/copy')
   async copy(
     @Param('tenantId', ParseIntPipe) tenantId: number,
@@ -47,7 +47,7 @@ export class LifecycleHookController {
   ): Promise<TypeApiLifecycleHooks['copy']['response']> {
     const user = req.user;
     if (!user) throw new UnauthorizedException();
-    const createPermission = getStringPermission({ action: 'create', feature: 'tenant', tenantId: body.targetTenantId });
+    const createPermission = getStringPermission({ action: 'create', feature: 'lifecycle-hook', tenantId: body.targetTenantId });
     if (!user.roles.some((role) => role.permissions.includes(createPermission))) throw new ForbiddenException('Insufficient permissions');
 
     const copiedLifecycleHook = await this.dbService.lifecycleHooks.copy({
@@ -62,7 +62,7 @@ export class LifecycleHookController {
   }
 
   @ZodResponse(lifecycleHookResponseSchemas.getMany)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'read', feature: 'lifecycle-hook' }))
   @Get()
   async getMany(
     @Param('tenantId', ParseIntPipe) tenantId: number,
@@ -75,7 +75,7 @@ export class LifecycleHookController {
   }
 
   @ZodResponse(lifecycleHookResponseSchemas.get)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'read', feature: 'lifecycle-hook' }))
   @Get(':lifecycleHookId')
   async get(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('lifecycleHookId', ParseIntPipe) lifecycleHookId: number) {
     const lifecycleHook = await this.dbService.lifecycleHooks.get({
@@ -88,7 +88,7 @@ export class LifecycleHookController {
   }
 
   @ZodResponse(lifecycleHookResponseSchemas.create)
-  @UseGuards(AuthGuard({ action: 'create', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'create', feature: 'lifecycle-hook' }))
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
@@ -109,7 +109,7 @@ export class LifecycleHookController {
   }
 
   @ZodResponse(lifecycleHookResponseSchemas.update)
-  @UseGuards(AuthGuard({ action: 'update', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'update', feature: 'lifecycle-hook' }))
   @Put(':lifecycleHookId')
   async update(
     @Param('tenantId', ParseIntPipe) tenantId: number,
@@ -128,7 +128,7 @@ export class LifecycleHookController {
   }
 
   @ZodResponse(lifecycleHookResponseSchemas.remove)
-  @UseGuards(AuthGuard({ action: 'delete', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'delete', feature: 'lifecycle-hook' }))
   @Delete(':lifecycleHookId')
   async remove(@Param('tenantId', ParseIntPipe) tenantId: number, @Param('lifecycleHookId', ParseIntPipe) lifecycleHookId: number): Promise<Record<string, never>> {
     const lifecycleHook = await this.dbService.lifecycleHooks.remove({

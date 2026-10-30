@@ -81,8 +81,9 @@ describe('roles client page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Activate all' }));
     await waitFor(() => expect(update).toHaveBeenCalledTimes(3));
     const tenantPermissions = update.mock.calls[2][0].body.permissions;
-    expect(tenantPermissions).toHaveLength(20);
+    expect(tenantPermissions).toHaveLength(24);
     expect(tenantPermissions).toContain(getStringPermission({ action: 'create', feature: 'campaign', tenantId: 12 }));
+    expect(tenantPermissions).toContain(getStringPermission({ action: 'create', feature: 'lifecycle-hook', tenantId: 12 }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Deactivate all' }).hasAttribute('disabled')).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate all' }));

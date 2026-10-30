@@ -52,6 +52,11 @@ const tenantPermissions = [
   { action: 'read', feature: 'execution-group' },
   { action: 'update', feature: 'execution-group' },
   { action: 'delete', feature: 'execution-group' },
+
+  { action: 'create', feature: 'lifecycle-hook' },
+  { action: 'read', feature: 'lifecycle-hook' },
+  { action: 'update', feature: 'lifecycle-hook' },
+  { action: 'delete', feature: 'lifecycle-hook' },
 ] as const;
 
 type Props = {

@@ -19,6 +19,12 @@ export const permissions: TypePermissions = {
     read: 'execution-group.read',
     update: 'execution-group.update',
   },
+  lifecycleHook: {
+    create: 'lifecycle-hook.create',
+    delete: 'lifecycle-hook.delete',
+    read: 'lifecycle-hook.read',
+    update: 'lifecycle-hook.update',
+  },
   role: {
     create: 'role.create',
     delete: 'role.delete',

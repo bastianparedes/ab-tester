@@ -52,7 +52,7 @@ describe('LifecycleHookController', () => {
     const request = {
       user: {
         id: 7,
-        roles: [{ permissions: ['tenant.13.feature.tenant.action.create'] }],
+        roles: [{ permissions: ['tenant.13.feature.lifecycle-hook.action.create'] }],
       },
     };
 

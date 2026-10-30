@@ -53,6 +53,7 @@ describe('Sidebar', () => {
       getStringPermission({ action: 'read', feature: 'audience', tenantId: tenant.id }),
       getStringPermission({ action: 'read', feature: 'campaign', tenantId: tenant.id }),
       getStringPermission({ action: 'read', feature: 'execution-group', tenantId: tenant.id }),
+      getStringPermission({ action: 'read', feature: 'lifecycle-hook', tenantId: tenant.id }),
     ];
     renderWithProviders(<Sidebar tenant={tenant}>Content</Sidebar>, permissions);
 
@@ -60,6 +61,13 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Audiences' }).getAttribute('href')).toBe('/tenants/12/audiences');
     expect(screen.getByRole('link', { name: 'Campaigns' }).getAttribute('href')).toBe('/tenants/12/campaigns');
     expect(screen.getByRole('link', { name: 'Execution groups' }).getAttribute('href')).toBe('/tenants/12/execution-groups');
+    expect(screen.getByRole('link', { name: 'Lifecycle hooks' }).getAttribute('href')).toBe('/tenants/12/lifecycle-hooks');
+  });
+
+  it('hides the Lifecycle hooks link without its read permission', () => {
+    renderWithProviders(<Sidebar tenant={tenant}>Content</Sidebar>);
+
+    expect(screen.queryByRole('link', { name: 'Lifecycle hooks' })).toBeNull();
   });
 
   it('collapses and expands the Testing navigation independently', () => {

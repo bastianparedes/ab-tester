@@ -89,13 +89,15 @@ export function Sidebar({ children, tenant }: Props) {
                     </a>
                   )}
 
-                  <a
-                    href={constants.pages.lifecycleHooks({ tenantId: tenant.id })}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                  >
-                    <Workflow className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.lifecycleHooks}</span>
-                  </a>
+                  {user.hasPermission({ action: 'read', feature: 'lifecycle-hook', tenantId: tenant.id }) && (
+                    <a
+                      href={constants.pages.lifecycleHooks({ tenantId: tenant.id })}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
+                    >
+                      <Workflow className="w-5 h-5" />
+                      <span className="text-sm font-medium">{translation.common.lifecycleHooks}</span>
+                    </a>
+                  )}
 
                   <a
                     href={constants.pages.script({ tenantId: tenant.id })}

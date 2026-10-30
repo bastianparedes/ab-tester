@@ -3,7 +3,7 @@ import { TypeTenant } from '@ab-tester/constants/types/tenant';
 type TypeAction = 'create' | 'delete' | 'read' | 'update';
 type Props = {
   tenantId?: null | TypeTenant['id'];
-  feature: 'role' | 'user' | 'audience' | 'campaign' | 'execution-group' | 'track-event' | 'tenant';
+  feature: 'role' | 'user' | 'audience' | 'campaign' | 'execution-group' | 'lifecycle-hook' | 'track-event' | 'tenant';
   action: TypeAction;
 };
 
