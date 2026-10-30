@@ -75,5 +75,5 @@ src/
 
 Routes live under `src/app`. Tenant-specific screens use dynamic route segments
 such as `[tenantId]`; shared components and contexts are under
-`src/app/_common`. The frontend uses HTTP requests and Socket.IO to communicate
-with the backend.
+`src/app/_common`. The frontend uses HTTP requests to communicate with the
+backend.

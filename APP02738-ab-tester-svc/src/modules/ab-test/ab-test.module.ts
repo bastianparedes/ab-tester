@@ -8,11 +8,9 @@ import { HealthController } from './controllers/health.controller';
 import { LifecycleHookController } from './controllers/lifecycleHook.controller';
 import { ScriptController } from './controllers/script.controller';
 import { TrackEventController } from './controllers/trackEvent.controller';
-import { EventsGateway } from './gateways/campaigns.gateway';
 
 @Module({
   controllers: [AudiencesController, TrackEventController, CampaignsController, HealthController, LifecycleHookController, ScriptController, ExecutionGroupsController],
   imports: [CommonModule],
-  providers: [EventsGateway],
 })
 export class AbTestModule {}

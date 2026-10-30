@@ -1,7 +1,7 @@
 # AB Tester Service
 
-The AB Tester backend API, built with NestJS. It provides the REST and
-Socket.IO services used by the AB Tester UI and client script.
+The AB Tester backend API, built with NestJS. It provides the REST services
+used by the AB Tester UI and client script.
 
 ## Requirements
 

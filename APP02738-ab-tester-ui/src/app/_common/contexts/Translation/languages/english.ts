@@ -297,15 +297,6 @@ const labels = {
     },
     updatedAt: 'Updated at',
   },
-  liveViewers: {
-    morePeople: 'more people',
-    morePerson: 'more person',
-    peopleViewing: 'people viewing',
-    reloadToMakeChanges: 'Reload the page to make changes',
-    total: 'total',
-    updatedThisData: 'updated this data',
-    watchingNow: 'Watching now',
-  },
   notFound: {
     backToHome: 'Back to home',
     description: 'Sorry, the page you are looking for does not exist or has been moved.',
