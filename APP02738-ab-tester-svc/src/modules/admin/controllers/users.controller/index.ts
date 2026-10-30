@@ -19,7 +19,7 @@ export class UsersController {
   constructor(private readonly dbService: DbService) {}
 
   @ZodResponse(userResponseSchemas.getAll)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'user' }))
+  @UseGuards(AuthGuard({ action: 'read', allowSuperAdmin: true, feature: 'user' }))
   @Get()
   async getAll(): Promise<TypeApiUsers['getAll']['response']> {
     const users = await this.dbService.users.getAll();
@@ -44,7 +44,7 @@ export class UsersController {
   }
 
   @ZodResponse(userResponseSchemas.create)
-  @UseGuards(AuthGuard({ action: 'create', feature: 'user' }))
+  @UseGuards(AuthGuard({ action: 'create', allowSuperAdmin: true, feature: 'user' }))
   @Post()
   async create(
     @Body({ schema: newUserSchema }) body: AssertEqual<z.infer<typeof newUserSchema>, TypeApiUsers['create']['request']['body']>,
@@ -59,7 +59,7 @@ export class UsersController {
   }
 
   @ZodResponse(userResponseSchemas.update)
-  @UseGuards(AuthGuard({ action: 'update', feature: 'user' }))
+  @UseGuards(AuthGuard({ action: 'update', allowSuperAdmin: true, feature: 'user' }))
   @Put(':userId')
   async update(
     @Param('userId') userId: TypeUser['id'],
@@ -78,7 +78,7 @@ export class UsersController {
   }
 
   @ZodResponse(userResponseSchemas.remove)
-  @UseGuards(AuthGuard({ action: 'delete', feature: 'user' }))
+  @UseGuards(AuthGuard({ action: 'delete', allowSuperAdmin: true, feature: 'user' }))
   @Delete(':userId')
   async remove(@Param('userId', ParseIntPipe) userId: number, @Req() req: Request): Promise<TypeApiUsers['delete']['response']> {
     const user = req.user;

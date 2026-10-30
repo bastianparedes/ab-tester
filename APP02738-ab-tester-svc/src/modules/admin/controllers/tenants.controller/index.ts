@@ -15,7 +15,7 @@ export class TenantsController {
   constructor(private readonly dbService: DbService) {}
 
   @ZodResponse(tenantResponseSchemas.getAll)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'tenant' }))
+  @UseGuards(AuthGuard({ action: 'read', allowSuperAdmin: true, feature: 'tenant' }))
   @Get()
   async getAll(): Promise<TypeApiTenants['getAll']['response']> {
     const tenants = await this.dbService.tenants.getAll();

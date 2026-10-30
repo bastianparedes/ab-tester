@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./src/repositories/postgres/migrations:/docker-entrypoint-initdb.d
+      - ./src/modules/common/repositories/postgres/migrations:/docker-entrypoint-initdb.d
 
   db-redis:
     tty: true

@@ -1,11 +1,12 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, mixin, Type, UnauthorizedException } from '@nestjs/common';
 import { getTokenData } from '../../../libs/auth/jwt';
 import { getStringPermission } from '../../../libs/auth/permissions';
-import { cookieNames } from '../../../libs/constants';
+import { cookieNames, superAdminId } from '../../../libs/constants';
 import { type Request } from '../../../types/request';
 import { DbService } from '../services/db.service';
 
 export function AuthGuard(permissionData: {
+  allowSuperAdmin?: boolean;
   feature: Parameters<typeof getStringPermission>[0]['feature'];
   action: Parameters<typeof getStringPermission>[0]['action'];
 }): Type<CanActivate> {
@@ -33,6 +34,11 @@ export function AuthGuard(permissionData: {
 
       if (!user) {
         throw new UnauthorizedException('User not found');
+      }
+
+      if (permissionData.allowSuperAdmin && user.id === superAdminId) {
+        request.user = user;
+        return true;
       }
 
       const tenantId = request.params.tenantId ? Number(request.params.tenantId) : null;

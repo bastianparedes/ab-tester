@@ -8,6 +8,7 @@ export const getUserFromCookies = async (): Promise<TypeFullUser> => {
       data: null,
       isLogedIn: false,
       permissions: [],
+      isSuperUser: false,
     };
 
   const user = await userResponse.json();
@@ -23,5 +24,6 @@ export const getUserFromCookies = async (): Promise<TypeFullUser> => {
     data: user,
     isLogedIn: true,
     permissions: permissions,
+    isSuperUser: user.id === -1,
   };
 };

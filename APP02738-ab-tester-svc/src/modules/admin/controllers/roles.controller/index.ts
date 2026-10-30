@@ -15,7 +15,7 @@ export class RolesController {
   constructor(private readonly dbService: DbService) {}
 
   @ZodResponse(roleResponseSchemas.getAll)
-  @UseGuards(AuthGuard({ action: 'read', feature: 'role' }))
+  @UseGuards(AuthGuard({ action: 'read', allowSuperAdmin: true, feature: 'role' }))
   @Get()
   async getAll(): Promise<TypeApiRoles['getAll']['response']> {
     const roles = await this.dbService.roles.getAll();
@@ -23,7 +23,7 @@ export class RolesController {
   }
 
   @ZodResponse(roleResponseSchemas.create)
-  @UseGuards(AuthGuard({ action: 'create', feature: 'role' }))
+  @UseGuards(AuthGuard({ action: 'create', allowSuperAdmin: true, feature: 'role' }))
   @Post()
   async create(
     @Body({ schema: roleSchema }) body: AssertEqual<z.infer<typeof roleSchema>, TypeApiRoles['create']['request']['body']>,
@@ -33,7 +33,7 @@ export class RolesController {
   }
 
   @ZodResponse(roleResponseSchemas.update)
-  @UseGuards(AuthGuard({ action: 'update', feature: 'role' }))
+  @UseGuards(AuthGuard({ action: 'update', allowSuperAdmin: true, feature: 'role' }))
   @Put(':roleId')
   async update(
     @Param('roleId', ParseIntPipe) roleId: number,
@@ -48,7 +48,7 @@ export class RolesController {
   }
 
   @ZodResponse(roleResponseSchemas.remove)
-  @UseGuards(AuthGuard({ action: 'delete', feature: 'role' }))
+  @UseGuards(AuthGuard({ action: 'delete', allowSuperAdmin: true, feature: 'role' }))
   @Delete(':roleId')
   async remove(@Param('roleId', ParseIntPipe) roleId: number): Promise<TypeApiRoles['delete']['response']> {
     await this.dbService.roles.remove({ roleId });
