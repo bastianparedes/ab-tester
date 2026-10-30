@@ -414,7 +414,7 @@ export function applySwaggerDocumentation(): void {
     refreshToken: [
       ApiOperation({
         description:
-          'Reads the `refreshToken` cookie, rotates it, and sets new `refreshToken` and `accessToken` HttpOnly cookies. Call this endpoint before protected endpoints when you need a fresh access token. The browser stores the returned cookies automatically. Returns an empty response if no valid refresh token is available.',
+          'Reads the `refreshToken` cookie and sets a new `accessToken` HttpOnly cookie without rotating the refresh token. Call this endpoint before protected endpoints when you need a fresh access token. The browser stores the returned cookie automatically. Returns an empty response if no valid refresh token is available.',
         summary: 'Refresh session',
       }),
       ApiCookieAuth('cookie'),

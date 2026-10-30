@@ -13,7 +13,7 @@ export function setupSwagger(app: INestApplication): void {
         '',
         '1. If you do not have a refresh token, sign in with `POST /auth/session`. The response sets both the `refreshToken` and `accessToken` cookies.',
         '',
-        '2. To obtain a fresh access token, call `GET /auth/session/refresh` with the `refreshToken` cookie. A valid refresh token is rotated, and the response sets a new `refreshToken` and `accessToken` cookie.',
+        '2. To obtain a fresh access token, call `GET /auth/session/refresh` with the `refreshToken` cookie. The response sets a new `accessToken` cookie and keeps the existing refresh token.',
         '',
         '3. Once the refresh request succeeds, call protected endpoints normally. They authenticate with the `accessToken` cookie.',
         '',

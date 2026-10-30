@@ -89,31 +89,20 @@ export class AuthController {
 
     const refreshTokenInCache = await this.cacheService.refreshToken.get({ userId });
     if (refreshTokenInCache === oldRefreshToken) {
-      const newRefreshToken = generateToken({ id: userId, purpose: 'refresh_token' });
-      await this.cacheService.refreshToken.save({ refreshToken: newRefreshToken, userId });
-
       const newAccessToken = generateToken({ id: userId, purpose: 'access' });
-
-      const refreshToken = {
-        milisecondsDuration: secondsRefreshTokenIsValid * 1000,
-        name: cookieNames.refreshToken,
-        value: newRefreshToken,
-      };
       const accessToken = {
         milisecondsDuration: secondsAccessTokenIsValid * 1000,
         name: cookieNames.accessToken,
         value: newAccessToken,
       };
 
-      [refreshToken, accessToken].forEach((token) => {
-        res.cookie(token.name, token.value, {
-          domain: env.DOMAIN,
-          httpOnly: true,
-          maxAge: token.milisecondsDuration,
-          path: '/',
-          sameSite: 'none',
-          secure: true,
-        });
+      res.cookie(accessToken.name, accessToken.value, {
+        domain: env.DOMAIN,
+        httpOnly: true,
+        maxAge: accessToken.milisecondsDuration,
+        path: '/',
+        sameSite: 'none',
+        secure: true,
       });
     } else {
       this.cacheService.refreshToken.clear({ userId });
