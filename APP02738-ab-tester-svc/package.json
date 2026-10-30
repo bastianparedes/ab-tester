@@ -50,7 +50,7 @@
   "scripts": {
     "build": "nest build",
     "build:script": "vite build",
-    "generate-migration": "drizzle-kit generate --dialect=postgresql --schema=./src/repositories/postgres/schema.ts --out=./src/repositories/postgres/migrations",
+    "generate-migration": "drizzle-kit generate --dialect=postgresql --schema=./src/modules/common/repositories/postgres/schema.ts --out=./src/modules/common/repositories/postgres/migrations",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "postbuild": "npm run build:script",
