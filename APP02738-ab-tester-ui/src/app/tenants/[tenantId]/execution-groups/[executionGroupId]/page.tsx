@@ -15,18 +15,19 @@ const Page = async (props: PageProps) => {
   const tenantId = Number(params.tenantId);
   const executionGroupId = Number(params.executionGroupId);
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, executionGroupResponse, allCampaignsResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.executionGroups.get({ pathParams: { executionGroupId, tenantId } }),
+    apiCaller.campaigns.getAllForExecutionGroup({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const executionGroupResponse = await apiCaller.executionGroups.get({ pathParams: { executionGroupId, tenantId } });
   if (!executionGroupResponse.ok) return redirect(constants.pages.executionGroups({ tenantId }));
-
-  const { executionGroup: initialExecutionGroup, campaigns: initialCampaigns } = await executionGroupResponse.json();
-
-  const allCampaignsResponse = await apiCaller.campaigns.getAllForExecutionGroup({ pathParams: { tenantId } });
   if (!allCampaignsResponse.ok) return redirect(constants.pages.executionGroups({ tenantId }));
-  const { campaigns: allCampaigns } = await allCampaignsResponse.json();
+  const [tenant, { executionGroup: initialExecutionGroup, campaigns: initialCampaigns }, { campaigns: allCampaigns }] = await Promise.all([
+    tenantResponse.json(),
+    executionGroupResponse.json(),
+    allCampaignsResponse.json(),
+  ]);
 
   return (
     <Navigation

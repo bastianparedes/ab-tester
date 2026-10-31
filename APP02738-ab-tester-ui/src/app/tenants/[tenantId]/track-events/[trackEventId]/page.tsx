@@ -15,14 +15,13 @@ const Page = async (props: PageProps) => {
   const tenantId = Number(params.tenantId);
   const trackEventId = Number(params.trackEventId);
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, response] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.trackEvents.get({ pathParams: { tenantId, trackEventId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const response = await apiCaller.trackEvents.get({ pathParams: { tenantId, trackEventId } });
   if (!response.ok) return redirect(constants.pages.trackEvents({ tenantId }));
-
-  const { trackEvent: initialTrackEvent } = await response.json();
+  const [tenant, { trackEvent: initialTrackEvent }] = await Promise.all([tenantResponse.json(), response.json()]);
 
   return (
     <Navigation

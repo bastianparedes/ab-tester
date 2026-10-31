@@ -15,17 +15,15 @@ const Page = async (props: PageProps) => {
   const tenantId = Number(params.tenantId);
   const audienceId = Number(params.audienceId);
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, audienceResponse, trackEventsResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.audiences.get({ pathParams: { audienceId, tenantId } }),
+    apiCaller.trackEvents.getAllForAudience({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const audienceResponse = await apiCaller.audiences.get({ pathParams: { audienceId, tenantId } });
   if (!audienceResponse.ok) return redirect(constants.pages.audiences({ tenantId }));
-  const initialAudience = await audienceResponse.json();
-
-  const trackEventsResponse = await apiCaller.trackEvents.getAllForAudience({ pathParams: { tenantId } });
   if (!trackEventsResponse.ok) return redirect(constants.pages.tenants());
-  const { trackEvents } = await trackEventsResponse.json();
+  const [tenant, initialAudience, { trackEvents }] = await Promise.all([tenantResponse.json(), audienceResponse.json(), trackEventsResponse.json()]);
   if (trackEvents.length === 0) return redirect(constants.pages.trackEvents({ tenantId }));
 
   return (

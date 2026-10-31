@@ -1,13 +1,14 @@
 import { TypeUser } from '@ab-tester/constants/types/user';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createClient } from 'redis';
 import { secondsRefreshTokenIsValid } from '../../../libs/auth/jwt';
 import { env } from '../../../libs/env';
 
+const logger = new Logger('Redis');
 const client = createClient({
   url: env.DATABASE_URL_REDIS,
 });
-client.connect();
+client.on('error', (error) => logger.error('Redis client error', error));
 
 /* ============================================================
  * Generic cache helpers
@@ -27,7 +28,15 @@ const cache = {
 };
 
 @Injectable()
-export class CacheService {
+export class CacheService implements OnModuleInit, OnModuleDestroy {
+  async onModuleDestroy(): Promise<void> {
+    if (client.isOpen) await client.quit();
+  }
+
+  async onModuleInit(): Promise<void> {
+    await client.connect();
+  }
+
   scripts = {
     async del({ tenantId }: { tenantId: number }): Promise<void> {
       const key = `tenant:${tenantId}:public_script`;

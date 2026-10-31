@@ -50,13 +50,12 @@ type PageProps = {
   }>;
 };
 const Page = async (props: PageProps) => {
-  const params = await props.params;
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const tenantId = Number(params.tenantId);
 
-  const { cloneFrom } = await props.searchParams;
-  const initialTrackEvent = await getTrackEventInitialData({ cloneFrom, tenantId });
+  const { cloneFrom } = searchParams;
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [initialTrackEvent, tenantResponse] = await Promise.all([getTrackEventInitialData({ cloneFrom, tenantId }), apiCaller.tenants.get({ pathParams: { tenantId } })]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
   const tenant = await tenantResponse.json();
 

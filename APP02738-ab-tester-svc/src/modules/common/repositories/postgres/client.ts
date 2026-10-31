@@ -6,7 +6,7 @@ import * as schema from './schema';
 
 const pool = new Pool({
   connectionString: env.DATABASE_URL_POSTGRES,
-  max: 1,
+  max: env.PG_POOL_MAX,
 });
 
 const db = drizzle(pool, { schema });

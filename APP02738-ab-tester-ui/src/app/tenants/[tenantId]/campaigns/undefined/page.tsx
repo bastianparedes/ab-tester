@@ -41,19 +41,18 @@ type PageProps = {
   }>;
 };
 const Page = async (props: PageProps) => {
-  const params = await props.params;
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const tenantId = Number(params.tenantId);
+  const { cloneFrom } = searchParams;
 
-  const { cloneFrom } = await props.searchParams;
-  const initialCampaign = await getCampaignInitialData({ cloneFrom, tenantId });
-
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [initialCampaign, tenantResponse, audiencesResponse] = await Promise.all([
+    getCampaignInitialData({ cloneFrom, tenantId }),
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.audiences.getAllForCampaign({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const audiencesResponse = await apiCaller.audiences.getAllForCampaign({ pathParams: { tenantId } });
   if (!audiencesResponse.ok) return redirect(constants.pages.tenants());
-  const { audiences } = await audiencesResponse.json();
+  const [tenant, { audiences }] = await Promise.all([tenantResponse.json(), audiencesResponse.json()]);
 
   return (
     <Navigation

@@ -15,17 +15,15 @@ const Page = async (props: PageProps) => {
   const tenantId = Number(params.tenantId);
   const campaignId = Number(params.campaignId);
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, campaignResponse, audiencesResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.campaigns.get({ pathParams: { campaignId, tenantId } }),
+    apiCaller.audiences.getAllForCampaign({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const campaignResponse = await apiCaller.campaigns.get({ pathParams: { campaignId, tenantId } });
   if (!campaignResponse.ok) return redirect(constants.pages.campaigns({ tenantId }));
-  const initialCampaign = await campaignResponse.json();
-
-  const audiencesResponse = await apiCaller.audiences.getAllForCampaign({ pathParams: { tenantId } });
   if (!audiencesResponse.ok) return redirect(constants.pages.tenants());
-  const { audiences } = await audiencesResponse.json();
+  const [tenant, initialCampaign, { audiences }] = await Promise.all([tenantResponse.json(), campaignResponse.json(), audiencesResponse.json()]);
 
   return (
     <Navigation

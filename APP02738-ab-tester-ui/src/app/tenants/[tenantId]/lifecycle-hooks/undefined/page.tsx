@@ -14,12 +14,21 @@ type PageProps = {
   }>;
 };
 export default async function Page({ params, searchParams }: PageProps) {
-  const tenantId = Number((await params).tenantId);
-  const response = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const tenantId = Number(resolvedParams.tenantId);
+  const { cloneFrom } = resolvedSearchParams;
+  const lifecycleHookId = cloneFrom === undefined ? undefined : Number(cloneFrom);
+  if (lifecycleHookId !== undefined && (!Number.isInteger(lifecycleHookId) || lifecycleHookId < 1)) {
+    redirect(constants.pages.lifecycleHooks({ tenantId }));
+  }
+
+  const [response, cloneResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    lifecycleHookId === undefined ? Promise.resolve(undefined) : apiCaller.lifecycleHooks.get({ pathParams: { lifecycleHookId, tenantId } }),
+  ]);
   if (!response.ok) redirect(constants.pages.logIn());
 
   const tenant = await response.json();
-  const { cloneFrom } = await searchParams;
   let initialLifecycleHook: TypeLifecycleHook = {
     javascript: createInitialLifecycleHookJavascript('scriptStart'),
     name: '',
@@ -27,10 +36,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     tenantId,
     trigger: 'scriptStart',
   };
-  if (cloneFrom !== undefined) {
-    const lifecycleHookId = Number(cloneFrom);
-    if (!Number.isInteger(lifecycleHookId) || lifecycleHookId < 1) redirect(constants.pages.lifecycleHooks({ tenantId }));
-    const cloneResponse = await apiCaller.lifecycleHooks.get({ pathParams: { lifecycleHookId, tenantId } });
+  if (cloneResponse !== undefined) {
     if (!cloneResponse.ok) redirect(constants.pages.lifecycleHooks({ tenantId }));
     const { lifecycleHook } = await cloneResponse.json();
     initialLifecycleHook = {

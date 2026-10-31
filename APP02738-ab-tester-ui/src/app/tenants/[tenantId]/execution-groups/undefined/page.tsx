@@ -13,12 +13,13 @@ const Page = async (props: PageProps) => {
   const params = await props.params;
   const tenantId = Number(params.tenantId);
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, allCampaignsResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.campaigns.getAllForExecutionGroup({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-  const allCampaignsResponse = await apiCaller.campaigns.getAllForExecutionGroup({ pathParams: { tenantId } });
   if (!allCampaignsResponse.ok) return redirect(constants.pages.executionGroups({ tenantId }));
-  const { campaigns } = await allCampaignsResponse.json();
+  const [tenant, { campaigns }] = await Promise.all([tenantResponse.json(), allCampaignsResponse.json()]);
 
   return (
     <Navigation

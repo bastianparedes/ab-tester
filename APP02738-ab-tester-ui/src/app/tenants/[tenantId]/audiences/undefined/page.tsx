@@ -36,19 +36,19 @@ type PageProps = {
   }>;
 };
 const Page = async (props: PageProps) => {
-  const params = await props.params;
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const tenantId = Number(params.tenantId);
 
-  const { cloneFrom } = await props.searchParams;
-  const initialAudience = await getAudienceInitialData({ cloneFrom, tenantId });
+  const { cloneFrom } = searchParams;
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [initialAudience, tenantResponse, trackEventsResponse] = await Promise.all([
+    getAudienceInitialData({ cloneFrom, tenantId }),
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.trackEvents.getAllForAudience({ pathParams: { tenantId } }),
+  ]);
   if (!tenantResponse.ok) return redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const trackEventsResponse = await apiCaller.trackEvents.getAllForAudience({ pathParams: { tenantId } });
   if (!trackEventsResponse.ok) return redirect(constants.pages.tenants());
-  const { trackEvents } = await trackEventsResponse.json();
+  const [tenant, { trackEvents }] = await Promise.all([tenantResponse.json(), trackEventsResponse.json()]);
 
   return (
     <Navigation

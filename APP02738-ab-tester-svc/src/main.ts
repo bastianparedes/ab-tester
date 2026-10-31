@@ -9,6 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new StandardSchemaValidationPipe());
   app.use(cookieParser());
+  app.enableShutdownHooks();
 
   setupSwagger(app);
 

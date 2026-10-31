@@ -55,6 +55,7 @@ settings include:
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL_POSTGRES` | PostgreSQL connection string. In Compose, use the `db-postgres` service as the host. |
+| `PG_POOL_MAX` | Maximum PostgreSQL connections per service instance; defaults to `10`. Set this with the database's total connection budget in mind. |
 | `DATABASE_URL_REDIS` | Redis connection URL. In Compose, use the `db-redis` service as the host. |
 | `JWT_SECRET` | Secret used to sign and verify authentication tokens. |
 | `SALT_ROUNDS` | Work factor used when hashing passwords. |
@@ -91,6 +92,12 @@ npm run start:dev
 The development command watches the NestJS service and rebuilds the client
 script when its sources change. Configure database connection URLs to use the
 addresses of your local PostgreSQL and Redis instances.
+
+## Continuous integration
+
+The GitHub Actions workflow runs lint, build, and the available test suite for
+each package when a pull request is opened or updated, and on pushes to `main`.
+The packages use Node.js 26 as specified by their `.nvmrc` files.
 
 ## Development commands
 

@@ -1,4 +1,4 @@
-import { env } from '@/libs/env';
+import { getBackendUrl } from '@/libs/env';
 import { withLoader } from '@/utils/hof';
 
 export async function getCookies(): Promise<string> {
@@ -22,7 +22,7 @@ const constructRequest = (method: 'GET' | 'POST' | 'PUT' | 'DELETE') => {
     body?: Record<string, unknown>;
   }): Promise<({ ok: true; json: () => Promise<T>; text: () => Promise<string> } & Response) | { ok: false }> => {
     const isServerSide = typeof window === 'undefined';
-    const baseUrl = isServerSide ? env.NEXT_PUBLIC_BACKEND_URL_FROM_SERVER_SIDE : env.NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE;
+    const baseUrl = getBackendUrl(isServerSide);
 
     const objectUrl = new URL(baseUrl + url);
     const cookies = await getCookies();
@@ -50,30 +50,26 @@ const constructRequest = (method: 'GET' | 'POST' | 'PUT' | 'DELETE') => {
     };
 
     try {
-      console.info('Making fetch to', objectUrl.toString());
-
       const originalResponse = await makeFetch();
       if (originalResponse.status === 401) {
-        console.warn('Access token expired, refreshing...');
+        console.warn('Access token expired; refreshing session.');
 
-        const refreshTokenUrl = new URL(`${baseUrl}/auth/session/refresh`);
+        const refreshTokenUrl = new URL(`${baseUrl}/public/auth/session/refresh`);
         const refreshResponse = await fetch(refreshTokenUrl.toString(), {
           credentials: 'include',
         });
 
         if (refreshResponse.ok) {
-          console.info('Refresh succeeded, retrying original request...');
-
           return await makeFetch();
         } else {
-          console.error('Refresh token failed');
+          console.error('Session refresh failed', { path: refreshTokenUrl.pathname, status: refreshResponse.status });
           return { ok: false };
         }
       }
 
       return originalResponse;
     } catch (error) {
-      console.error(error);
+      console.error('Backend request failed', { error, method, path: objectUrl.pathname });
       return { ok: false };
     }
   };

@@ -19,13 +19,13 @@ export default async function Page({ params }: PageProps) {
     redirect(constants.pages.tenants());
   }
 
-  const tenantResponse = await apiCaller.tenants.get({ pathParams: { tenantId } });
+  const [tenantResponse, lifecycleHookResponse] = await Promise.all([
+    apiCaller.tenants.get({ pathParams: { tenantId } }),
+    apiCaller.lifecycleHooks.get({ pathParams: { lifecycleHookId, tenantId } }),
+  ]);
   if (!tenantResponse.ok) redirect(constants.pages.tenants());
-  const tenant = await tenantResponse.json();
-
-  const lifecycleHookResponse = await apiCaller.lifecycleHooks.get({ pathParams: { lifecycleHookId, tenantId } });
   if (!lifecycleHookResponse.ok) redirect(constants.pages.lifecycleHooks({ tenantId }));
-  const { lifecycleHook } = await lifecycleHookResponse.json();
+  const [tenant, { lifecycleHook }] = await Promise.all([tenantResponse.json(), lifecycleHookResponse.json()]);
 
   return (
     <Navigation
