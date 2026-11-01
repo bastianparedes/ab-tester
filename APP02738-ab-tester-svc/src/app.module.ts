@@ -15,7 +15,7 @@ import { CommonModule } from './modules/common/common.module';
     RouterModule.register([
       { module: AuthModule, path: 'auth' },
       { module: AdminModule, path: 'admin' },
-      { module: AbTestModule, path: 'ab-test/tenants/:tenantId' },
+      { module: AbTestModule, path: 'tenants/:tenantId/ab-test' },
     ]),
   ],
   providers: [],
