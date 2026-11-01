@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { app, create, document } = vi.hoisted(() => {
+const { app, create } = vi.hoisted(() => {
   const app = {
     enableCors: vi.fn(),
     listen: vi.fn(),
@@ -8,51 +8,15 @@ const { app, create, document } = vi.hoisted(() => {
     useGlobalPipes: vi.fn(),
   };
   const create = vi.fn().mockResolvedValue(app);
-  const document = { openapi: '3.0.0' };
-  return { app, create, document };
+  return { app, create };
 });
 
 vi.mock('@nestjs/core', async (importOriginal) => {
   const original = await importOriginal<typeof import('@nestjs/core')>();
   return { ...original, NestFactory: { create } };
 });
-vi.mock('@nestjs/swagger', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@nestjs/swagger')>();
-  return {
-    ...original,
-    DocumentBuilder: class {
-      addTag() {
-        return this;
-      }
-      addCookieAuth() {
-        return this;
-      }
-      setDescription() {
-        return this;
-      }
-      setTitle() {
-        return this;
-      }
-      setVersion() {
-        return this;
-      }
-      build() {
-        return document;
-      }
-    },
-    SwaggerModule: {
-      createDocument: vi.fn(() => document),
-      setup: vi.fn(),
-    },
-  };
-});
-vi.mock('../swagger/zod-openapi', () => ({
-  appendZodResponseSchemas: vi.fn(),
-  registerZodResponseSchema: vi.fn(),
-}));
 
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule } from '@nestjs/swagger';
 
 describe('application bootstrap', () => {
   beforeEach(() => {
@@ -61,28 +25,13 @@ describe('application bootstrap', () => {
     app.listen.mockImplementation(() => Promise.resolve());
   });
 
-  it('configures Nest middleware, Swagger, CORS, and the HTTP listener', async () => {
+  it('configures Nest middleware, CORS, and the HTTP listener', async () => {
     await import('../main.js');
     await vi.waitFor(() => expect(app.listen).toHaveBeenCalledOnce());
 
     expect(NestFactory.create).toHaveBeenCalledOnce();
     expect(app.useGlobalPipes).toHaveBeenCalledOnce();
     expect(app.use).toHaveBeenCalledOnce();
-    expect(SwaggerModule.createDocument).toHaveBeenCalledOnce();
-    expect(SwaggerModule.setup).toHaveBeenCalledWith('docs', app, document, {
-      customSiteTitle: 'AB Tester API | Swagger',
-      swaggerOptions: {
-        deepLinking: true,
-        defaultModelsExpandDepth: -1,
-        displayRequestDuration: true,
-        docExpansion: 'list',
-        filter: true,
-        operationsSorter: 'alpha',
-        persistAuthorization: false,
-        supportedSubmitMethods: ['get'],
-        tagsSorter: 'alpha',
-      },
-    });
     expect(app.enableCors).toHaveBeenCalledWith({ credentials: true, origin: true });
     expect(app.listen).toHaveBeenCalledOnce();
   }, 15_000);

@@ -39,8 +39,6 @@ Services are available at:
 | --- | --- |
 | UI | [http://localhost:3000](http://localhost:3000) |
 | Backend | [http://localhost:4000](http://localhost:4000) |
-| Swagger UI | [http://localhost:4000/docs](http://localhost:4000/docs) |
-| OpenAPI document | [http://localhost:4000/docs-json](http://localhost:4000/docs-json) |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
 
@@ -110,15 +108,3 @@ The packages use Node.js 26 as specified by their `.nvmrc` files.
 | `npm test` | Run Vitest with coverage; configured thresholds are 100%. |
 | `npm run test:watch` | Run Vitest in watch mode. |
 | `npm run generate-migration` | Generate a PostgreSQL migration from the Drizzle schema. |
-
-## API documentation
-
-When the service is running, use [Swagger UI](http://localhost:4000/docs) to
-explore the API, request and response schemas, and examples. The generated
-OpenAPI JSON is available at
-[http://localhost:4000/docs-json](http://localhost:4000/docs-json).
-
-Authentication uses secure `accessToken` and `refreshToken` cookies. Swagger
-cannot set an `HttpOnly` cookie through its **Authorize** dialog. Establish a
-session by calling the sign-in or refresh endpoint from the Swagger UI; see the
-authentication workflow at the top of the Swagger page.

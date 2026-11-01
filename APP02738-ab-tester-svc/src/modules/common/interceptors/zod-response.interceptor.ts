@@ -1,7 +1,6 @@
 import { type CallHandler, type ExecutionContext, InternalServerErrorException, Logger, type NestInterceptor, UseInterceptors } from '@nestjs/common';
 import { map, type Observable } from 'rxjs';
 import { z } from 'zod';
-import { registerZodResponseSchema } from '../../../swagger/zod-openapi';
 
 export class ZodResponseInterceptor<T> implements NestInterceptor<unknown, T> {
   private readonly logger = new Logger(ZodResponseInterceptor.name);
@@ -28,7 +27,6 @@ export function ZodResponse<T>(schema: z.ZodType<T>): MethodDecorator {
   const interceptorDecorator = UseInterceptors(new ZodResponseInterceptor(schema));
 
   return (target, propertyKey, descriptor) => {
-    registerZodResponseSchema(target.constructor.name, String(propertyKey), schema);
     interceptorDecorator(target, propertyKey, descriptor);
   };
 }
