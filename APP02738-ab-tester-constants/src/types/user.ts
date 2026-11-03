@@ -1,5 +1,5 @@
-import type { TypeRole } from './role';
 import type { TypeStatus } from './constants';
+import type { TypeRole } from './role';
 
 export type TypeUser = {
   id: number;

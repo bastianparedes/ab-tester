@@ -1,0 +1,77 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "projectRoot",
+      "type": "promptString",
+      "description": "Ruta raíz del proyecto",
+      "default": "APP02738-ab-tester-constants"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Constants: Versionar, validar y publicar",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/constans-new-version.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/${input:projectRoot}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Constants: Actualizar en UI, servicio y debug panel",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/constants-update-consumers.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Debug panel: Versionar, validar y publicar",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/debug-panel-new-version.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/APP02738-ab-tester-debug-panel"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Debug panel: Actualizar en servicio",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/debug-panel-update-consumers.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
