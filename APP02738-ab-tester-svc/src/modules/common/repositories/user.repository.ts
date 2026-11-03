@@ -1,3 +1,4 @@
+import type { TypeStatus } from '@ab-tester/constants/types/constants';
 import { TypeRole } from '@ab-tester/constants/types/role';
 import type { TypeUser, TypeUserUpdatable } from '@ab-tester/constants/types/user';
 import { Injectable } from '@nestjs/common';
@@ -99,17 +100,33 @@ export class UserRepository {
       .where(eq(schema.users.id, userId));
   };
 
-  getForLogin = async ({ email }: { email: TypeUser['email'] }): Promise<undefined | { id: TypeUser['id']; email: TypeUser['email']; passwordHash: string }> => {
+  getForLogin = async ({
+    email,
+  }: {
+    email: TypeUser['email'];
+  }): Promise<undefined | { id: TypeUser['id']; email: TypeUser['email']; passwordHash: string; status: TypeStatus }> => {
     const user = await db.query.users.findFirst({
       columns: {
         email: true,
         id: true,
         passwordHash: true,
+        status: true,
       },
       where: eq(schema.users.email, email),
     });
 
     return user;
+  };
+
+  getStatus = async ({ userId }: { userId: TypeUser['id'] }): Promise<TypeStatus | undefined> => {
+    const user = await db.query.users.findFirst({
+      columns: {
+        status: true,
+      },
+      where: eq(schema.users.id, userId),
+    });
+
+    return user?.status;
   };
 
   getAll = async (): Promise<TypeUser[]> => {

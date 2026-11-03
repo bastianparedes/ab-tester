@@ -408,6 +408,7 @@ const labels = {
     email: 'Email',
     name: 'Name',
     newUser: 'New user',
+    noData: 'No users found',
     password: 'Password',
     roles: 'Roles',
     userManagement: 'User management',

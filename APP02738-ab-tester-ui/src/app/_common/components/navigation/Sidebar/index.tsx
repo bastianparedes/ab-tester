@@ -19,6 +19,34 @@ export function Sidebar({ children, tenant }: Props) {
   const user = useUser();
   const [isTestingExpanded, setIsTestingExpanded] = useState(true);
   const [isAdministrationExpanded, setIsAdministrationExpanded] = useState(true);
+  const administrationItems = [
+    { feature: 'tenant', href: constants.pages.tenants(), icon: Building2, label: translation.common.tenants },
+    { feature: 'role', href: constants.pages.roles(), icon: Shield, label: translation.common.roles },
+    { feature: 'user', href: constants.pages.users(), icon: Users, label: translation.common.users },
+  ] as const;
+  const visibleAdministrationItems = administrationItems.filter(({ feature }) => user.hasPermission({ action: 'read', feature }));
+  const testingItems = tenant
+    ? [
+        { feature: 'track-event' as const, href: constants.pages.trackEvents({ tenantId: tenant.id }), icon: Database, label: translation.common.trackEvents },
+        { feature: 'audience' as const, href: constants.pages.audiences({ tenantId: tenant.id }), icon: Tags, label: translation.common.audiences },
+        { feature: 'campaign' as const, href: constants.pages.campaigns({ tenantId: tenant.id }), icon: FlaskConical, label: translation.common.campaigns },
+        {
+          feature: 'execution-group' as const,
+          href: constants.pages.executionGroups({ tenantId: tenant.id }),
+          icon: Boxes,
+          label: translation.common.executionGroups,
+        },
+        {
+          feature: 'lifecycle-hook' as const,
+          href: constants.pages.lifecycleHooks({ tenantId: tenant.id }),
+          icon: Workflow,
+          label: translation.common.lifecycleHooks,
+        },
+        { feature: null, href: constants.pages.script({ tenantId: tenant.id }), icon: Code, label: translation.common.scriptAndUrl },
+        { feature: null, href: constants.pages.playground({ tenantId: tenant.id }), icon: Eye, label: translation.common.playground },
+      ]
+    : [];
+  const visibleTestingItems = tenant ? testingItems.filter(({ feature }) => feature === null || user.hasPermission({ action: 'read', feature, tenantId: tenant.id })) : [];
 
   return (
     <div className="flex min-h-[calc(100svh-40px)] bg-gray-100">
@@ -49,108 +77,39 @@ export function Sidebar({ children, tenant }: Props) {
                   <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isTestingExpanded ? '' : '-rotate-90'}`} />
                 </button>
                 <div id="testing-navigation" hidden={!isTestingExpanded}>
-                  {user.hasPermission({ action: 'read', feature: 'track-event', tenantId: tenant.id }) && (
-                    <a
-                      href={constants.pages.trackEvents({ tenantId: tenant.id })}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                    >
-                      <Database className="w-5 h-5" />
-                      <span className="text-sm font-medium">{translation.common.trackEvents}</span>
+                  {visibleTestingItems.map(({ feature, href, icon: Icon, label }) => (
+                    <a key={feature ?? href} href={href} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
+                      <Icon className="w-5 h-5" />
+                      <span className="text-sm font-medium">{label}</span>
                     </a>
-                  )}
-
-                  {user.hasPermission({ action: 'read', feature: 'audience', tenantId: tenant.id }) && (
-                    <a
-                      href={constants.pages.audiences({ tenantId: tenant.id })}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                    >
-                      <Tags className="w-5 h-5" />
-                      <span className="text-sm font-medium">{translation.common.audiences}</span>
-                    </a>
-                  )}
-
-                  {user.hasPermission({ action: 'read', feature: 'campaign', tenantId: tenant.id }) && (
-                    <a
-                      href={constants.pages.campaigns({ tenantId: tenant.id })}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                    >
-                      <FlaskConical className="w-5 h-5" />
-                      <span className="text-sm font-medium">{translation.common.campaigns}</span>
-                    </a>
-                  )}
-
-                  {user.hasPermission({ action: 'read', feature: 'execution-group', tenantId: tenant.id }) && (
-                    <a
-                      href={constants.pages.executionGroups({ tenantId: tenant.id })}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                    >
-                      <Boxes className="w-5 h-5" />
-                      <span className="text-sm font-medium">{translation.common.executionGroups}</span>
-                    </a>
-                  )}
-
-                  {user.hasPermission({ action: 'read', feature: 'lifecycle-hook', tenantId: tenant.id }) && (
-                    <a
-                      href={constants.pages.lifecycleHooks({ tenantId: tenant.id })}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                    >
-                      <Workflow className="w-5 h-5" />
-                      <span className="text-sm font-medium">{translation.common.lifecycleHooks}</span>
-                    </a>
-                  )}
-
-                  <a
-                    href={constants.pages.script({ tenantId: tenant.id })}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                  >
-                    <Code className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.scriptAndUrl}</span>
-                  </a>
-
-                  <a
-                    href={constants.pages.playground({ tenantId: tenant.id })}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800"
-                  >
-                    <Eye className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.playground}</span>
-                  </a>
+                  ))}
                 </div>
               </div>
             )}
 
             {/* Administration Section */}
-            <div className="mb-6">
-              <button
-                type="button"
-                aria-expanded={isAdministrationExpanded}
-                aria-controls="administration-navigation"
-                onClick={() => setIsAdministrationExpanded((expanded) => !expanded)}
-                className="w-full flex items-center justify-between text-left text-md font-semibold text-gray-400 uppercase mb-2 px-2"
-              >
-                {translation.common.administration}
-                <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isAdministrationExpanded ? '' : '-rotate-90'}`} />
-              </button>
-              <div id="administration-navigation" hidden={!isAdministrationExpanded}>
-                {user.hasPermission({ action: 'read', feature: 'tenant' }) && (
-                  <a href={constants.pages.tenants()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
-                    <Building2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.tenants}</span>
-                  </a>
-                )}
-                {user.hasPermission({ action: 'read', feature: 'role' }) && (
-                  <a href={constants.pages.roles()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
-                    <Shield className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.roles}</span>
-                  </a>
-                )}
-                {user.hasPermission({ action: 'read', feature: 'user' }) && (
-                  <a href={constants.pages.users()} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
-                    <Users className="w-5 h-5" />
-                    <span className="text-sm font-medium">{translation.common.users}</span>
-                  </a>
-                )}
+            {visibleAdministrationItems.length > 0 && (
+              <div className="mb-6">
+                <button
+                  type="button"
+                  aria-expanded={isAdministrationExpanded}
+                  aria-controls="administration-navigation"
+                  onClick={() => setIsAdministrationExpanded((expanded) => !expanded)}
+                  className="w-full flex items-center justify-between text-left text-md font-semibold text-gray-400 uppercase mb-2 px-2"
+                >
+                  {translation.common.administration}
+                  <ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${isAdministrationExpanded ? '' : '-rotate-90'}`} />
+                </button>
+                <div id="administration-navigation" hidden={!isAdministrationExpanded}>
+                  {visibleAdministrationItems.map(({ feature, href, icon: Icon, label }) => (
+                    <a key={feature} href={href} className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors mb-1 text-gray-300 hover:bg-gray-800">
+                      <Icon className="w-5 h-5" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </nav>
         </div>
       </aside>

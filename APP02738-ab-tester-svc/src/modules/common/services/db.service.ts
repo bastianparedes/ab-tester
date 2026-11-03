@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { getPasswordHashed } from '../../../libs/auth/password';
 import { superAdminId, superAdminPermissions } from '../../../libs/constants';
 import { env } from '../../../libs/env';
+import commonConstants from '../../../libs/sharedConstants';
 import { ScriptService } from '../../ab-test/services/script.service';
 import { AudienceRepository } from '../repositories/audience.repository';
 import { CampaignRepository } from '../repositories/campaign.repository';
@@ -79,6 +80,7 @@ export class DbService {
             email: env.SUPER_ADMIN_EMAIL,
             id: superAdminId,
             passwordHash: getPasswordHashed(env.SUPER_ADMIN_PASSWORD ?? ''),
+            status: commonConstants.status.active,
           };
 
         return undefined;

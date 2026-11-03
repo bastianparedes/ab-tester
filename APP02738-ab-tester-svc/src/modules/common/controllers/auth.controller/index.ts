@@ -7,6 +7,7 @@ import { generateToken, getTokenData, secondsAccessTokenIsValid, secondsRefreshT
 import { isPasswordCorrect } from '../../../../libs/auth/password';
 import { cookieNames } from '../../../../libs/constants';
 import { env } from '../../../../libs/env';
+import commonConstants from '../../../../libs/sharedConstants';
 import { type Request } from '../../../../types/request';
 import { ZodResponse } from '../../interceptors/zod-response.interceptor';
 import { CacheService } from '../../services/cache.service';
@@ -50,6 +51,7 @@ export class AuthController {
 
     const passwordIsCorrect = isPasswordCorrect({ password, passwordHash: user.passwordHash });
     if (!passwordIsCorrect) throw new UnauthorizedException();
+    if (user.status !== commonConstants.status.active) throw new UnauthorizedException();
 
     const refreshToken = {
       milisecondsDuration: secondsRefreshTokenIsValid * 1000,
@@ -89,6 +91,9 @@ export class AuthController {
 
     const refreshTokenInCache = await this.cacheService.refreshToken.get({ userId });
     if (refreshTokenInCache === oldRefreshToken) {
+      const userStatus = await this.dbService.users.getStatus({ userId });
+      if (userStatus !== commonConstants.status.active) throw new UnauthorizedException();
+
       const newAccessToken = generateToken({ id: userId, purpose: 'access' });
       const accessToken = {
         milisecondsDuration: secondsAccessTokenIsValid * 1000,

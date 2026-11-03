@@ -4,6 +4,7 @@ import type { TypeRole } from '@ab-tester/constants/types/role';
 import type { TypeUser } from '@ab-tester/constants/types/user';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { DataTable } from '@/app/_common/components/DataTable';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useTranslationContext } from '@/app/_common/contexts/Translation';
 import { useUser } from '@/app/_common/contexts/User';
@@ -118,75 +119,75 @@ export function ClientPage({ initialUsers, roles }: Props) {
   return (
     <div className="bg-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">{translation.users.userManagement}</h1>
-            {currentUser.hasPermission({ action: 'create', feature: 'user' }) && (
-              <button
-                type="button"
-                onClick={handleAdd}
-                className="bg-blue-600 hover:enabled:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition disabled:opacity-80 disabled:cursor-not-allowed"
-              >
-                <Plus size={20} /> {translation.users.addUser}
-              </button>
-            )}
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translation.users.name}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translation.users.email}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translation.users.roles}</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{translation.users.editUser}</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{translation.users.deleteUser}</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.email} className="hover:bg-gray-100">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-2">
-                        {user.roles.map((role) => (
-                          <span key={role.id} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {role.name}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
-                        <button
-                          type="button"
-                          onClick={() => handleEdit({ user })}
-                          className="px-3 py-1 rounded inline-flex items-center gap-1 transition bg-blue-100 text-blue-700 hover:enabled:bg-blue-200 disabled:opacity-80 disabled:cursor-not-allowed"
-                        >
-                          <Pencil size={16} />
-                          {translation.users.edit}
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {currentUser.hasPermission({ action: 'delete', feature: 'user' }) && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete({ user })}
-                          className="px-3 py-1 rounded inline-flex items-center gap-1 transition bg-red-100 text-red-700 hover:enabled:bg-red-200 disabled:opacity-80 disabled:cursor-not-allowed"
-                        >
-                          <Trash2 size={16} />
-                          {translation.users.delete}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-4xl font-bold text-slate-900">{translation.users.userManagement}</h1>
+          {currentUser.hasPermission({ action: 'create', feature: 'user' }) && (
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all bg-blue-600 text-white hover:bg-blue-700 h-9 px-4 py-2"
+            >
+              <Plus size={20} /> {translation.users.addUser}
+            </button>
+          )}
         </div>
+
+        <DataTable
+          rows={users}
+          getRowKey={(user) => user.email}
+          rowClassName="hover:bg-slate-50 transition-colors"
+          columns={[
+            {
+              label: translation.users.name,
+              renderCell: (user) => <span className="whitespace-nowrap text-sm font-medium text-slate-900">{user.name}</span>,
+            },
+            {
+              label: translation.users.email,
+              renderCell: (user) => <span className="whitespace-nowrap text-sm text-slate-500">{user.email}</span>,
+            },
+            {
+              label: translation.users.roles,
+              renderCell: (user) => (
+                <div className="flex flex-wrap gap-2">
+                  {user.roles.map((role) => (
+                    <span key={role.id} className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                      {role.name}
+                    </span>
+                  ))}
+                </div>
+              ),
+            },
+            {
+              label: translation.users.editUser,
+              renderCell: (user) =>
+                currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
+                  <button
+                      type="button"
+                      onClick={() => handleEdit({ user })}
+                      className="inline-flex items-center gap-1 rounded bg-blue-100 px-3 py-1 text-blue-700 transition hover:enabled:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-80"
+                    >
+                      <Pencil size={16} />
+                      {translation.users.edit}
+                    </button>
+                ),
+            },
+            {
+              label: translation.users.deleteUser,
+              renderCell: (user) =>
+                currentUser.hasPermission({ action: 'delete', feature: 'user' }) && (
+                  <button
+                      type="button"
+                      onClick={() => handleDelete({ user })}
+                      className="inline-flex items-center gap-1 rounded bg-red-100 px-3 py-1 text-red-700 transition hover:enabled:bg-red-200 disabled:cursor-not-allowed disabled:opacity-80"
+                    >
+                      <Trash2 size={16} />
+                      {translation.users.delete}
+                    </button>
+                ),
+            },
+          ]}
+          emptyMessage={translation.users.noData}
+        />
       </div>
     </div>
   );
