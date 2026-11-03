@@ -2,7 +2,7 @@
 
 import type { TypeRole } from '@ab-tester/constants/types/role';
 import type { TypeUser } from '@ab-tester/constants/types/user';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { KeyRound, Pencil, Plus, Power } from 'lucide-react';
 import { useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
@@ -19,7 +19,6 @@ export function ClientPage({ initialUsers, roles }: Props) {
   const { translation } = useTranslationContext();
   const [users, setUsers] = useState(initialUsers);
   const getDataFromForm = useDialogStore((state) => state.getDataFromForm);
-  const confirm = useDialogStore((state) => state.confirm);
   const currentUser = useUser();
 
   const handleAdd = async () => {
@@ -101,19 +100,46 @@ export function ClientPage({ initialUsers, roles }: Props) {
         email: data.email,
         name: data.name,
         roleIds: data.roleIds,
+        status: user.status,
       },
       pathParams: { userId: user.id },
     });
     if (apiResponse.ok) return window.location.reload();
   };
 
-  const handleDelete = async ({ user }: { user: TypeUser }) => {
-    const result = await confirm({ title: translation.users.deleteUserTitle.replace('{name}', user.name) });
-    if (!result) return;
-    const apiResponse = await apiCaller.users.delete({
+  const handleToggleStatus = async ({ user }: { user: TypeUser }) => {
+    const status = user.status === 'active' ? 'inactive' : 'active';
+    const apiResponse = await apiCaller.users.update({
+      body: {
+        email: user.email,
+        name: user.name,
+        roleIds: user.roles.map((role) => role.id),
+        status,
+      },
       pathParams: { userId: user.id },
     });
-    if (apiResponse.ok) setUsers((currentState) => currentState.filter((userInArray) => userInArray.id !== user.id));
+    if (apiResponse.ok) setUsers((currentState) => currentState.map((userInArray) => (userInArray.id === user.id ? { ...userInArray, status } : userInArray)));
+  };
+
+  const handleResetPassword = async ({ user }: { user: TypeUser }) => {
+    const data = await getDataFromForm(
+      { title: `${translation.users.resetPassword}: ${user.name}` },
+      {
+        newPassword: {
+          label: translation.users.newPassword,
+          required: true,
+          type: 'password',
+          value: '',
+        },
+      },
+    );
+    if (!data) return;
+
+    const apiResponse = await apiCaller.users.resetPassword({
+      body: { newPassword: data.newPassword },
+      pathParams: { userId: user.id },
+    });
+    if (apiResponse.ok) return window.location.reload();
   };
 
   return (
@@ -158,6 +184,18 @@ export function ClientPage({ initialUsers, roles }: Props) {
               ),
             },
             {
+              label: translation.users.status,
+              renderCell: (user) => (
+                <span
+                  className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                    user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {user.status === 'active' ? translation.users.active : translation.users.inactive}
+                </span>
+              ),
+            },
+            {
               label: translation.users.editUser,
               renderCell: (user) =>
                 currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
@@ -172,17 +210,33 @@ export function ClientPage({ initialUsers, roles }: Props) {
                 ),
             },
             {
-              label: translation.users.deleteUser,
+              label: translation.users.statusAction,
               renderCell: (user) =>
-                currentUser.hasPermission({ action: 'delete', feature: 'user' }) && (
+                currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
                   <button
-                      type="button"
-                      onClick={() => handleDelete({ user })}
-                      className="inline-flex items-center gap-1 rounded bg-red-100 px-3 py-1 text-red-700 transition hover:enabled:bg-red-200 disabled:cursor-not-allowed disabled:opacity-80"
-                    >
-                      <Trash2 size={16} />
-                      {translation.users.delete}
-                    </button>
+                    type="button"
+                    onClick={() => handleToggleStatus({ user })}
+                    className={`inline-flex items-center gap-1 rounded px-3 py-1 transition hover:enabled:opacity-80 disabled:cursor-not-allowed disabled:opacity-80 ${
+                      user.status === 'active' ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-800'
+                    }`}
+                  >
+                    <Power size={16} />
+                    {user.status === 'active' ? translation.users.deactivate : translation.users.activate}
+                  </button>
+                ),
+            },
+            {
+              label: translation.users.resetPassword,
+              renderCell: (user) =>
+                currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
+                  <button
+                    type="button"
+                    onClick={() => handleResetPassword({ user })}
+                    className="inline-flex items-center gap-1 rounded bg-amber-100 px-3 py-1 text-amber-800 transition hover:enabled:bg-amber-200"
+                  >
+                    <KeyRound size={16} />
+                    {translation.users.resetPassword}
+                  </button>
                 ),
             },
           ]}

@@ -1,6 +1,6 @@
 import type { TypeStatus } from '@ab-tester/constants/types/constants';
 import { TypeRole } from '@ab-tester/constants/types/role';
-import type { TypeUser, TypeUserUpdatable } from '@ab-tester/constants/types/user';
+import type { TypeUser, TypeUserCreatable, TypeUserUpdatable } from '@ab-tester/constants/types/user';
 import { Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getPasswordHashed } from '../../../libs/auth/password';
@@ -55,7 +55,7 @@ export class UserRepository {
     return fullUser;
   };
 
-  create = async (data: TypeUserUpdatable & { password: string }) => {
+  create = async (data: TypeUserCreatable & { password: string }) => {
     await db
       .insert(schema.users)
       .values({
@@ -66,7 +66,15 @@ export class UserRepository {
       .returning();
   };
 
-  update = async ({ userId, updates, roleIds }: { userId: TypeUser['id']; updates: TypeUserUpdatable; roleIds: TypeRole['id'][] }) => {
+  update = async ({
+    userId,
+    updates,
+    roleIds,
+  }: {
+    userId: TypeUser['id'];
+    updates: TypeUserUpdatable;
+    roleIds: TypeRole['id'][];
+  }) => {
     await db.transaction(async (tx) => {
       await tx.update(schema.users).set(updates).where(eq(schema.users.id, userId));
 

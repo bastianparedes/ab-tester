@@ -29,6 +29,13 @@ export const users = {
     });
     return response;
   },
+  resetPassword: async (data: TypeApiUsers['resetPassword']['request']) => {
+    const response = await fetchers.put<TypeApiUsers['resetPassword']['response']>({
+      body: data.body,
+      url: usersUrls.resetPassword(data),
+    });
+    return response;
+  },
   update: async (data: TypeApiUsers['update']['request']) => {
     const response = await fetchers.put<TypeApiUsers['update']['response']>({
       body: data.body,

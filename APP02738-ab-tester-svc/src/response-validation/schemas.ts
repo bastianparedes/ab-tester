@@ -170,6 +170,7 @@ export const userResponseSchema = z.object({
   id: idSchema,
   name: z.string(),
   roles: z.array(roleResponseSchema),
+  status: z.enum(['active', 'inactive']),
 });
 
 export const tenantResponseSchema = z.object({

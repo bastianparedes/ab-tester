@@ -9,7 +9,7 @@ import { type Request } from '../../../../types/request';
 import { AuthGuard } from '../../../common/guards/auth.guard';
 import { ZodResponse } from '../../../common/interceptors/zod-response.interceptor';
 import { DbService } from '../../../common/services/db.service';
-import { newUserSchema, oldUserSchema } from './request.schema';
+import { newUserSchema, oldUserSchema, resetPasswordSchema } from './request.schema';
 import { userResponseSchemas } from './response.schema';
 
 /* ---------- CONTROLLER ---------- */
@@ -73,6 +73,25 @@ export class UsersController {
     if (!currentUser) throw new BadRequestException();
 
     await this.dbService.users.update({ roleIds: body.roleIds, updates: body, userId });
+
+    return {};
+  }
+
+  @ZodResponse(userResponseSchemas.resetPassword)
+  @UseGuards(AuthGuard({ action: 'update', allowSuperAdmin: true, feature: 'user' }))
+  @Put(':userId/password')
+  async resetPassword(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body({ schema: resetPasswordSchema }) body: AssertEqual<z.infer<typeof resetPasswordSchema>, TypeApiUsers['resetPassword']['request']['body']>,
+    @Req() req: Request,
+  ): Promise<TypeApiUsers['resetPassword']['response']> {
+    const user = req.user;
+    if (!user) throw new UnauthorizedException();
+
+    const targetUser = await this.dbService.users.get({ userId });
+    if (!targetUser) throw new BadRequestException();
+
+    await this.dbService.users.updatePassword({ newPassword: body.newPassword, userId });
 
     return {};
   }

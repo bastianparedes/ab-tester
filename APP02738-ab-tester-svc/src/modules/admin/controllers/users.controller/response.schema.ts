@@ -6,5 +6,6 @@ export const userResponseSchemas = {
   get: userResponseSchema,
   getAll: z.array(userResponseSchema),
   remove: emptyResponseSchema,
+  resetPassword: emptyResponseSchema,
   update: emptyResponseSchema,
 };

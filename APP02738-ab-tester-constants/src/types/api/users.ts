@@ -1,5 +1,5 @@
 import type { TypeRole } from '../role';
-import type { TypeUser } from '../user';
+import type { TypeUser, TypeUserCreatable } from '../user';
 
 export type TypeApiUsers = {
   getAll: {
@@ -13,8 +13,8 @@ export type TypeApiUsers = {
   create: {
     request: {
       body: {
-        name: TypeUser['name'];
-        email: TypeUser['email'];
+        name: TypeUserCreatable['name'];
+        email: TypeUserCreatable['email'];
         password: string;
       };
     };
@@ -27,6 +27,16 @@ export type TypeApiUsers = {
         name: TypeUser['name'];
         email: TypeUser['email'];
         roleIds: TypeRole['id'][];
+        status: TypeUser['status'];
+      };
+    };
+    response: Record<string, never>;
+  };
+  resetPassword: {
+    request: {
+      pathParams: { userId: TypeUser['id'] };
+      body: {
+        newPassword: string;
       };
     };
     response: Record<string, never>;

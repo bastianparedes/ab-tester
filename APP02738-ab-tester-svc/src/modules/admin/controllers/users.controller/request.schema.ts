@@ -13,5 +13,12 @@ export const oldUserSchema = z
     email: z.string(),
     name: z.string(),
     roleIds: z.array(z.number().int()),
+    status: z.enum(['active', 'inactive']),
+  })
+  .strip();
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z.string().min(1),
   })
   .strip();
