@@ -200,13 +200,13 @@ export function ClientPage({ initialUsers, roles }: Props) {
               renderCell: (user) =>
                 currentUser.hasPermission({ action: 'update', feature: 'user' }) && (
                   <button
-                      type="button"
-                      onClick={() => handleEdit({ user })}
-                      className="inline-flex items-center gap-1 rounded bg-blue-100 px-3 py-1 text-blue-700 transition hover:enabled:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-80"
-                    >
-                      <Pencil size={16} />
-                      {translation.users.edit}
-                    </button>
+                    type="button"
+                    onClick={() => handleEdit({ user })}
+                    className="inline-flex items-center gap-1 rounded bg-blue-100 px-3 py-1 text-blue-700 transition hover:enabled:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-80"
+                  >
+                    <Pencil size={16} />
+                    {translation.users.edit}
+                  </button>
                 ),
             },
             {

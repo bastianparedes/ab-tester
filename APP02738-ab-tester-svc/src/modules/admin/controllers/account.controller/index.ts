@@ -47,7 +47,7 @@ export class AccountController {
 
     const roleIds = user.roles.map((role) => role.id);
 
-    await this.dbService.users.update({ roleIds, updates: body, userId: user.id });
+    await this.dbService.users.update({ roleIds, updates: { ...body, status: user.status }, userId: user.id });
     return {};
   }
 }

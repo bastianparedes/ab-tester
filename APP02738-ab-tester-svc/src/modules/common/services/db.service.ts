@@ -61,6 +61,7 @@ export class DbService {
                 permissions: superAdminPermissions,
               },
             ],
+            status: commonConstants.status.active,
           };
           await this.cacheService.users.save({ user });
           return user;

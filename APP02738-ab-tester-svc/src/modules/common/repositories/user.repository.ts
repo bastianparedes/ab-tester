@@ -66,15 +66,7 @@ export class UserRepository {
       .returning();
   };
 
-  update = async ({
-    userId,
-    updates,
-    roleIds,
-  }: {
-    userId: TypeUser['id'];
-    updates: TypeUserUpdatable;
-    roleIds: TypeRole['id'][];
-  }) => {
+  update = async ({ userId, updates, roleIds }: { userId: TypeUser['id']; updates: TypeUserUpdatable; roleIds: TypeRole['id'][] }) => {
     await db.transaction(async (tx) => {
       await tx.update(schema.users).set(updates).where(eq(schema.users.id, userId));
 
