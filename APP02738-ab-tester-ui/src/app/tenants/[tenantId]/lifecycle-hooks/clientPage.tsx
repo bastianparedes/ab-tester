@@ -5,6 +5,7 @@ import type { TypeLifecycleHookForMenu, TypeOrderLifecycleHookBy } from '@ab-tes
 import { ArrowRight, ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
+import { FilterCheckboxGroup, FilterSelect, FilterSidebar, FilterTextInput } from '@/app/_common/components/FilterSidebar';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
@@ -350,58 +351,25 @@ export function ClientPage({ tenantId }: PageProps) {
         </div>
       </div>
 
-      <div className="w-64 bg-white p-6 shadow-lg">
-        <h2 className="mb-6 text-xl font-bold text-slate-900">{translation.lifecycleHooks.filtersTitle}</h2>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            onApplyFilters();
+      <FilterSidebar title={translation.lifecycleHooks.filtersTitle} applyLabel={translation.lifecycleHooks.applyFilters} onApply={onApplyFilters}>
+        <FilterTextInput label={translation.lifecycleHooks.filtersText} value={state.nameFilter} onChange={(value) => dispatch({ payload: value, type: 'SET_NAME_FILTER' })} />
+        <FilterCheckboxGroup
+          label={translation.lifecycleHooks.filtersStatus}
+          options={commonConstants.arrayStatusArray.map((status) => ({ label: translation.common[status], value: status }))}
+          selectedValues={state.statusFilter}
+          onChange={(values) => {
+            for (const status of commonConstants.arrayStatusArray) {
+              if (values.includes(status) !== state.statusFilter.includes(status)) dispatch({ payload: status, type: 'SET_STATUS_FILTER' });
+            }
           }}
-        >
-          <div className="mb-6">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">{translation.lifecycleHooks.filtersText}</span>
-            <input
-              type="text"
-              value={state.nameFilter}
-              onChange={(event) => dispatch({ payload: event.target.value, type: 'SET_NAME_FILTER' })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-6">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">{translation.lifecycleHooks.filtersStatus}</span>
-            <div className="space-y-2">
-              {commonConstants.arrayStatusArray.map((status) => (
-                <label key={status} className="flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    checked={state.statusFilter.includes(status)}
-                    onChange={() => dispatch({ payload: status, type: 'SET_STATUS_FILTER' })}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-slate-700">{translation.common[status]}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="mb-6">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">{translation.lifecycleHooks.filtersQuantity}</span>
-            <select
-              value={state.itemsPerPage}
-              onChange={(event) => dispatch({ payload: Number(event.target.value), type: 'SET_ITEMS_PER_PAGE' })}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {config.quantitiesAvailable.map((quantity) => (
-                <option key={quantity} value={quantity}>
-                  {quantity}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white shadow-md transition-colors hover:bg-blue-700 hover:shadow-lg">
-            {translation.lifecycleHooks.applyFilters}
-          </button>
-        </form>
-      </div>
+        />
+        <FilterSelect
+          label={translation.lifecycleHooks.filtersQuantity}
+          value={state.itemsPerPage}
+          options={config.quantitiesAvailable.map((quantity) => ({ label: String(quantity), value: quantity }))}
+          onChange={(value) => dispatch({ payload: value, type: 'SET_ITEMS_PER_PAGE' })}
+        />
+      </FilterSidebar>
     </div>
   );
 }

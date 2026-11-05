@@ -5,6 +5,7 @@ import type { TypeOrderTrackEventBy, TypeTrackEventForMenu } from '@ab-tester/co
 import { ArrowRight, ChevronDown, ChevronUp, Copy, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
+import { FilterCheckboxGroup, FilterSelect, FilterSidebar, FilterTextInput } from '@/app/_common/components/FilterSidebar';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
@@ -348,67 +349,25 @@ export function ClientPage({ tenantId }: PageProps) {
       </div>
 
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg p-6">
-        <h2 className="text-xl font-bold text-slate-900 mb-6">{translation.trackEvents.filtersTitle}</h2>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onApplyFilters();
+      <FilterSidebar title={translation.trackEvents.filtersTitle} applyLabel={translation.trackEvents.applyFilters} onApply={onApplyFilters}>
+        <FilterTextInput label={translation.trackEvents.filtersText} value={state.nameFilter} onChange={(value) => dispatch({ payload: value, type: 'SET_NAME_FILTER' })} />
+        <FilterCheckboxGroup
+          label={translation.trackEvents.filtersStatus}
+          options={commonConstants.arrayStatusArray.map((status) => ({ label: translation.trackEvents.status[status], value: status }))}
+          selectedValues={state.statusFilter}
+          onChange={(values) => {
+            for (const status of commonConstants.arrayStatusArray) {
+              if (values.includes(status) !== state.statusFilter.includes(status)) dispatch({ payload: status, type: 'SET_STATUS_FILTER' });
+            }
           }}
-        >
-          <div className="mb-6">
-            <span className="block text-sm font-semibold text-slate-700 mb-2">{translation.trackEvents.filtersText}</span>
-            <input
-              type="text"
-              value={state.nameFilter}
-              onChange={(e) => dispatch({ payload: e.target.value, type: 'SET_NAME_FILTER' })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="mb-6">
-            <span className="block text-sm font-semibold text-slate-700 mb-2">{translation.trackEvents.filtersStatus}</span>
-            <div className="space-y-2">
-              {commonConstants.arrayStatusArray.map((status) => (
-                <label key={status} className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={state.statusFilter.includes(status)}
-                    onChange={() => dispatch({ payload: status, type: 'SET_STATUS_FILTER' })}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-slate-700">{translation.trackEvents.status[status]}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <span className="block text-sm font-semibold text-slate-700 mb-2">{translation.trackEvents.filtersQuantity}</span>
-            <select
-              value={state.itemsPerPage}
-              onChange={(e) =>
-                dispatch({
-                  payload: Number(e.target.value),
-                  type: 'SET_ITEMS_PER_PAGE',
-                })
-              }
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              {config.quantitiesAvailable.map((qty) => (
-                <option key={qty} value={qty}>
-                  {qty}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button type="submit" className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg">
-            {translation.trackEvents.applyFilters}
-          </button>
-        </form>
-      </div>
+        />
+        <FilterSelect
+          label={translation.trackEvents.filtersQuantity}
+          value={state.itemsPerPage}
+          options={config.quantitiesAvailable.map((quantity) => ({ label: String(quantity), value: quantity }))}
+          onChange={(value) => dispatch({ payload: value, type: 'SET_ITEMS_PER_PAGE' })}
+        />
+      </FilterSidebar>
     </div>
   );
 }

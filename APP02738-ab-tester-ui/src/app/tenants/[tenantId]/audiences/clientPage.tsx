@@ -5,6 +5,7 @@ import type { TypeDirection } from '@ab-tester/constants/types/constants';
 import { ArrowRight, ChevronDown, ChevronUp, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useState } from 'react';
 import { DataTable } from '@/app/_common/components/DataTable';
+import { FilterSelect, FilterSidebar, FilterTextInput } from '@/app/_common/components/FilterSidebar';
 import { Pagination } from '@/app/_common/components/Pagination';
 import { useDialogStore } from '@/app/_common/contexts/Dialog/state';
 import { useToast } from '@/app/_common/contexts/ToastEmitter';
@@ -318,50 +319,15 @@ export function ClientPage({ tenantId }: PageProps) {
       </div>
 
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg p-6">
-        <h2 className="text-xl font-bold text-slate-900 mb-6">{translation.audiences.filtersTitle}</h2>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onApplyFilters();
-          }}
-        >
-          <div className="mb-6">
-            <span className="block text-sm font-semibold text-slate-700 mb-2">{translation.audiences.filtersText}</span>
-            <input
-              type="text"
-              value={state.nameFilter}
-              onChange={(e) => dispatch({ payload: e.target.value, type: 'SET_NAME_FILTER' })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="mb-6">
-            <span className="block text-sm font-semibold text-slate-700 mb-2">{translation.audiences.filtersQuantity}</span>
-            <select
-              value={state.itemsPerPage}
-              onChange={(e) =>
-                dispatch({
-                  payload: Number(e.target.value),
-                  type: 'SET_ITEMS_PER_PAGE',
-                })
-              }
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              {config.quantitiesAvailable.map((qty) => (
-                <option key={qty} value={qty}>
-                  {qty}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button type="submit" className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg">
-            {translation.audiences.applyFilters}
-          </button>
-        </form>
-      </div>
+      <FilterSidebar title={translation.audiences.filtersTitle} applyLabel={translation.audiences.applyFilters} onApply={onApplyFilters}>
+        <FilterTextInput label={translation.audiences.filtersText} value={state.nameFilter} onChange={(value) => dispatch({ payload: value, type: 'SET_NAME_FILTER' })} />
+        <FilterSelect
+          label={translation.audiences.filtersQuantity}
+          value={state.itemsPerPage}
+          options={config.quantitiesAvailable.map((quantity) => ({ label: String(quantity), value: quantity }))}
+          onChange={(value) => dispatch({ payload: value, type: 'SET_ITEMS_PER_PAGE' })}
+        />
+      </FilterSidebar>
     </div>
   );
 }
