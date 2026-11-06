@@ -26,6 +26,22 @@
       "problemMatcher": []
     },
     {
+      "label": "Workspace: Aplicar lint:fix en paralelo",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/npm-lint-fix-all-projects.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Constants: Versionar, validar y publicar",
       "type": "process",
       "command": "powershell.exe",
