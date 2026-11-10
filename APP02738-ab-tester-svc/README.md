@@ -14,19 +14,18 @@ Ask a team member for `.npmrc` if you do not have access. Do not commit
 
 ## Run the full application with Docker Compose
 
-The Compose file in this repository starts PostgreSQL, Redis, the backend, and
-the UI. The UI directory must be a sibling of this service directory, or
-`AB_TESTER_UI_PATH` must point to its location.
+The workspace root `compose.yaml` starts PostgreSQL, Redis, the backend, and
+the UI. The service and UI directories must keep their workspace names.
 
-1. From this directory, create your local environment file:
+1. From the workspace root, create the service environment file:
 
    ```powershell
-   Copy-Item .env.example .env
+   Copy-Item APP02738-ab-tester-svc/.env.example APP02738-ab-tester-svc/.env
    ```
 
 2. Edit `.env`. In particular, replace the example database password, JWT
    secret, and administrator password with values appropriate for your local
-   environment. Verify that `AB_TESTER_UI_PATH` points to the UI directory.
+   environment.
 3. Start the application:
 
    ```powershell
@@ -65,7 +64,6 @@ Other settings used by Compose:
 | Variable | Purpose |
 | --- | --- |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL container initialization. |
-| `AB_TESTER_UI_PATH` | Path to the sibling UI directory, relative to this repository or as an absolute path. |
 | `NEXT_PUBLIC_BACKEND_URL_FROM_SERVER_SIDE` | Backend URL reachable by the UI server. |
 | `NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE` | Backend URL reachable by the user's browser. |
 | `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` | Optional initial super-admin credentials. |

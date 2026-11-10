@@ -1,0 +1,46 @@
+# Dependencies
+**/node_modules/
+
+# Build and test output
+**/dist/
+**/build/
+**/coverage/
+**/.next/
+**/out/
+
+# Logs and temporary files
+**/logs/
+**/*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/.temp/
+**/.tmp/
+
+# Local environment and registry configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.npmrc
+**/.npmrc
+
+# IDE and operating system files
+.idea/
+**/.idea/
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+
+# Runtime and diagnostic files
+**/pids/
+*.pid
+*.seed
+*.pid.lock
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# TypeScript build metadata
+*.tsbuildinfo

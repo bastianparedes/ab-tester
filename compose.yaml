@@ -1,0 +1,58 @@
+name: ab-tester
+
+services:
+  db-postgres:
+    tty: true
+    image: postgres
+    env_file:
+      - ./APP02738-ab-tester-svc/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./APP02738-ab-tester-svc/src/modules/common/repositories/postgres/migrations:/docker-entrypoint-initdb.d
+
+  db-redis:
+    tty: true
+    image: redis
+    env_file:
+      - ./APP02738-ab-tester-svc/.env
+    ports:
+      - "6379:6379"
+
+  ab-tester-svc:
+    build:
+      context: ./APP02738-ab-tester-svc
+      dockerfile: Dockerfile.dev
+    image: ab-tester/service
+    env_file:
+      - ./APP02738-ab-tester-svc/.env
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: 10000
+      TSC_WATCHFILE: PriorityPollingInterval
+      TSC_WATCHDIRECTORY: RecursiveDirectoryUsingDynamicPriorityPolling
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db-postgres
+      - db-redis
+    volumes:
+      - /app/node_modules
+      - ./APP02738-ab-tester-svc:/app
+
+  ab-tester-ui:
+    tty: true
+    command: npm run dev
+    build:
+      context: ./APP02738-ab-tester-ui
+      dockerfile: Dockerfile.dev
+    image: ab-tester/ui
+    env_file:
+      - ./APP02738-ab-tester-svc/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ab-tester-svc
+    volumes:
+      - /app/node_modules
+      - ./APP02738-ab-tester-ui:/app
