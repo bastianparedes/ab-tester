@@ -154,6 +154,7 @@ const labels = {
     updatedAt: 'Updated at',
   },
   common: {
+    abTest: 'AB Test',
     accept: 'Accept',
     account: 'Account',
     active: 'Active',
@@ -179,7 +180,6 @@ const labels = {
     selectOption: 'Select an option',
     selectOptions: 'Select options',
     tenants: 'Tenants',
-    testing: 'Testing',
     trackEvents: 'Track events',
     users: 'Users',
   },
