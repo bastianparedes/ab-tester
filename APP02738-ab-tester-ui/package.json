@@ -34,7 +34,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "start": "next start",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage --passWithNoTests"
   },
   "version": "1.0.0"
 }

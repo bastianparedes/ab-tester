@@ -34,12 +34,12 @@ the UI. The service and UI directories must keep their workspace names.
 
 Services are available at:
 
-| Service | Local address |
-| --- | --- |
-| UI | [http://localhost:3000](http://localhost:3000) |
-| Backend | [http://localhost:4000](http://localhost:4000) |
-| PostgreSQL | `localhost:5432` |
-| Redis | `localhost:6379` |
+| Service    | Local address                                  |
+| ---------- | ---------------------------------------------- |
+| UI         | [http://localhost:3000](http://localhost:3000) |
+| Backend    | [http://localhost:4000](http://localhost:4000) |
+| PostgreSQL | `localhost:5432`                               |
+| Redis      | `localhost:6379`                               |
 
 Stop the services with `Ctrl+C`. To stop and remove the Compose containers,
 run `docker compose down`.
@@ -49,25 +49,25 @@ run `docker compose down`.
 The Compose setup reads its configuration from `.env`. Required backend
 settings include:
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL_POSTGRES` | PostgreSQL connection string. In Compose, use the `db-postgres` service as the host. |
-| `PG_POOL_MAX` | Maximum PostgreSQL connections per service instance; defaults to `10`. Set this with the database's total connection budget in mind. |
-| `DATABASE_URL_REDIS` | Redis connection URL. In Compose, use the `db-redis` service as the host. |
-| `JWT_SECRET` | Secret used to sign and verify authentication tokens. |
-| `SALT_ROUNDS` | Work factor used when hashing passwords. |
-| `SERVICE_BASE_URL` | Base URL used by the service when building public resource URLs. |
-| `PORT` | HTTP port; defaults to `4000` when omitted. |
+| Variable                | Purpose                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL_POSTGRES` | PostgreSQL connection string. In Compose, use the `db-postgres` service as the host.                                                 |
+| `PG_POOL_MAX`           | Maximum PostgreSQL connections per service instance; defaults to `10`. Set this with the database's total connection budget in mind. |
+| `DATABASE_URL_REDIS`    | Redis connection URL. In Compose, use the `db-redis` service as the host.                                                            |
+| `JWT_SECRET`            | Secret used to sign and verify authentication tokens.                                                                                |
+| `SALT_ROUNDS`           | Work factor used when hashing passwords.                                                                                             |
+| `SERVICE_BASE_URL`      | Base URL used by the service when building public resource URLs.                                                                     |
+| `PORT`                  | HTTP port; defaults to `4000` when omitted.                                                                                          |
 
 Other settings used by Compose:
 
-| Variable | Purpose |
-| --- | --- |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL container initialization. |
-| `NEXT_PUBLIC_BACKEND_URL_FROM_SERVER_SIDE` | Backend URL reachable by the UI server. |
-| `NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE` | Backend URL reachable by the user's browser. |
-| `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` | Optional initial super-admin credentials. |
-| `DOMAIN` | Optional cookie/domain configuration. |
+| Variable                                            | Purpose                                      |
+| --------------------------------------------------- | -------------------------------------------- |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQL container initialization.         |
+| `NEXT_PUBLIC_BACKEND_URL_FROM_SERVER_SIDE`          | Backend URL reachable by the UI server.      |
+| `NEXT_PUBLIC_BACKEND_URL_FROM_CLIENT_SIDE`          | Backend URL reachable by the user's browser. |
+| `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD`         | Optional initial super-admin credentials.    |
+| `DOMAIN`                                            | Optional cookie/domain configuration.        |
 
 The committed `.env.example` provides a local Compose template. Review and
 replace example credentials before use; never use them in a shared or
@@ -97,12 +97,12 @@ The packages use Node.js 26 as specified by their `.nvmrc` files.
 
 ## Development commands
 
-| Command | Description |
-| --- | --- |
-| `npm run build` | Compile the NestJS service. |
-| `npm run build:script` | Build the client script. |
-| `npm run start:prod` | Run the compiled service from `dist`. |
-| `npm run lint` | Check the project with Biome. |
-| `npm test` | Run Vitest with coverage; configured thresholds are 100%. |
-| `npm run test:watch` | Run Vitest in watch mode. |
-| `npm run generate-migration` | Generate a PostgreSQL migration from the Drizzle schema. |
+| Command                      | Description                                               |
+| ---------------------------- | --------------------------------------------------------- |
+| `npm run build`              | Compile the NestJS service.                               |
+| `npm run build:script`       | Build the client script.                                  |
+| `npm run start:prod`         | Run the compiled service from `dist`.                     |
+| `npm run lint`               | Check the project with Biome.                             |
+| `npm test`                   | Run Vitest with coverage; configured thresholds are 100%. |
+| `npm run test:watch`         | Run Vitest in watch mode.                                 |
+| `npm run generate-migration` | Generate a PostgreSQL migration from the Drizzle schema.  |

@@ -104,6 +104,21 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Workspace: Ejecutar tests en secuencia",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/tasks/npm-test-all-projects.ps1"
+      ],
+      "isBackground": false,
+      "problemMatcher": [],
+      "group": "test"
     }
   ]
 }

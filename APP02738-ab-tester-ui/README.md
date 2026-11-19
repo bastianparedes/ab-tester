@@ -55,13 +55,13 @@ when the backend is running.
 
 ## Useful commands
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the Next.js development server. |
-| `npm run build` | Create a production build. |
-| `npm run start` | Serve the production build; run `npm run build` first. |
-| `npm run lint` | Check the project with Biome. |
-| `npm test` | Run Vitest with coverage; the configured thresholds are 100%. |
+| Command         | Description                                                   |
+| --------------- | ------------------------------------------------------------- |
+| `npm run dev`   | Start the Next.js development server.                         |
+| `npm run build` | Create a production build.                                    |
+| `npm run start` | Serve the production build; run `npm run build` first.        |
+| `npm run lint`  | Check the project with Biome.                                 |
+| `npm test`      | Run Vitest with coverage; the configured thresholds are 100%. |
 
 ## Project structure
 

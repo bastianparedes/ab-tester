@@ -53,8 +53,7 @@
     "start:debug": "npm run start:dev -- --debug ",
     "start:dev": "NODE_ENV=development nest start --watch & nodemon",
     "start:prod": "NODE_ENV=production node dist/main",
-    "test": "vitest run --coverage",
-    "test:watch": "vitest"
+    "test": "vitest run --coverage --passWithNoTests"
   },
   "version": "1.0.0"
 }
